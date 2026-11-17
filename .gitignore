@@ -1,0 +1,6 @@
+node_modules/
+app-native/www/
+app-native/android/app/build/
+.vercel
+.env*
+licences_rbq.csv

@@ -1,0 +1,5 @@
+app-native/
+supabase/
+*.sql
+*.mjs
+LISEZ-MOI.md
