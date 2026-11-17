@@ -125,6 +125,17 @@ Change `appId` (`ca.verifqc.app`) et `appName` dans `capacitor.config.json` quan
 
 **Politique de confidentialité** : elle s'affiche dans l'app (lien sur l'accueil, l'inscription et la page de la pièce d'identité). Avant la mise en ligne, remplis les crochets de `RESPONSABLE` au début de la section « Politique de confidentialité » dans `app.js` (nom, titre, entreprise, courriel, adresse, date), et les durées de conservation entre crochets.
 
+## 7c. Vérification approfondie payante (Stripe)
+
+Le client paie par carte sur une page Stripe ; HabitaScan ne voit jamais le numéro de carte.
+1. Crée un compte sur https://stripe.com (Canada), puis active les paiements (renseignements d'entreprise et compte bancaire).
+2. Produits > Ajouter un produit : « Vérification approfondie HabitaScan », prix unique (ex. 10 $ CAD).
+3. Liens de paiement > Créer : choisis ce produit. Dans « Après le paiement », choisis « Rediriger vers votre site » : `https://habitascan.vercel.app/?paye=1`.
+4. Copie le lien (https://buy.stripe.com/…) et colle-le dans l'app : Espace admin > Montants > Paiement Stripe. Mets le même prix dans « Prix de la vérification approfondie ».
+5. Développeurs > Webhooks > Ajouter un point de terminaison : `https://oyiiaqyepihkawzkkjpi.supabase.co/functions/v1/stripe-webhook`, événement `checkout.session.completed`. Copie le « secret de signature » (whsec_…) et ajoute-le dans Supabase > Edge Functions > Secrets sous le nom `STRIPE_WEBHOOK_SECRET`.
+6. Les demandes payées apparaissent dans Espace admin > Demandes. Consulte le Registre foncier, puis choisis le verdict. Sans webhook, utilise « Marquer payée » après avoir vu le paiement dans Stripe.
+7. Remboursement : fais-le dans Stripe (Paiements > Rembourser), puis « Marquer remboursée » dans l'app.
+
 ## 8. Ce qui est stocké
 
 | Donnée | Où | Qui la voit |
@@ -139,6 +150,8 @@ Change `appId` (`ca.verifqc.app`) et `appName` dans `capacitor.config.json` quan
 | Compte de taxes montré par un annonceur (« Vérifier le propriétaire ») | Lu sur le téléphone, jamais envoyé | Personne |
 | Recherche « Trouver » : ville, chambres, budget | Envoyés à Brave Search pour la recherche, jamais conservés | Brave (traitement) |
 | Montants du budget | `parametres` | Tout le monde (lecture), toi (modification) |
+| Demandes de vérification approfondie : adresse, lot, nom de l'interlocuteur, lien, verdict | `demandes_verif` | Le client (sa demande), toi |
+| Paiement (carte, nom, courriel) | Stripe | Stripe seulement |
 | Loyers SCHL, licences RBQ | `loyers_reference`, `licences_rbq` | Tout le monde (lecture) |
 
 Avant le lancement, la politique de confidentialité doit mentionner Google Vision et Brave Search (transfert hors Québec : Loi 25, évaluation des facteurs relatifs à la vie privée).
@@ -154,10 +167,11 @@ Avant le lancement, la politique de confidentialité doit mentionner Google Visi
 ## Fichiers
 
 - `index.html`, `app.js` : l'app web
-- `migration-reno.sql`, `migration-v3-compte-facultatif-signalements.sql`, `migration-v4-admin-confidentialite.sql` : mises à jour de la base
+- `migration-reno.sql`, `migration-v3-compte-facultatif-signalements.sql`, `migration-v4-admin-confidentialite.sql`, `migration-v5-verification-approfondie.sql` : mises à jour de la base
 - `supabase/functions/recherche-image/index.ts` : recherche des photos (Google Vision)
 - `supabase/functions/chercher-annonces/index.ts` : recherche d'annonces (Brave Search)
 - `supabase/functions/supprimer-compte/index.ts` : suppression du compte par l'utilisateur
+- `supabase/functions/stripe-webhook/index.ts` : confirme les paiements Stripe
 - `supabase/functions/info-adresse/index.ts` : adresse → numéro de lot (services publics du Québec)
 - `preparer-licences.mjs` : prépare la liste des licences RBQ
 - `app-native/` : app iPhone et Android (Capacitor)
