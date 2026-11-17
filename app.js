@@ -315,6 +315,7 @@ ${ligne("i","<b>Compare le nom</b> du dernier acheteur avec celui du compte de t
 <label>Nom inscrit au rôle, si tu l'as trouvé<input id="prole" autocomplete="off" placeholder="Prénom Nom" value="${esc(P.nomRole||"")}"></label>
 ${role?`<ul class="reasons">${ligne(role==="oui"?"g":role==="partiel"?"y":"r",role==="oui"?"Le nom au rôle est celui de ton interlocuteur.":role==="partiel"?"Le nom au rôle ressemble en partie à celui de ton interlocuteur.":"Le nom au rôle n'est pas celui de ton interlocuteur.")}</ul>`:""}
 </div>
+${carteApprofondie()}
 <button class="btn" data-go="${back}">Retour au résultat</button>`}
 function lierProprio(F){const P=F.P;
  const garder=()=>{P.nom=$("#pnom").value;P.adr=$("#padr").value;P.nomRole=$("#prole").value};
@@ -561,7 +562,8 @@ function vueConfidentialite(back){const R=RESPONSABLE;
  ["Résumé de tes vérifications : ville, chambres, loyer, lien, résultat ; travaux et licence RBQ","Ton historique. Pour un même lien, les autres voient seulement un nombre"],
  ["Signalement : lien et motif","Avertir les autres. Ils voient seulement un nombre"],
  ["Photo de pièce d'identité, seulement pour signaler","Éviter les fausses accusations. Supprimée après la vérification"],
- ["Ville, chambres et budget de « Trouver »","Chercher des annonces. Non conservés"]],["Renseignement","Pourquoi"])}
+ ["Ville, chambres et budget de « Trouver »","Chercher des annonces. Non conservés"],
+ ["Vérification approfondie : adresse, lot, nom de ton interlocuteur, lien","Faire la vérification que tu as payée. Seul le verdict t'est remis"]],["Renseignement","Pourquoi"])}
 <p class="hint"><b>Restent sur ton téléphone :</b> le texte des annonces et des conversations, tes captures (sauf si la recherche des photos est activée : envoyée à Google Cloud Vision puis oubliée), la photo du compte de taxes, ton budget et ton revenu.</p>
 <p class="hint"><b>Résultat automatique :</b> le verdict est calculé à partir de règles publiques. Il porte sur l'annonce, pas sur toi. Tu peux demander quelles règles ont mené à un résultat.</p></div>
 <div class="card"><h2>Fournisseurs, dont hors du Québec</h2>${t([
@@ -569,7 +571,8 @@ function vueConfidentialite(back){const R=RESPONSABLE;
  ["Vercel (pages de l'app)","États-Unis : adresse IP"],
  ["jsDelivr (bibliothèques de l'app)","Réseau mondial : adresse IP"],
  ["Brave Search (« Trouver »)","États-Unis : mots de la recherche, sans ton nom"],
- ["Google Cloud Vision, si activé","États-Unis : capture envoyée pour la recherche"]],["Fournisseur","Où et quoi"])}
+ ["Google Cloud Vision, si activé","États-Unis : capture envoyée pour la recherche"],
+ ["Stripe (paiement de la vérification approfondie)","Entreprise américaine : courriel et carte. HabitaScan ne voit jamais le numéro de carte"]],["Fournisseur","Où et quoi"])}
 <p class="hint">Avant de confier des renseignements hors du Québec, nous évaluons s'ils seront protégés adéquatement (art. 17 de la loi). Nous ne communiquons rien d'autre sans ton consentement, sauf dans les cas prévus par la loi.</p></div>
 <div class="card"><h2>Conservation et sécurité</h2>
 <ul class="liste"><li>Compte et historique : jusqu'à la suppression du compte, ou [24] mois sans connexion.</li>
@@ -607,7 +610,7 @@ function vueAdmin(){const onglet=F.onglet||"chiffres";
  const o=(k,t)=>`<button type="button" data-onglet="${k}" aria-pressed="${onglet===k}">${t}</button>`;
  return `${top("accueil","Admin")}
 <h2>Espace admin</h2>${ADM.demo?`<p class="demo">Démo : données fictives, rien n'est envoyé.</p>`:""}
-<div class="seg seg4" role="group" aria-label="Section">${o("chiffres","Chiffres")}${o("identites","Identités")}${o("signalements","Signalements")}${o("montants","Montants")}</div>
+<div class="seg seg5" role="group" aria-label="Section">${o("chiffres","Chiffres")}${o("demandes","Demandes")}${o("identites","Identités")}${o("signalements","Signalements")}${o("montants","Montants")}</div>
 <div id="adm" aria-live="polite"><p class="hint">Chargement…</p></div>`}
 async function lierAdmin(){const onglet=F.onglet||"chiffres";
  app.querySelectorAll("[data-onglet]").forEach(b=>b.onclick=()=>{F.onglet=b.dataset.onglet;go("admin")});
@@ -653,7 +656,99 @@ const CSS_PLUS3=`.btn.danger{background:var(--red)}.liste{margin:0;padding-left:
 .ligne{display:grid;grid-template-columns:1fr auto;gap:8px}.btn.petit{font-size:14px;min-height:48px;width:auto}
 input.mini{min-height:40px;padding:6px 8px;font-size:15px}#adm{display:flex;flex-direction:column;gap:14px}
 .pied{display:flex;flex-wrap:wrap;gap:4px 16px;justify-content:center}`;
+/* ===== HabitaScan : vérification approfondie payante (commun démo + Supabase) =====
+   Dépend de : F, $, app, go, esc, top, err, nouveauF, lienExt, fmtLot, chiffresLot, PARAMS, ADM
+   et d'un adaptateur VAP : VAP.creer(d) → id ; VAP.mes() ; VAP.adminListe() ; VAP.adminMaj(id, statut, verdict, note)
+   VAP.sauverTexte(cle, valeur) ; VAP.courriel() → courriel du compte ; VAP.demo */
+const VCFG={prix:10,delai:24,lien:""};
+PARAMS.push({cle:"prix_verif",n:"Prix de la vérification approfondie ($)",get:()=>VCFG.prix,set:v=>VCFG.prix=v},
+ {cle:"delai_verif_heures",n:"Délai de réponse promis (heures)",get:()=>VCFG.delai,set:v=>VCFG.delai=v});
+const prixTxt=()=>String(VCFG.prix).replace(".",",")+" $";
+const VERDICTS={correspond:["g","Le nom correspond au propriétaire inscrit au Registre foncier."],
+ ne_correspond_pas:["r","Le nom ne correspond pas au propriétaire inscrit. Ne paie rien avant d'avoir une explication et un mandat écrit du propriétaire."],
+ compagnie:["y","Le propriétaire inscrit est une entreprise. Demande la preuve que ton interlocuteur la représente (mandat écrit, registre des entreprises)."],
+ introuvable:["y","Nous n'avons pas pu confirmer le propriétaire (lot introuvable ou vente trop récente). Écris-nous pour un remboursement."]};
+const STATUTS={a_payer:["i","Paiement non reçu"],payee:["y","En cours"],terminee:["g","Terminée"],remboursee:["i","Remboursée"]};
 
+const carteApprofondie=()=>`<div class="card offre"><h2>Pas le temps ? On le fait pour toi</h2>
+<p>Notre équipe consulte le Registre foncier et te dit si ton interlocuteur est bien le propriétaire inscrit. Réponse en ${VCFG.delai} h maximum.</p>
+<button class="btn" data-go="approfondie">Vérification approfondie · ${prixTxt()}</button>
+<p class="hint">Paiement par carte de crédit ou de débit. Ce n'est pas une garantie : visite toujours et signe le bail avant de payer.</p></div>`;
+
+function vueApprofondie(F,back){const P=F.P||{};const A=F.VA||(F.VA={adresse:P.adr||F.adr||"",lot:(P.geo&&P.geo.lots&&P.geo.lots[0])||(P.cmp&&P.cmp.lot&&chiffresLot(P.cmp.lot))||"",nom:P.nom||"",role:P.role||"proprietaire",lien:F.lien||""});
+ return `${top(back,"Vérification approfondie")}
+<h2>Vérification approfondie</h2>
+<p class="soft">Nous consultons le Registre foncier pour ce logement et comparons le propriétaire inscrit avec le nom de ton interlocuteur. Tu reçois le verdict dans l'app, en ${VCFG.delai} h maximum.</p>
+<form class="card" id="f-va" novalidate>
+<label>Adresse du logement<input id="va-adresse" autocomplete="off" placeholder="1234, rue Exemple, Ville" value="${esc(A.adresse)}"></label>
+<label>Numéro de lot (facultatif)<input id="va-lot" inputmode="numeric" autocomplete="off" placeholder="1 234 567" value="${esc(A.lot?fmtLot(A.lot):"")}"></label>
+<label>Nom de ton interlocuteur<input id="va-nom" autocomplete="off" placeholder="Prénom Nom, ou nom de l'entreprise" value="${esc(A.nom)}"></label>
+<div class="seg" role="group" aria-label="Il dit être"><button type="button" data-varole="proprietaire" aria-pressed="${A.role!=="gestionnaire"}">Propriétaire</button><button type="button" data-varole="gestionnaire" aria-pressed="${A.role==="gestionnaire"}">Gestionnaire</button></div>
+<label>Lien de l'annonce (facultatif)<input id="va-lien" type="url" inputmode="url" autocomplete="off" value="${esc(A.lien)}"></label>
+<label style="flex-direction:row;align-items:flex-start;gap:10px;font-weight:500"><input type="checkbox" id="va-ok" style="width:22px;min-height:22px;margin-top:2px">Je comprends que HabitaScan confirme seulement si ce nom correspond au propriétaire inscrit. Ce n'est pas une garantie : je visite et je signe le bail avant de payer quoi que ce soit.</label>
+<p class="err" id="e" hidden></p>
+<button class="btn" id="go">Payer ${prixTxt()} par carte</button>
+<p class="hint">Le paiement se fait sur la page sécurisée de Stripe : HabitaScan ne voit jamais ton numéro de carte. Nous ne te transmettons aucun document sur le propriétaire, seulement le verdict.</p>
+</form>${VAP.demo?`<p class="demo">Démo : aucun paiement réel, tu pourras simuler le paiement.</p>`:""}`}
+function lierApprofondie(F){const A=F.VA;
+ const garder=()=>{A.adresse=$("#va-adresse").value;A.lot=chiffresLot($("#va-lot").value);A.nom=$("#va-nom").value;A.lien=$("#va-lien").value};
+ app.querySelectorAll("[data-varole]").forEach(b=>b.onclick=()=>{garder();A.role=b.dataset.varole;go("approfondie")});
+ $("#f-va").onsubmit=async e=>{e.preventDefault();garder();
+  if(A.adresse.trim().length<6||!/\d/.test(A.adresse))return err("Entre l'adresse complète, avec le numéro et la ville.");
+  if(A.lot&&!/^\d{7,8}$/.test(A.lot))return err("Le numéro de lot a 7 chiffres, par exemple 1 234 567. Laisse vide si tu ne l'as pas.");
+  if(A.nom.trim().length<2)return err("Entre le nom de ton interlocuteur.");
+  if(!$("#va-ok").checked)return err("Coche la case pour continuer.");
+  if(!VAP.demo&&!VCFG.lien)return err("Le paiement n'est pas encore ouvert. Réessaie bientôt.");
+  const b=$("#go");b.disabled=true;b.textContent="Préparation du paiement…";
+  try{const id=await VAP.creer({adresse:A.adresse.trim(),lot:A.lot||null,nom_interlocuteur:A.nom.trim(),role:A.role,lien:A.lien.trim()||null});
+   if(VAP.demo){nouveauF({});return go("accueil")}
+   const u=new URL(VCFG.lien);u.searchParams.set("client_reference_id",id);const c=VAP.courriel();if(c)u.searchParams.set("prefilled_email",c);
+   location.href=u.toString()}
+  catch(x){b.disabled=false;b.textContent=`Payer ${prixTxt()} par carte`;err("La demande n'a pas pu être créée. Réessaie.")}}}
+
+/* Liste « Mes vérifications approfondies » sur l'accueil */
+const blocMesApprofondies=`<div id="mes-approf"></div>`;
+async function remplirMesApprofondies(){const el=$("#mes-approf");if(!el)return;
+ const paye=/[?&]paye=1/.test(location.search);if(paye)try{history.replaceState(null,"",location.pathname)}catch(e){}
+ let L=[];try{L=await VAP.mes()}catch(e){}
+ if(!$("#mes-approf"))return;
+ if(!L.length&&!paye){el.innerHTML="";return}
+ el.innerHTML=`<div class="card"><h2>Vérifications approfondies</h2>${paye?`<p class="lu">Paiement reçu. Ta réponse arrive ici en ${VCFG.delai} h maximum.</p>`:""}
+${L.map(d=>{const s=STATUTS[d.statut]||["i",d.statut];const v=d.verdict&&VERDICTS[d.verdict];
+ return `<div class="demande"><p><b>${esc(d.adresse)}</b><span class="tag ${s[0]}">${s[1]}</span></p>
+${v?`<ul class="reasons"><li><span class="dot ${v[0]}"></span><div>${v[1]}${d.note?`<div class="law">${esc(d.note)}</div>`:""}</div></li></ul>`:""}
+${d.statut==="payee"?`<p class="hint">Réponse au plus tard ${VCFG.delai} h après le paiement.</p>`:""}
+${d.statut==="a_payer"&&VAP.demo?`<button type="button" class="lienbtn" data-simpaye="${esc(d.id)}">(Démo) Simuler le paiement</button>`:""}</div>`}).join("")}</div>`;
+ el.querySelectorAll("[data-simpaye]").forEach(b=>b.onclick=async()=>{await VAP.simulerPaiement(b.dataset.simpaye);remplirMesApprofondies()})}
+
+/* Onglet admin « Demandes » */
+async function remplirAdminDemandes(el){const L=await VAP.adminListe();if(!el.isConnected)return;
+ el.innerHTML=L.length?L.map(d=>{const s=STATUTS[d.statut]||["i",d.statut];const v=d.verdict&&VERDICTS[d.verdict];
+ return `<div class="card"><p><b>${esc(d.adresse)}</b> <span class="tag ${s[0]}">${s[1]}</span></p>
+<p class="hint">${esc(d.contact||"")} · demandée le ${esc(String(d.created_at||"").slice(0,16).replace("T"," "))}${d.paye_le?` · payée le ${esc(String(d.paye_le).slice(0,16).replace("T"," "))}`:""}${d.montant?` · ${esc(String(d.montant))} $`:""}</p>
+<p>Interlocuteur : <b>${esc(d.nom_interlocuteur)}</b> (${d.role==="gestionnaire"?"dit être gestionnaire":"dit être propriétaire"})${d.lot?` · lot <span class="num">${esc(fmtLot(d.lot))}</span>`:""}</p>
+${d.lien?`<p class="hint">${lienExt(esc(d.lien),"Annonce")}</p>`:""}
+${v?`<ul class="reasons"><li><span class="dot ${v[0]}"></span><div>${v[1]}${d.note?`<div class="law">${esc(d.note)}</div>`:""}</div></li></ul>`:""}
+${d.statut==="a_payer"?`<button class="btn ghost" data-maj="${esc(d.id)}" data-statut="payee">Marquer payée (vu dans Stripe)</button>`:""}
+${d.statut==="payee"?`<label>Note pour le client (facultatif)<textarea data-note="${esc(d.id)}" maxlength="600" placeholder="Ex. : le propriétaire inscrit depuis 2019 est une autre personne."></textarea></label>
+<div class="grid2"><button class="btn" data-maj="${esc(d.id)}" data-statut="terminee" data-verdict="correspond">Correspond</button><button class="btn danger" data-maj="${esc(d.id)}" data-statut="terminee" data-verdict="ne_correspond_pas">Ne correspond pas</button>
+<button class="btn ghost" data-maj="${esc(d.id)}" data-statut="terminee" data-verdict="compagnie">Entreprise</button><button class="btn ghost" data-maj="${esc(d.id)}" data-statut="terminee" data-verdict="introuvable">Introuvable</button></div>
+<p class="hint">${lienExt(L_REGISTRE,"Registre foncier")} · ${lienExt(L_INFOLOT,"Infolot")} · ${lienExt("https://www.registreentreprises.gouv.qc.ca","Registre des entreprises")}</p>`:""}
+${["payee","terminee"].includes(d.statut)?`<button type="button" class="lienbtn" data-maj="${esc(d.id)}" data-statut="remboursee">Marquer remboursée</button>`:""}</div>`}).join(""):`<div class="card"><p>Aucune demande.</p></div>`;
+ el.querySelectorAll("[data-maj]").forEach(b=>b.onclick=async()=>{const id=b.dataset.maj,n=el.querySelector(`[data-note="${id}"]`);b.disabled=true;
+  try{await VAP.adminMaj(id,b.dataset.statut,b.dataset.verdict||null,n?n.value.trim():"");remplirAdminDemandes(el)}catch(x){b.disabled=false;b.textContent="Erreur, réessaie"}})}
+
+function bindPlus4(v){
+ if(v==="approfondie")lierApprofondie(F);
+ if(v==="accueil")remplirMesApprofondies();
+ if(v==="admin"&&(F.onglet==="demandes")){const el=$("#adm");if(el)remplirAdminDemandes(el).catch(()=>{el.innerHTML=`<p class="err">Chargement impossible.</p>`})}
+ if(v==="admin"&&(F.onglet||"chiffres")==="montants"){setTimeout(()=>{const el=$("#adm");if(!el||el.querySelector("#va-lienpay"))return;
+  el.insertAdjacentHTML("afterbegin",`<div class="card"><h2>Paiement Stripe</h2><label>Lien de paiement Stripe (Payment Link)<span class="ligne"><input id="va-lienpay" inputmode="url" placeholder="https://buy.stripe.com/…" value="${esc(VCFG.lien)}"><button type="button" class="btn ghost petit" id="va-sauverlien">Enregistrer</button></span></label><p class="hint">Le prix et le délai se changent plus bas, dans « Budget ». Le prix affiché doit être le même que celui du lien Stripe.</p></div>`);
+  $("#va-sauverlien").onclick=async()=>{const val=$("#va-lienpay").value.trim();if(val&&!/^https:\/\/(buy\.stripe\.com|checkout\.stripe\.com)\//.test(val)){$("#va-sauverlien").textContent="Lien invalide";return}
+   try{await VAP.sauverTexte("lien_paiement",val);VCFG.lien=val;$("#va-sauverlien").textContent="Enregistré"}catch(x){$("#va-sauverlien").textContent="Erreur"}}},0)}
+}
+const CSS_PLUS4=`.offre{border-color:var(--blue);border-width:2px}.demande{display:flex;flex-direction:column;gap:6px;padding:10px 0;border-bottom:1px solid var(--line)}
+.demande:last-child{border-bottom:0}.demande p:first-child{display:flex;justify-content:space-between;gap:10px}.seg5{grid-template-columns:repeat(5,1fr)}.seg5 button{font-size:12px;padding:0 1px}`;
 /* Adaptateur admin (Supabase : fonctions admin_*, tables parametres et loyers_reference, compartiment pieces-identite) */
 let EST_ADMIN=false;
 const rpc=async(n,a)=>{const {data,error}=await sb.rpc(n,a);if(error)throw error;return data};
@@ -670,6 +765,16 @@ const ADM={demo:false,estAdmin:()=>EST_ADMIN,
  async supprimerCompte(){const {error}=await sb.functions.invoke("supprimer-compte",{body:{}});if(error)throw error;await sb.auth.signOut();PROFIL=null;HIST=[];SESSION=false;EST_ADMIN=false}};
 async function chargerParametres(){try{const {data}=await sb.from("parametres").select("cle,valeur");appliquerParametres(data)}catch(e){}}
 document.head.insertAdjacentHTML("beforeend","<style>"+CSS_PLUS3+"</style>");
+
+/* Adaptateur vérification approfondie (Supabase : table demandes_verif, paiement par lien Stripe, webhook stripe-webhook) */
+const VAP={demo:false,courriel:()=>(PROFIL&&PROFIL.contact&&PROFIL.contact.includes("@"))?PROFIL.contact:"",
+ async creer(d){const {data,error}=await sb.from("demandes_verif").insert(d).select("id").single();if(error)throw error;return data.id},
+ async mes(){if(!SESSION)return [];const {data,error}=await sb.from("demandes_verif").select("id,adresse,statut,verdict,note,created_at,paye_le").order("created_at",{ascending:false}).limit(10);if(error)throw error;return data||[]},
+ adminListe:async()=>(await rpc("admin_demandes"))||[],
+ adminMaj:(id,statut,verdict,note)=>rpc("admin_maj_demande",{p_id:id,p_statut:statut,p_verdict:verdict,p_note:note||""}),
+ async sauverTexte(cle,valeur){const {error}=await sb.from("parametres_texte").upsert({cle,valeur,maj_le:new Date().toISOString()});if(error)throw error}};
+async function chargerTextes(){try{const {data}=await sb.from("parametres_texte").select("cle,valeur");(data||[]).forEach(r=>{if(r.cle==="lien_paiement")VCFG.lien=r.valeur||""})}catch(e){}}
+document.head.insertAdjacentHTML("beforeend","<style>"+CSS_PLUS4+"</style>");
 const V={
 bienvenue:()=>`${top()}
 <svg class="seal" role="img" aria-label="Bail avec sceau vérifié"><use href="#seal"/></svg>
@@ -730,6 +835,7 @@ ${!ANONYME&&PROFIL?`<p class="badge" style="color:${PROFIL.identite_statut==="co
 <button class="btn ghost" data-go="reno" id="nouvR">Vérifier un entrepreneur en rénovation</button>
 </div>
 ${!ANONYME&&PROFIL&&["aucune","refusee"].includes(PROFIL.identite_statut)?`<button class="btn ghost" data-go="identite">Confirmer mon identité (pour signaler)</button>`:""}
+${blocMesApprofondies}
 <div class="card"><h2>Mes vérifications</h2>${HIST.length?`<div class="hist">${HIST.map(x=>x.module==="reno"?`<div><span>Réno · ${esc((TRAVAUX[x.travaux]||{l:""}).l.split(/ \(|,/)[0])}${x.licence?` · <span class="num">${esc(formatLicence(x.licence))}</span>`:""}</span><span class="tag ${x.couleur}">${{r:"Ne pas signer",y:"Prudence",g:"Aucun signal"}[x.couleur]}</span></div>`:`<div><span>${esc(x.ville)} · ${x.chambres===3?"3+":x.chambres} ch. · <span class="num">${money(x.prix)}</span></span><span class="tag ${x.couleur}">${{r:"Ne paie pas",y:"Visite d'abord",g:"Aucun signal"}[x.couleur]}</span></div>`).join("")}</div>`:`<p class="soft">Aucune vérification pour l'instant.</p>`}</div>
 <button class="btn ghost" data-go="victime">J'ai été victime d'une arnaque</button>
 ${ADM.estAdmin()?`<button class="btn ghost" data-go="admin" id="nouvA">Espace admin${ADM.demo?" (démo)":""}</button>`:""}
@@ -779,6 +885,7 @@ trouver:()=>vueTrouver(F,"accueil"),
 confidentialite:()=>vueConfidentialite(SESSION?"accueil":"bienvenue"),
 supprimer:()=>vueSupprimer(),
 admin:()=>vueAdmin(),
+approfondie:()=>vueApprofondie(F,"proprio"),
 reno:()=>vueReno(F,"accueil"),
 renoResultat:()=>vueRenoResultat(F,"accueil"),
 
@@ -795,7 +902,7 @@ victime:()=>`${top(SESSION?"accueil":"bienvenue","Aide")}
 function yn(k,q){return `<div class="q">${q}<div class="yn" role="group" aria-label="${esc(q)}"><button type="button" data-yn="${k}" data-v="oui" aria-pressed="${F[k]==="oui"}">Oui</button><button type="button" data-yn="${k}" data-v="non" aria-pressed="${F[k]==="non"}">Non</button></div></div>`}
 
 const PUBLIQUES=["bienvenue","inscription","code","victime","erreur","confidentialite"];
-function go(v){if(!SESSION&&!PUBLIQUES.includes(v)){if(F.partage)LS.set("vl_partage",{annonce:F.annonce,lien:F.lien});v="bienvenue"}app.innerHTML=V[v]();window.scrollTo(0,0);bind(v);bindPlus(v);bindPlus3(v)}
+function go(v){if(!SESSION&&!PUBLIQUES.includes(v)){if(F.partage)LS.set("vl_partage",{annonce:F.annonce,lien:F.lien});v="bienvenue"}app.innerHTML=V[v]();window.scrollTo(0,0);bind(v);bindPlus(v);bindPlus3(v);bindPlus4(v)}
 const err=m=>{const e=$("#e");if(e){e.textContent=m;e.hidden=!m}};
 const busy=(on,label)=>{const b=$("#go");if(b){b.disabled=on;if(label)b.textContent=label}};
 function appliquerLecture(r){["prix","ch","ville","cession"].forEach(k=>{if(r[k])F[k]=r[k]});if(r.lien&&!F.lien)F.lien=r.lien;
@@ -950,7 +1057,7 @@ window.recevoirPartage=t=>{if(!t)return;F={annonce:String(t).slice(0,5000),parta
 (async()=>{
  try{if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{})}catch(e){}
  go("analyse");
- try{await Promise.all([chargerLoyers(),chargerRegistre(),chargerParametres()]);
+ try{await Promise.all([chargerLoyers(),chargerRegistre(),chargerParametres(),chargerTextes()]);
   await ouvrirSession();await chargerProfil();go(SESSION?(F.partage?"verifier":"accueil"):"bienvenue")}
  catch(e){app.innerHTML=`${top()}<p class="err">Impossible de joindre le serveur. Vérifie ta connexion et recharge la page.</p>`}
 })();
