@@ -566,7 +566,7 @@ function vueConfidentialite(back){const R=RESPONSABLE;
 <p class="hint"><b>Résultat automatique :</b> le verdict est calculé à partir de règles publiques. Il porte sur l'annonce, pas sur toi. Tu peux demander quelles règles ont mené à un résultat.</p></div>
 <div class="card"><h2>Fournisseurs, dont hors du Québec</h2>${t([
  ["Supabase (base de données, connexion)","Données à Montréal (AWS Canada Centre) ; entreprise américaine"],
- ["Netlify (pages de l'app)","États-Unis : adresse IP"],
+ ["Vercel (pages de l'app)","États-Unis : adresse IP"],
  ["jsDelivr (bibliothèques de l'app)","Réseau mondial : adresse IP"],
  ["Brave Search (« Trouver »)","États-Unis : mots de la recherche, sans ton nom"],
  ["Google Cloud Vision, si activé","États-Unis : capture envoyée pour la recherche"]],["Fournisseur","Où et quoi"])}

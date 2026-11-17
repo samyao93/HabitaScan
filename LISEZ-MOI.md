@@ -46,7 +46,7 @@ Authentication > Emails > Templates > **« Magic Link »** : remplace le contenu
 <p>Il expire dans 1 heure. Si tu n'as rien demandé, ignore ce courriel.</p>
 ```
 
-**c) Adresse de l'app (obligatoire)** : Authentication > URL Configuration > Site URL : l'adresse Netlify.
+**c) Adresse de l'app (obligatoire)** : Authentication > URL Configuration > Site URL : https://habitascan.vercel.app (et dans Redirect URLs : https://habitascan.vercel.app/**).
 
 **d) Envoi de courriels en volume (avant le lancement)** : Authentication > Emails > SMTP Settings.
 
@@ -56,9 +56,9 @@ Authentication > Emails > Templates > **« Magic Link »** : remplace le contenu
 
 ## 3. Mettre l'app web en ligne (2 minutes, gratuit)
 
-1. Décompresse ce dossier.
-2. Va sur https://app.netlify.com/drop et glisse le dossier (sans `app-native` ni `supabase`).
-3. Sur ton téléphone, ouvre l'adresse puis « Ajouter à l'écran d'accueil ».
+L'app est en ligne sur **https://habitascan.vercel.app**, publiée par Vercel à partir du dépôt GitHub samyao93/HabitaScan.
+1. Pour une mise à jour : remplace le fichier modifié dans le dépôt GitHub (« Add file » > « Upload files »). Vercel republie tout seul en moins d'une minute.
+2. Sur ton téléphone, ouvre l'adresse puis « Ajouter à l'écran d'accueil ».
 4. Sur Android, l'app installée apparaît dans le menu « Partager » de Facebook et Kijiji. Sur iPhone, il faut l'app native (section 6).
 
 ## 4. Activer la recherche des photos (facultatif, payant au-delà du gratuit)
