@@ -7,49 +7,171 @@
 <link rel="canonical" href="https://habitascan.vercel.app/en">
 <link rel="alternate" hreflang="fr-CA" href="https://habitascan.vercel.app/"><link rel="alternate" hreflang="en-CA" href="https://habitascan.vercel.app/en">
 <meta property="og:title" content="HabitaScan · Check a rental listing in Québec before you pay"><meta property="og:description" content="Spot fake rental listings in Québec in one minute, for free. Find the real owner without asking a single awkward question."><meta property="og:type" content="website">
+<meta name="theme-color" content="#ffffff">
 <link rel="icon" href="/icon.svg" type="image/svg+xml"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="/site.css">
 </head>
 <body>
-<header class="nav"><div class="wrap"><a class="marque" href="/en"><img src="/icon.svg" alt="">HabitaScan</a><nav><a class="cacher" href="#scams">Common scams</a><a class="cacher" href="#about">About us</a><a href="/app" lang="fr" hreflang="fr">Français</a><a class="btn sm" href="/app">Open the app</a></nav></div></header>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+ <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+ <symbol id="i-x" viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></symbol>
+ <symbol id="i-fleche" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+ <symbol id="i-externe" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></symbol>
+ <symbol id="i-bouclier" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.4 8.2-8 9-4.6-.8-8-4-8-9V6z"/><path d="m8.5 12 2.5 2.5 4.5-5"/></symbol>
+ <symbol id="i-photo" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="1.6"/><path d="m21 15-4.5-4.5L6 21"/></symbol>
+ <symbol id="i-masque" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.2-4 4.3-6 8-6s6.8 2 8 6"/><path d="M3 3l18 18"/></symbol>
+ <symbol id="i-argent" viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 9.5v.01M18 14.5v.01"/></symbol>
+ <symbol id="i-message" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/><path d="M8.5 12h.01M12 12h.01M15.5 12h.01"/></symbol>
+ <symbol id="i-cle" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3M15 8l2 2"/></symbol>
+ <symbol id="i-calcul" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8.5 7.5h7M8.5 12h.01M12 12h.01M15.5 12h.01M8.5 16h.01M12 16h.01M15.5 16h.01"/></symbol>
+ <symbol id="i-maison" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+ <symbol id="i-outil" viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0 5 5L21 12.6A6 6 0 0 1 13 20.5L6.5 14 4 16.5 7.5 20 3 21l1-4.5L11.4 9A6 6 0 0 1 11.4 3l1.3 1.3a4 4 0 0 0 2 2z"/></symbol>
+ <symbol id="i-doc" viewBox="0 0 24 24"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5"/><path d="m9 14.5 2 2 4-4.5"/></symbol>
+ <symbol id="i-oeil" viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+ <symbol id="i-balance" viewBox="0 0 24 24"><path d="M12 3v18M7 21h10M5 7h14M5 7l-3 7a3 3 0 0 0 6 0zM19 7l-3 7a3 3 0 0 0 6 0z"/></symbol>
+ <symbol id="i-cadenas" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+ <symbol id="i-lieu" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></symbol>
+ <symbol id="i-alerte" viewBox="0 0 24 24"><path d="M10.3 3.9 2.4 17.5A2 2 0 0 0 4.1 20.5h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9.5v4M12 17h.01"/></symbol>
+ <symbol id="i-livre" viewBox="0 0 24 24"><path d="M4 19.5V5a2 2 0 0 1 2-2h14v16H6a2 2 0 0 0-2 2zM20 19v2H6"/></symbol>
+</svg>
+
+<header class="nav"><div class="wrap"><a class="marque" href="/en"><img src="/icon.svg" alt="">HabitaScan</a>
+<nav aria-label="Main navigation"><a class="cacher" href="#features">Features</a><a class="cacher" href="#how">How it works</a><a class="cacher" href="#pricing">Pricing</a><a class="cacher" href="#about">About</a><a href="/" lang="fr" hreflang="fr">FR</a>
+<a class="btn sm" href="/app" target="_blank" rel="noopener">Open the app<svg class="ic" aria-hidden="true"><use href="#i-externe"/></svg><span class="sr"> (new tab)</span></a></nav></div></header>
+
 <main>
-<div class="hero"><div class="wrap"><div><span class="eti">Free · Made in Québec</span>
-<h1>Before you pay for an apartment, check the listing.</h1>
-<p class="lead">Upload a screenshot of the Kijiji, Facebook or LesPAC listing. HabitaScan tells you in a minute whether it shows signs of a scam, without you having to ask the advertiser a single awkward question.</p>
-<div class="ctas"><a class="btn" href="/app">Check a listing for free</a><a class="btn ghost" href="#how">How it works</a></div>
-<p class="petit">Free · Your screenshots stay on your phone · Compliant with Québec's privacy law (Law 25)</p>
-<p class="petit">The app is currently in French; the anti-scam message is available in English.</p></div>
-<div class="maquette" aria-label="Sample result"><div class="v r"><strong>Don't pay</strong><span>Sample result for a fake listing</span></div>
-<div class="li"><span class="pt r"></span><span>You're asked for a deposit before the lease. In Québec, only the first month's rent can be required, and no deposit.</span></div>
-<div class="li"><span class="pt r"></span><span>The advertiser says they're abroad and can't show the apartment.</span></div>
-<div class="li"><span class="pt y"></span><span>The rent is far below the city average.</span></div></div></div></div>
+<section class="hero"><div class="wrap">
+<div>
+<span class="eti"><i></i>Free · Made in Québec</span>
+<h1>Never pay for a rental <em>that doesn't exist.</em></h1>
+<p class="lead">Paste a screenshot of the Kijiji, Facebook or LesPAC listing. In one minute, HabitaScan spots the warning signs and helps you confirm the real owner, without asking the advertiser a single awkward question.</p>
+<div class="ctas"><a class="btn" href="/app" target="_blank" rel="noopener">Check a listing for free<svg class="ic" aria-hidden="true"><use href="#i-fleche"/></svg><span class="sr"> (new tab)</span></a><a class="btn ghost" href="#how">See how it works</a></div>
+<ul class="atouts-hero">
+<li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Result in one minute</li>
+<li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Your screenshots stay on your phone</li>
+<li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Compliant with Québec's Law 25</li></ul>
+<p class="petit">The app is in French. The filter message is available in English.</p>
+</div>
+<div class="scene" aria-label="HabitaScan app preview">
+<div class="tel arriere"><img src="/img/app-accueil.webp" alt="" width="390" height="844" loading="lazy"></div>
+<div class="tel avant"><img src="/img/app-resultat.webp" alt="App result screen: the verdict “Don't pay” with the list of warning signs" width="390" height="844"></div>
+<div class="bulle b1"><span class="pastille p-rouge"><svg class="ic" aria-hidden="true"><use href="#i-argent"/></svg></span><span><b>Deposit to “hold” the unit</b><small>Illegal in Québec (art. 1904 C.C.Q.)</small></span></div>
+<div class="bulle b2"><span class="pastille p-vert"><svg class="ic" aria-hidden="true"><use href="#i-cle"/></svg></span><span><b>Real owner</b><small>Found in the land register, from the address</small></span></div>
+</div>
+</div></section>
 
-<section class="alt" id="how"><div class="wrap"><h2>Three steps, no awkward questions</h2>
+<div class="sources"><div class="wrap"><p>Built on public sources</p>
+<ul><li>Québec Land Register</li><li>CMHC</li><li>Civil Code of Québec</li><li>Administrative Housing Tribunal</li><li>Enterprise Register</li><li>RBQ</li></ul></div></div>
+
+<section id="scams"><div class="wrap">
+<div class="tete"><span class="surtitre">The problem</span><h2>Three scams show up in almost every case</h2>
+<p class="lead">In a tight market, scammers count on you being in a hurry. Their goal never changes: get your money before you've seen the unit or signed the lease.</p></div>
 <div class="grille g3">
-<div class="carte"><div class="etape">1</div><h3>Check the listing</h3><p>A screenshot is enough: price compared with CMHC average rents, advertiser profile, copied photos, typical scam phrases.</p></div>
-<div class="carte"><div class="etape">2</div><h3>Send the filter message</h3><p>One polite, ready-to-copy message. A real landlord says yes; a scammer pushes for a deposit. Paste the reply: the app analyzes it.</p></div>
-<div class="carte"><div class="etape">3</div><h3>Compare when you sign</h3><p>The address is enough to find the real owner in Québec's land register. Before you pay, compare that name with the one on the lease.</p></div></div></div></section>
+<div class="carte arnaque"><div class="picto"><svg class="ic" aria-hidden="true"><use href="#i-photo"/></svg></div><h3>The fake listing</h3><p>Photos copied from a real listing, a rent that's too good to be true, a unit that doesn't exist or isn't for rent.</p><p class="indice">Clue: <span>the same photos elsewhere on the web.</span></p></div>
+<div class="carte arnaque"><div class="picto"><svg class="ic" aria-hidden="true"><use href="#i-masque"/></svg></div><h3>The fake landlord</h3><p>Someone poses as the owner, often “abroad”, and can never show you the unit.</p><p class="indice">Clue: <span>their name isn't the one in the land register.</span></p></div>
+<div class="carte arnaque"><div class="picto"><svg class="ic" aria-hidden="true"><use href="#i-argent"/></svg></div><h3>The illegal deposit</h3><p>You're asked for a deposit to “hold” the unit, application fees, or a transfer before the lease is signed.</p><p class="indice">Clue: <span>in Québec, only the first month's rent can be required.</span></p></div>
+</div></div></section>
 
-<section><div class="wrap grille g2" style="align-items:center"><div><h2>The filter message</h2>
-<p>It asks nothing. It simply states the normal rules in Québec: visit first, first month's rent paid when the lease is signed. Any honest landlord accepts this, and it's exactly what a scammer wants to avoid.</p>
-<p class="source">In Québec, requiring a security deposit is illegal: only the first month's rent may be required in advance. <a href="https://www.quebec.ca/nouvelles/actualites/details/exiger-un-depot-de-garantie-est-illegal" hreflang="fr">Québec.ca (French)</a></p></div>
-<div class="carte"><div class="msg" lang="en">Hello, I'm very interested in your apartment. Could I visit it this week? If everything suits me, I'm ready to sign the lease on the spot and pay the first month's rent at signing. Thank you!</div></div></div></section>
+<section class="alt" id="features"><div class="wrap">
+<div class="tete centre"><span class="surtitre">The solution</span><h2>Everything you need to rent with confidence</h2>
+<p class="lead">One app, from the moment you find the listing to the day you sign the lease.</p></div>
+<div class="grille g3">
+<div class="carte fonction"><div class="picto"><svg class="ic" aria-hidden="true"><use href="#i-bouclier"/></svg></div><h3>Listing check</h3><p>Rent compared with CMHC averages, advertiser profile, photos searched on the web, typical scam phrases.</p><span class="tag">Free</span></div>
+<div class="carte fonction"><div class="picto"><svg class="ic" aria-hidden="true"><use href="#i-message"/></svg></div><h3>Filter message</h3><p>One polite, ready-to-copy message that makes scammers react. Paste the reply and the app analyzes it.</p><span class="tag">Free</span></div>
+<div class="carte fonction"><div class="picto"><svg class="ic" aria-hidden="true"><use href="#i-cle"/></svg></div><h3>Real owner</h3><p>From the address only: lot number, land register, then a comparison with the name on the lease.</p><span class="tag">Free</span></div>
+<div class="carte fonction"><div class="picto"><svg class="ic" aria-hidden="true"><use href="#i-calcul"/></svg></div><h3>Moving budget</h3><p>How much to set aside to move in and what rent you can really afford, city by city, with sourced amounts.</p><span class="tag">Free</span></div>
+<div class="carte fonction"><div class="picto"><svg class="ic" aria-hidden="true"><use href="#i-outil"/></svg></div><h3>Renovation contractor</h3><p>Check a contractor's RBQ licence before paying a down payment.</p><span class="tag">Free</span></div>
+<div class="carte fonction"><div class="picto"><svg class="ic" aria-hidden="true"><use href="#i-doc"/></svg></div><h3>Full verification</h3><p>Our team checks the listing in depth and sends you a written report with a clear verdict.</p><span class="tag payant">$<span data-prix>15</span> · report within <span data-delai>24</span> h</span></div>
+</div></div></section>
 
-<section class="alt" id="scams"><div class="wrap"><h2>Common rental scams in Québec</h2><div class="grille g3">
-<div class="carte cas"><span class="fictif">Fictional example</span><h3>The landlord "abroad"</h3><p>A great apartment at a low price. The owner is "on a mission overseas" and will mail the keys once you send a deposit by Interac. There is no apartment for you.</p></div>
-<div class="carte cas"><span class="fictif">Fictional example</span><h3>The rushed "deposit to hold it"</h3><p>"Many people are interested, send $500 today to hold it." In Québec, no deposit can be required: only the first month's rent, when the lease is signed.</p></div>
-<div class="carte cas"><span class="fictif">Fictional example</span><h3>The fake lease transfer</h3><p>Someone posing as the current tenant asks for "transfer fees". A real transfer needs the landlord's written consent, and the outgoing tenant can't ask you for anything in return.</p></div></div>
-<p class="source" style="margin-top:16px">Victim of a scam? Report it to the Canadian Anti-Fraud Centre: 1-888-495-8501.</p></div></section>
+<section id="how"><div class="wrap etapes">
+<div><span class="surtitre">How it works</span><h2>Three steps, no awkward questions</h2>
+<p class="lead">Whoever asks ten questions loses the unit to someone else. HabitaScan checks without asking the advertiser anything.</p>
+<ol>
+<li><h3>Check the listing</h3><p>Add a screenshot of the listing. The app reads the rent, city and text, then gives you a verdict: <b>Don't pay</b>, <b>Visit first</b> or <b>No warning signs</b>.</p></li>
+<li><h3>Send the filter message</h3><p>A real landlord says yes. A scammer pushes for a deposit or disappears.</p></li>
+<li><h3>Compare when you sign</h3><p>Before paying, the app compares the owner's name in the land register with the name written on the lease.</p></li>
+</ol>
+<p style="margin-top:24px"><a class="btn" href="/app" target="_blank" rel="noopener">Try it now<svg class="ic" aria-hidden="true"><use href="#i-fleche"/></svg><span class="sr"> (new tab)</span></a></p>
+</div>
+<div class="tel"><img src="/img/app-verifier.webp" alt="App screen for adding screenshots of a listing" width="390" height="844" loading="lazy"></div>
+</div></section>
 
-<section id="pricing"><div class="wrap"><h2>Free for the essentials</h2><div class="grille g2">
-<div class="carte"><h3>Automatic check</h3><div class="prix">$0</div><ul class="coche"><li>Listing analysis in one minute</li><li>Filter message and reply analysis</li><li>Guide to find the real owner</li><li>Lease comparison before you pay</li></ul></div>
-<div class="carte" style="border:2px solid var(--blue)"><h3>Full check by our team</h3><div class="prix">$<span data-prix>15</span> <small>per listing</small></div><ul class="coche"><li>The building's owner, in the land register</li><li>If it's a company: active status and directors</li><li>Photos copied from another listing?</li><li>The same unit listed elsewhere</li><li>A written report with a clear verdict</li></ul>
-<span class="garantie">Report within <span data-delai>24</span> h, or your money back</span><p class="petit">Not a guarantee against fraud: always visit and sign the lease before paying.</p></div></div></div></section>
+<section class="alt" id="filter"><div class="wrap filtre">
+<div><span class="surtitre">Only on HabitaScan</span><h2>The filter message</h2>
+<p class="lead">It asks no questions. It simply states the normal rules in Québec. Any honest landlord does this, and it's exactly what a scammer wants to avoid.</p>
+<ul class="liste-coche">
+<li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>Ready to copy, in English or French</span></li>
+<li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>The advertiser's reply is analyzed on your phone</span></li>
+<li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>You stay polite and keep your place in line</span></li></ul>
+<p class="source" style="margin-top:20px">In Québec, requiring a security deposit is illegal: only the first month's rent can be required in advance. <a href="https://www.quebec.ca/nouvelles/actualites/details/exiger-un-depot-de-garantie-est-illegal" hreflang="fr">Québec.ca (French)</a></p></div>
+<div class="conversation" aria-label="Example conversation">
+<div class="bul moi"><small>You</small>Hello, I'm very interested in your apartment. Could I visit it this week? If everything suits me, I'm ready to sign the lease on the spot and pay the first month's rent at signing. Thank you!</div>
+<div class="bul eux"><small>The advertiser</small>I'm abroad for work. Send a $500 deposit by e-transfer to hold it and I'll mail you the keys.</div>
+<div class="verdict-mini r"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg>Don't pay: deposit required and no visit possible</div>
+<p class="fictif" style="margin:0">Fictional example</p>
+</div>
+</div></section>
 
-<section class="alt" id="about"><div class="wrap"><h2>About us</h2><p class="lead">HabitaScan was built in Québec to help people check a rental listing before sending money: students, newcomers, families. The essentials are free, with no ads.</p>
-<div class="grille g3"><div class="carte"><h3>Free and ad-free</h3><p>The automatic check is free. We never sell your information.</p></div><div class="carte"><h3>Private by default</h3><p>Your screenshots stay on your phone. Location sharing is off unless you turn it on (Québec's Law 25).</p></div><div class="carte"><h3>Public sources</h3><p>Our checks rely on Québec's official registers and CMHC data, with links to each source.</p></div></div>
-<p class="petit"><a href="/a-propos" hreflang="fr">Full company details (French)</a></p></div></section>
+<section id="pricing"><div class="wrap">
+<div class="tete centre"><span class="surtitre">Pricing</span><h2>Free for the essentials</h2><p class="lead">No subscription, no ads. You only pay if you want someone on our team to check for you.</p></div>
+<div class="tarifs">
+<div class="carte tarif"><h3>Automatic check</h3><p class="sous">For every listing you look at.</p>
+<div class="prix">$0</div>
+<ul class="coche"><li>Listing analysis in one minute</li><li>Filter message and reply analysis</li><li>Guide to find the real owner</li><li>Comparison with the lease before you pay</li><li>Moving budget and history</li></ul>
+<a class="btn ghost" href="/app" target="_blank" rel="noopener">Start for free<span class="sr"> (new tab)</span></a></div>
+<div class="carte tarif vedette" data-badge="Most complete"><h3>Full verification by our team</h3><p class="sous">For the listing you really want.</p>
+<div class="prix">$<span data-prix>15</span> <small>per listing</small></div>
+<ul class="coche"><li>The building's owner, in the land register</li><li>If it's a company: whether it's active, and who runs it</li><li>The photos: copied from another listing?</li><li>The same unit advertised elsewhere</li><li>A written report with a clear verdict</li></ul>
+<p class="garantie"><svg class="ic" aria-hidden="true"><use href="#i-bouclier"/></svg>Report within <span data-delai>24</span> h, or your money back</p>
+<a class="btn" href="/app" target="_blank" rel="noopener">Request a verification<span class="sr"> (new tab)</span></a>
+<p class="petit">Card payment, in the app. This is not a guarantee against fraud: always visit, and sign the lease before paying.</p></div>
+</div></div></section>
+
+<section class="alt" id="cases"><div class="wrap">
+<div class="tete"><span class="surtitre">Typical cases</span><h2>What the app catches, in practice</h2><p class="lead">Three common situations, and the verdict HabitaScan would give.</p></div>
+<div class="grille g3">
+<div class="carte cas"><span class="fictif">Fictional example</span><h3>The landlord abroad</h3><p class="ann">“2-bedroom in Rosemont, $950. I'm on assignment abroad, I'll send the keys after the deposit.”</p><p>Rent well below average, no visit possible, deposit requested.</p><div class="verdict-mini r"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg>Don't pay</div></div>
+<div class="carte cas y"><span class="fictif">Fictional example</span><h3>The brand-new profile</h3><p class="ann">“1-bedroom in the Plateau, $1,100. Available now, message me privately.”</p><p>Advertiser account less than a year old, and you haven't visited yet. Nothing illegal, but be careful.</p><div class="verdict-mini" style="background:var(--amberbg);color:var(--amber);border:1px solid var(--amberline)"><svg class="ic" aria-hidden="true"><use href="#i-alerte"/></svg>Visit first, then check the owner</div></div>
+<div class="carte cas" style="border-left-color:var(--ok)"><span class="fictif">Fictional example</span><h3>The honest listing</h3><p class="ann">“3-bedroom in Laval, $1,650. Visits Saturday. Lease signed on site, first month at signing.”</p><p>Normal rent, visit offered, no payment before the lease.</p><div class="verdict-mini g"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>No warning signs: you can visit</div></div>
+</div></div></section>
+
+<section class="sombre" id="about"><div class="wrap">
+<div class="tete"><span class="surtitre">Why HabitaScan</span><h2>Built for tenants, not advertisers</h2><p class="lead">HabitaScan was built in Québec to help students, newcomers and families check a rental listing before sending money.</p></div>
+<div class="grille g4">
+<div class="carte"><div class="picto"><svg class="ic" aria-hidden="true"><use href="#i-oeil"/></svg></div><h3>Discreet</h3><p>The advertiser never knows you checked them.</p></div>
+<div class="carte"><div class="picto"><svg class="ic" aria-hidden="true"><use href="#i-balance"/></svg></div><h3>Grounded in law</h3><p>Every warning cites its source: Civil Code, TAL, CMHC, Québec.ca.</p></div>
+<div class="carte"><div class="picto"><svg class="ic" aria-hidden="true"><use href="#i-cadenas"/></svg></div><h3>Private by default</h3><p>Your screenshots stay on your phone. Compliant with Law 25.</p></div>
+<div class="carte"><div class="picto"><svg class="ic" aria-hidden="true"><use href="#i-lieu"/></svg></div><h3>Made in Québec</h3><p>Designed for local rules, registers and the local market.</p></div>
+</div>
+<p class="petit" style="margin-top:28px"><a href="/a-propos" hreflang="fr" style="color:#9bbaff">Full company details (French)</a></p>
+</div></section>
+
+<section id="faq"><div class="wrap faq-grille">
+<div><span class="surtitre">FAQ</span><h2>Got a question?</h2><p class="lead">The answers to what people ask us most often.</p></div>
+<div class="faq">
+<details open><summary>Is it really free?</summary><p>Yes. The automatic check, the filter message, the owner guide and the budget are free. Only the full verification done by our team is paid.</p></details>
+<details><summary>Will the advertiser know I checked them?</summary><p>No. Everything is based on the listing, the address and public registers. You don't have to ask them anything.</p></details>
+<details><summary>What happens to my screenshots?</summary><p>They stay on your phone. If you turn on smart analysis, the image is sent to be read and is not kept by HabitaScan. Details are in the app's privacy policy.</p></details>
+<details><summary>I already paid. What should I do?</summary><p>Open the app and choose “J'ai été victime d'une arnaque” (I was scammed): it tells you what to do right away (bank, police, Canadian Anti-Fraud Centre, reporting the listing).</p></details>
+<details><summary>Does HabitaScan guarantee a listing is safe?</summary><p>No. We help you spot the signs of a scam from the information available. The rule stays the same: visit, then sign the lease before paying anything.</p></details>
+</div></div></section>
+
+<section class="final"><div class="wrap"><div class="boite">
+<h2>One minute to check.<br>Months of rent protected.</h2>
+<p>Free, no ads, and nothing to ask the advertiser.</p>
+<div class="ctas"><a class="btn blanc" href="/app" target="_blank" rel="noopener">Check a listing now<svg class="ic" aria-hidden="true"><use href="#i-fleche"/></svg><span class="sr"> (new tab)</span></a><a class="btn ghost" href="/" hreflang="fr" lang="fr">Version française</a></div>
+</div></div></section>
 </main>
-<footer><div class="wrap"><span>© 2026 HabitaScan · Made in Québec</span><span><a href="#about">About us</a> · <a href="/app">Français</a> · <a href="/app">Open the app</a></span></div></footer>
+
+<footer><div class="wrap">
+<div class="pied-grille">
+<div><a class="marque" href="/en"><img src="/icon.svg" alt="">HabitaScan</a><p style="margin-top:14px;max-width:320px">Check before you pay. The tool that helps Québec tenants avoid fake rental listings.</p></div>
+<div><h4>Product</h4><ul><li><a href="#features">Features</a></li><li><a href="#how">How it works</a></li><li><a href="#pricing">Pricing</a></li><li><a href="/app" target="_blank" rel="noopener">Open the app</a></li></ul></div>
+<div><h4>Resources</h4><ul><li><a href="/guides/arnaques-courantes" hreflang="fr">Common scams (FR)</a></li><li><a href="/guides/verifier-un-proprietaire" hreflang="fr">Checking an owner (FR)</a></li><li><a href="#faq">FAQ</a></li></ul></div>
+<div><h4>Company</h4><ul><li><a href="#about">About us</a></li><li><a href="/" lang="fr" hreflang="fr">Français</a></li></ul></div>
+</div>
+<div class="pied-bas"><span>© 2026 HabitaScan · Made in Québec</span><span>HabitaScan is not legal advice. If in doubt, contact the <a href="https://www.tal.gouv.qc.ca">Administrative Housing Tribunal</a>.</span></div>
+</div></footer>
 <script>
 /* Prix et délai à jour, lus dans les réglages publics (modifiables dans la console) */
 fetch("https://oyiiaqyepihkawzkkjpi.supabase.co/rest/v1/parametres?select=cle,valeur&cle=in.(prix_verif,delai_verif_heures)",{headers:{apikey:"sb_publishable_LhDVlSvpyM-bkW-QSp0lsw_wgNIsELX"}})

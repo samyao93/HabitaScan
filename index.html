@@ -7,55 +7,192 @@
 <link rel="canonical" href="https://habitascan.vercel.app/">
 <link rel="alternate" hreflang="fr-CA" href="https://habitascan.vercel.app/"><link rel="alternate" hreflang="en-CA" href="https://habitascan.vercel.app/en">
 <meta property="og:title" content="HabitaScan · Vérifier une annonce de logement avant de payer"><meta property="og:description" content="Repère les fausses annonces de logement au Québec en une minute, gratuitement. Trouve le vrai propriétaire sans poser une seule question gênante."><meta property="og:type" content="website">
+<meta name="theme-color" content="#ffffff">
 <link rel="icon" href="/icon.svg" type="image/svg+xml"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="/site.css">
 </head>
 <body>
-<header class="nav"><div class="wrap"><a class="marque" href="/app"><img src="/icon.svg" alt="">HabitaScan</a><nav><a class="cacher" href="/guides/arnaques-courantes">Arnaques courantes</a><a class="cacher" href="/guides/verifier-un-proprietaire">Vérifier un propriétaire</a><a class="cacher" href="/a-propos">Qui sommes-nous</a><a href="/en" lang="en" hreflang="en">English</a><a class="btn sm" href="/app">Ouvrir l'app</a></nav></div></header>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+ <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+ <symbol id="i-x" viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></symbol>
+ <symbol id="i-fleche" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+ <symbol id="i-externe" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></symbol>
+ <symbol id="i-bouclier" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.4 8.2-8 9-4.6-.8-8-4-8-9V6z"/><path d="m8.5 12 2.5 2.5 4.5-5"/></symbol>
+ <symbol id="i-photo" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="1.6"/><path d="m21 15-4.5-4.5L6 21"/></symbol>
+ <symbol id="i-masque" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.2-4 4.3-6 8-6s6.8 2 8 6"/><path d="M3 3l18 18"/></symbol>
+ <symbol id="i-argent" viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 9.5v.01M18 14.5v.01"/></symbol>
+ <symbol id="i-message" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/><path d="M8.5 12h.01M12 12h.01M15.5 12h.01"/></symbol>
+ <symbol id="i-cle" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3M15 8l2 2"/></symbol>
+ <symbol id="i-calcul" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8.5 7.5h7M8.5 12h.01M12 12h.01M15.5 12h.01M8.5 16h.01M12 16h.01M15.5 16h.01"/></symbol>
+ <symbol id="i-maison" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+ <symbol id="i-outil" viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0 5 5L21 12.6A6 6 0 0 1 13 20.5L6.5 14 4 16.5 7.5 20 3 21l1-4.5L11.4 9A6 6 0 0 1 11.4 3l1.3 1.3a4 4 0 0 0 2 2z"/></symbol>
+ <symbol id="i-doc" viewBox="0 0 24 24"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5"/><path d="m9 14.5 2 2 4-4.5"/></symbol>
+ <symbol id="i-oeil" viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+ <symbol id="i-balance" viewBox="0 0 24 24"><path d="M12 3v18M7 21h10M5 7h14M5 7l-3 7a3 3 0 0 0 6 0zM19 7l-3 7a3 3 0 0 0 6 0z"/></symbol>
+ <symbol id="i-cadenas" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+ <symbol id="i-lieu" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></symbol>
+ <symbol id="i-alerte" viewBox="0 0 24 24"><path d="M10.3 3.9 2.4 17.5A2 2 0 0 0 4.1 20.5h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9.5v4M12 17h.01"/></symbol>
+ <symbol id="i-livre" viewBox="0 0 24 24"><path d="M4 19.5V5a2 2 0 0 1 2-2h14v16H6a2 2 0 0 0-2 2zM20 19v2H6"/></symbol>
+</svg>
+
+<header class="nav"><div class="wrap"><a class="marque" href="/"><img src="/icon.svg" alt="">HabitaScan</a>
+<nav aria-label="Navigation principale"><a class="cacher" href="#fonctions">Fonctionnalités</a><a class="cacher" href="#etapes">Comment ça marche</a><a class="cacher" href="#tarifs">Tarifs</a><a class="cacher" href="/guides/arnaques-courantes">Guides</a><a class="cacher" href="/a-propos">À propos</a><a href="/en" lang="en" hreflang="en">EN</a>
+<a class="btn sm" href="/app" target="_blank" rel="noopener">Ouvrir l'app<svg class="ic" aria-hidden="true"><use href="#i-externe"/></svg><span class="sr"> (nouvel onglet)</span></a></nav></div></header>
+
 <main>
-<div class="hero"><div class="wrap"><div><span class="eti">Gratuit · Fait au Québec</span>
-<h1>Avant de payer un logement, vérifie l'annonce.</h1>
-<p class="lead">Colle une capture d'écran de l'annonce Kijiji, Facebook ou LesPAC. HabitaScan te dit en une minute si elle présente des signes d'arnaque, sans que tu aies une seule question gênante à poser à l'annonceur.</p>
-<div class="ctas"><a class="btn" href="/app">Vérifier une annonce gratuitement</a><a class="btn ghost" href="#comment">Comment ça marche</a></div>
-<p class="petit">Gratuit · Tes captures restent sur ton téléphone · Conforme à la Loi 25</p></div>
-<div class="maquette" aria-label="Exemple de résultat"><div class="v r"><strong>Ne paie pas</strong><span>Exemple de résultat pour une fausse annonce</span></div>
-<div class="li"><span class="pt r"></span><span>On te demande un dépôt avant le bail. Au Québec, seul le premier mois peut être exigé, et aucun dépôt.</span></div>
-<div class="li"><span class="pt r"></span><span>L'annonceur dit être à l'étranger et ne peut pas faire visiter.</span></div>
-<div class="li"><span class="pt y"></span><span>Le loyer est bien plus bas que la moyenne de la ville.</span></div>
-<div class="li"><span class="pt y"></span><span>Le compte de l'annonceur a été créé il y a moins d'un an.</span></div></div></div></div>
+<!-- Héros -->
+<section class="hero"><div class="wrap">
+<div>
+<span class="eti"><i></i>Gratuit · Fait au Québec</span>
+<h1>Ne paie jamais pour un logement <em>qui n'existe pas.</em></h1>
+<p class="lead">Colle une capture de l'annonce Kijiji, Facebook ou LesPAC. En une minute, HabitaScan repère les signes d'arnaque et t'aide à confirmer le vrai propriétaire, sans poser une seule question gênante à l'annonceur.</p>
+<div class="ctas"><a class="btn" href="/app" target="_blank" rel="noopener">Vérifier une annonce gratuitement<svg class="ic" aria-hidden="true"><use href="#i-fleche"/></svg><span class="sr"> (nouvel onglet)</span></a><a class="btn ghost" href="#etapes">Voir comment ça marche</a></div>
+<ul class="atouts-hero">
+<li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Résultat en une minute</li>
+<li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Tes captures restent sur ton téléphone</li>
+<li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Conforme à la Loi 25</li></ul>
+</div>
+<div class="scene" aria-label="Aperçu de l'app HabitaScan">
+<div class="tel arriere"><img src="/img/app-accueil.webp" alt="" width="390" height="844" loading="lazy"></div>
+<div class="tel avant"><img src="/img/app-resultat.webp" alt="Écran de résultat de l'app : verdict «&nbsp;Ne paie pas&nbsp;» avec la liste des signaux détectés" width="390" height="844"></div>
+<div class="bulle b1"><span class="pastille p-rouge"><svg class="ic" aria-hidden="true"><use href="#i-argent"/></svg></span><span><b>Dépôt pour «&nbsp;réserver&nbsp;»</b><small>Illégal au Québec (art. 1904 C.c.Q.)</small></span></div>
+<div class="bulle b2"><span class="pastille p-vert"><svg class="ic" aria-hidden="true"><use href="#i-cle"/></svg></span><span><b>Vrai propriétaire</b><small>Trouvé au Registre foncier, à partir de l'adresse</small></span></div>
+</div>
+</div></section>
 
-<section class="alt" id="comment"><div class="wrap"><h2>Trois étapes, aucune question gênante</h2>
-<p class="lead">Dans un marché serré, celui qui pose dix questions passe après les autres. HabitaScan vérifie sans rien demander à l'annonceur.</p>
+<!-- Sources -->
+<div class="sources"><div class="wrap"><p>S'appuie sur des sources publiques</p>
+<ul><li>Registre foncier du Québec</li><li>SCHL</li><li>Code civil du Québec</li><li>Tribunal administratif du logement</li><li>Registraire des entreprises</li><li>RBQ</li></ul></div></div>
+
+<!-- Arnaques -->
+<section id="arnaques"><div class="wrap">
+<div class="tete"><span class="surtitre">Le problème</span><h2>Trois arnaques reviennent dans presque tous les cas</h2>
+<p class="lead">Dans un marché serré, les fraudeurs comptent sur ta hâte. Leur but est toujours le même : obtenir de l'argent avant que tu aies vu le logement ou signé le bail.</p></div>
 <div class="grille g3">
-<div class="carte"><div class="etape">1</div><h3>Vérifie l'annonce</h3><p>Une capture d'écran suffit : prix comparé aux loyers moyens de la SCHL, profil de l'annonceur, photos copiées, phrases typiques d'arnaque.</p></div>
-<div class="carte"><div class="etape">2</div><h3>Envoie le message-filtre</h3><p>Un seul message poli, prêt à copier. Un vrai propriétaire répond oui ; un fraudeur insiste pour un dépôt. Colle sa réponse : l'app l'analyse.</p></div>
-<div class="carte"><div class="etape">3</div><h3>Compare au moment de signer</h3><p>L'adresse suffit pour trouver le vrai propriétaire au Registre foncier. Avant de payer, l'app compare son nom avec celui écrit sur le bail.</p></div></div></div></section>
+<div class="carte arnaque"><div class="picto"><svg class="ic" aria-hidden="true"><use href="#i-photo"/></svg></div><h3>La fausse annonce</h3><p>Des photos copiées d'une vraie annonce, un loyer trop beau, un logement qui n'existe pas ou qui n'est pas à louer.</p>
+<p class="indice">Indice : <span>les mêmes photos ailleurs sur le web.</span></p></div>
+<div class="carte arnaque"><div class="picto"><svg class="ic" aria-hidden="true"><use href="#i-masque"/></svg></div><h3>Le faux propriétaire</h3><p>Quelqu'un se présente comme le propriétaire, souvent «&nbsp;à l'étranger&nbsp;», et ne peut jamais faire visiter.</p>
+<p class="indice">Indice : <span>son nom n'est pas celui du Registre foncier.</span></p></div>
+<div class="carte arnaque"><div class="picto"><svg class="ic" aria-hidden="true"><use href="#i-argent"/></svg></div><h3>Le dépôt illégal</h3><p>On te demande un dépôt pour «&nbsp;réserver&nbsp;», des frais de dossier ou un virement avant la signature du bail.</p>
+<p class="indice">Indice : <span>au Québec, seul le premier mois peut être exigé.</span></p></div>
+</div></div></section>
 
-<section><div class="wrap grille g2" style="align-items:center"><div><span class="eti">Nouveau</span><h2>Le message-filtre</h2>
-<p>Il ne pose aucune question. Il annonce simplement les règles normales au Québec : visite d'abord, paiement du premier mois à la signature du bail. C'est ce que fait n'importe quel propriétaire honnête, et c'est exactement ce qu'un fraudeur veut éviter.</p>
-<p class="source">Au Québec, exiger un dépôt de garantie est illégal : seul le premier mois de loyer peut être exigé à l'avance. <a href="https://www.quebec.ca/nouvelles/actualites/details/exiger-un-depot-de-garantie-est-illegal">Québec.ca</a></p></div>
-<div class="carte"><div class="msg">Bonjour, votre logement m'intéresse beaucoup. Est-ce que je peux le visiter cette semaine ? Si tout me convient, je suis prêt(e) à signer le bail sur place et à payer le premier mois à la signature. Merci !</div>
-<p class="petit" style="margin:0">Disponible en français et en anglais dans l'app.</p></div></div></section>
+<!-- Fonctionnalités -->
+<section class="alt" id="fonctions"><div class="wrap">
+<div class="tete centre centre"><span class="surtitre">La solution</span><h2>Tout ce qu'il faut pour louer en confiance</h2>
+<p class="lead">Une seule app, du moment où tu trouves l'annonce jusqu'à la signature du bail.</p></div>
+<div class="grille g3">
+<div class="carte fonction"><div class="picto"><svg class="ic" aria-hidden="true"><use href="#i-bouclier"/></svg></div><h3>Analyse de l'annonce</h3><p>Prix comparé aux loyers moyens de la SCHL, profil de l'annonceur, photos recherchées sur le web, phrases typiques d'arnaque.</p><span class="tag">Gratuit</span></div>
+<div class="carte fonction"><div class="picto"><svg class="ic" aria-hidden="true"><use href="#i-message"/></svg></div><h3>Message-filtre</h3><p>Un message poli, prêt à copier, qui fait réagir les fraudeurs. Colle la réponse : l'app l'analyse pour toi.</p><span class="tag">Gratuit</span></div>
+<div class="carte fonction"><div class="picto"><svg class="ic" aria-hidden="true"><use href="#i-cle"/></svg></div><h3>Vrai propriétaire</h3><p>À partir de l'adresse seulement : numéro de lot, Registre foncier, puis comparaison avec le nom écrit sur le bail.</p><span class="tag">Gratuit</span></div>
+<div class="carte fonction"><div class="picto"><svg class="ic" aria-hidden="true"><use href="#i-calcul"/></svg></div><h3>Budget d'installation</h3><p>Combien prévoir pour t'installer et quel loyer tu peux vraiment payer, ville par ville, avec des montants sourcés.</p><span class="tag">Gratuit</span></div>
+<div class="carte fonction"><div class="picto"><svg class="ic" aria-hidden="true"><use href="#i-outil"/></svg></div><h3>Entrepreneur en rénovation</h3><p>Vérifie la licence RBQ d'un entrepreneur avant de lui verser un acompte.</p><span class="tag">Gratuit</span></div>
+<div class="carte fonction"><div class="picto"><svg class="ic" aria-hidden="true"><use href="#i-doc"/></svg></div><h3>Vérification complète</h3><p>Notre équipe vérifie l'annonce à fond et t'envoie un rapport écrit avec un verdict clair.</p><span class="tag payant"><span data-prix>15</span> $ · rapport en <span data-delai>24</span> h</span></div>
+</div></div></section>
 
-<section class="alt" id="prix"><div class="wrap"><h2>Gratuit pour l'essentiel</h2>
-<div class="grille g2">
-<div class="carte"><h3>Vérification automatique</h3><div class="prix">0 $</div>
-<ul class="coche"><li>Analyse de l'annonce en une minute</li><li>Message-filtre et analyse de la réponse</li><li>Guide pour trouver le vrai propriétaire</li><li>Comparaison avec le bail avant de payer</li><li>Historique de tes vérifications</li></ul>
-<a class="btn ghost" href="/app">Commencer gratuitement</a></div>
-<div class="carte" style="border:2px solid var(--blue)"><h3>Vérification complète par notre équipe</h3><div class="prix"><span data-prix>15</span> $ <small>par annonce</small></div>
+<!-- Étapes -->
+<section id="etapes"><div class="wrap etapes">
+<div><span class="surtitre">Comment ça marche</span><h2>Trois étapes, aucune question gênante</h2>
+<p class="lead">Celui qui pose dix questions passe après les autres. HabitaScan vérifie sans rien demander à l'annonceur.</p>
+<ol>
+<li><h3>Vérifie l'annonce</h3><p>Ajoute une capture d'écran de l'annonce. L'app lit le prix, la ville et le texte, puis te donne un verdict : <b>Ne paie pas</b>, <b>Visite d'abord</b> ou <b>Aucun signal</b>.</p></li>
+<li><h3>Envoie le message-filtre</h3><p>Un vrai propriétaire répond oui. Un fraudeur insiste pour un dépôt ou disparaît.</p></li>
+<li><h3>Compare au moment de signer</h3><p>Avant de payer, l'app compare le nom du propriétaire inscrit au Registre foncier avec celui écrit sur le bail.</p></li>
+</ol>
+<p style="margin-top:24px"><a class="btn" href="/app" target="_blank" rel="noopener">Essayer maintenant<svg class="ic" aria-hidden="true"><use href="#i-fleche"/></svg><span class="sr"> (nouvel onglet)</span></a></p>
+</div>
+<div class="tel"><img src="/img/app-verifier.webp" alt="Écran de l'app pour ajouter les captures d'écran d'une annonce" width="390" height="844" loading="lazy"></div>
+</div></section>
+
+<!-- Message-filtre -->
+<section class="alt" id="filtre"><div class="wrap filtre">
+<div><span class="surtitre">Exclusif à HabitaScan</span><h2>Le message-filtre</h2>
+<p class="lead">Il ne pose aucune question. Il rappelle simplement les règles normales au Québec. C'est ce que fait n'importe quel propriétaire honnête, et exactement ce qu'un fraudeur veut éviter.</p>
+<ul class="liste-coche">
+<li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>Prêt à copier, en français ou en anglais</span></li>
+<li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>La réponse de l'annonceur est analysée sur ton téléphone</span></li>
+<li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>Tu restes poli et tu ne perds pas ta place</span></li></ul>
+<p class="source" style="margin-top:20px">Au Québec, exiger un dépôt de garantie est illégal : seul le premier mois de loyer peut être exigé à l'avance. <a href="https://www.quebec.ca/nouvelles/actualites/details/exiger-un-depot-de-garantie-est-illegal">Québec.ca</a></p></div>
+<div class="conversation" aria-label="Exemple de conversation">
+<div class="bul moi"><small>Toi</small>Bonjour, votre logement m'intéresse beaucoup. Est-ce que je peux le visiter cette semaine ? Si tout me convient, je suis prêt(e) à signer le bail sur place et à payer le premier mois à la signature. Merci !</div>
+<div class="bul eux"><small>L'annonceur</small>Je suis à l'étranger pour le travail. Envoyez un dépôt de 500 $ par virement pour réserver, je vous poste les clés.</div>
+<div class="verdict-mini r"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg>Ne paie pas : dépôt exigé et aucune visite possible</div>
+<p class="fictif" style="margin:0">Exemple fictif</p>
+</div>
+</div></section>
+
+<!-- Tarifs -->
+<section id="tarifs"><div class="wrap">
+<div class="tete centre"><span class="surtitre">Tarifs</span><h2>Gratuit pour l'essentiel</h2><p class="lead">Pas d'abonnement, pas de publicité. Tu paies seulement si tu veux qu'une personne de notre équipe vérifie pour toi.</p></div>
+<div class="tarifs">
+<div class="carte tarif"><h3>Vérification automatique</h3><p class="sous">Pour toutes les annonces que tu regardes.</p>
+<div class="prix">0 $</div>
+<ul class="coche"><li>Analyse de l'annonce en une minute</li><li>Message-filtre et analyse de la réponse</li><li>Guide pour trouver le vrai propriétaire</li><li>Comparaison avec le bail avant de payer</li><li>Budget d'installation et historique</li></ul>
+<a class="btn ghost" href="/app" target="_blank" rel="noopener">Commencer gratuitement<span class="sr"> (nouvel onglet)</span></a></div>
+<div class="carte tarif vedette" data-badge="Le plus complet"><h3>Vérification complète par notre équipe</h3><p class="sous">Pour l'annonce qui t'intéresse vraiment.</p>
+<div class="prix"><span data-prix>15</span> $ <small>par annonce</small></div>
 <ul class="coche"><li>Le propriétaire de l'immeuble, au Registre foncier</li><li>Si c'est une entreprise : qu'elle est active, et qui la dirige</li><li>Les photos : copiées d'une autre annonce ?</li><li>Le même logement annoncé ailleurs</li><li>Un rapport écrit avec un verdict clair</li></ul>
-<span class="garantie">Rapport en <span data-delai>24</span> h, sinon remboursé</span><p class="petit">Paiement par carte, dans l'app. Ce n'est pas une garantie contre la fraude : visite toujours, et signe le bail avant de payer.</p></div></div></div></section>
+<p class="garantie"><svg class="ic" aria-hidden="true"><use href="#i-bouclier"/></svg>Rapport en <span data-delai>24</span> h, sinon remboursé</p>
+<a class="btn" href="/app" target="_blank" rel="noopener">Demander une vérification<span class="sr"> (nouvel onglet)</span></a>
+<p class="petit">Paiement par carte, dans l'app. Ce n'est pas une garantie contre la fraude : visite toujours, et signe le bail avant de payer.</p></div>
+</div></div></section>
 
-<section><div class="wrap"><h2>Questions fréquentes</h2><div class="faq">
-<details><summary>Est-ce vraiment gratuit ?</summary><p>Oui. La vérification automatique, le message-filtre et le guide du propriétaire sont gratuits. Seule la vérification complète faite par notre équipe est payante.</p></details>
+<!-- Cas types -->
+<section class="alt" id="cas"><div class="wrap">
+<div class="tete"><span class="surtitre">Cas types</span><h2>Ce que l'app repère, concrètement</h2><p class="lead">Trois situations fréquentes, et le verdict que HabitaScan donnerait.</p></div>
+<div class="grille g3">
+<div class="carte cas"><span class="fictif">Exemple fictif</span><h3>Le propriétaire à l'étranger</h3><p class="ann">«&nbsp;4 ½ à Rosemont, 950 $. Je suis en mission à l'étranger, je vous envoie les clés après le dépôt.&nbsp;»</p><p>Loyer bien sous la moyenne, aucune visite possible, dépôt demandé.</p><div class="verdict-mini r"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg>Ne paie pas</div></div>
+<div class="carte cas y"><span class="fictif">Exemple fictif</span><h3>Le profil tout neuf</h3><p class="ann">«&nbsp;3 ½ au Plateau, 1 100 $. Libre tout de suite, écrivez-moi en privé.&nbsp;»</p><p>Compte de l'annonceur créé il y a moins d'un an, et tu n'as pas encore visité. Rien d'illégal, mais prudence.</p><div class="verdict-mini" style="background:var(--amberbg);color:var(--amber);border:1px solid var(--amberline)"><svg class="ic" aria-hidden="true"><use href="#i-alerte"/></svg>Visite d'abord, puis vérifie le propriétaire</div></div>
+<div class="carte cas" style="border-left-color:var(--ok)"><span class="fictif">Exemple fictif</span><h3>L'annonce honnête</h3><p class="ann">«&nbsp;5 ½ à Laval, 1 650 $. Visites samedi. Bail signé sur place, premier mois à la signature.&nbsp;»</p><p>Prix dans la normale, visite proposée, aucun paiement avant le bail.</p><div class="verdict-mini g"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Aucun signal : tu peux visiter</div></div>
+</div></div></section>
+
+<!-- Pourquoi -->
+<section class="sombre"><div class="wrap">
+<div class="tete"><span class="surtitre">Pourquoi HabitaScan</span><h2>Conçu pour les locataires, pas pour les annonceurs</h2></div>
+<div class="grille g4">
+<div class="carte"><div class="picto"><svg class="ic" aria-hidden="true"><use href="#i-oeil"/></svg></div><h3>Discret</h3><p>L'annonceur ne sait jamais que tu l'as vérifié.</p></div>
+<div class="carte"><div class="picto"><svg class="ic" aria-hidden="true"><use href="#i-balance"/></svg></div><h3>Fondé sur la loi</h3><p>Chaque signal cite sa source : Code civil, TAL, SCHL, Québec.ca.</p></div>
+<div class="carte"><div class="picto"><svg class="ic" aria-hidden="true"><use href="#i-cadenas"/></svg></div><h3>Respect de ta vie privée</h3><p>Tes captures restent sur ton téléphone. Conforme à la Loi 25.</p></div>
+<div class="carte"><div class="picto"><svg class="ic" aria-hidden="true"><use href="#i-lieu"/></svg></div><h3>Fait au Québec</h3><p>Pensé pour les règles, les registres et le marché d'ici.</p></div>
+</div></div></section>
+
+<!-- Ressources -->
+<section id="guides"><div class="wrap">
+<div class="tete"><span class="surtitre">Ressources gratuites</span><h2>Apprends à repérer une arnaque</h2></div>
+<div class="grille g3">
+<a class="carte ressource" href="/guides/arnaques-courantes"><div class="picto"><svg class="ic" aria-hidden="true"><use href="#i-alerte"/></svg></div><h3>Les arnaques courantes</h3><p>Les scénarios les plus fréquents au Québec et comment les reconnaître.</p><span class="lire">Lire le guide<svg class="ic" aria-hidden="true"><use href="#i-fleche"/></svg></span></a>
+<a class="carte ressource" href="/guides/verifier-un-proprietaire"><div class="picto"><svg class="ic" aria-hidden="true"><use href="#i-livre"/></svg></div><h3>Vérifier un propriétaire</h3><p>Trouver le vrai propriétaire au Registre foncier, étape par étape.</p><span class="lire">Lire le guide<svg class="ic" aria-hidden="true"><use href="#i-fleche"/></svg></span></a>
+<a class="carte ressource" href="/app" target="_blank" rel="noopener"><div class="picto"><svg class="ic" aria-hidden="true"><use href="#i-calcul"/></svg></div><h3>Simulateur de budget</h3><p>Combien prévoir pour t'installer, selon ta ville et ton ménage.</p><span class="lire">Ouvrir dans l'app<svg class="ic" aria-hidden="true"><use href="#i-externe"/></svg></span><span class="sr"> (nouvel onglet)</span></a>
+</div></div></section>
+
+<!-- FAQ -->
+<section class="alt" id="faq"><div class="wrap faq-grille">
+<div><span class="surtitre">Questions fréquentes</span><h2>Tu te poses la question ?</h2><p class="lead">Pour en savoir plus sur l'équipe et notre démarche, consulte la page <a href="/a-propos">Qui sommes-nous</a>.</p></div>
+<div class="faq">
+<details open><summary>Est-ce vraiment gratuit ?</summary><p>Oui. La vérification automatique, le message-filtre, le guide du propriétaire et le budget sont gratuits. Seule la vérification complète faite par notre équipe est payante.</p></details>
 <details><summary>Est-ce que l'annonceur saura que je l'ai vérifié ?</summary><p>Non. Tout se fait à partir de l'annonce, de l'adresse et des registres publics. Tu n'as rien à lui demander.</p></details>
-<details><summary>Que deviennent mes captures d'écran ?</summary><p>Elles restent sur ton téléphone. Si tu actives l'analyse intelligente, l'image est envoyée pour la lecture puis n'est pas conservée par HabitaScan. Détails dans la <a href="/app">politique de confidentialité de l'app</a>.</p></details>
+<details><summary>Que deviennent mes captures d'écran ?</summary><p>Elles restent sur ton téléphone. Si tu actives l'analyse intelligente, l'image est envoyée pour la lecture puis n'est pas conservée par HabitaScan. Les détails sont dans la politique de confidentialité de l'app.</p></details>
 <details><summary>Et si c'est le locataire actuel qui annonce (cession de bail) ?</summary><p>C'est permis, mais c'est le propriétaire qui doit donner son accord écrit, avec ton nom. L'app te dit qui doit signer cet accord, à partir de l'adresse seulement. <a href="/guides/verifier-un-proprietaire">Lire le guide</a>.</p></details>
+<details><summary>J'ai déjà payé. Que faire ?</summary><p>Ouvre l'app et choisis «&nbsp;J'ai été victime d'une arnaque&nbsp;» : on t'indique quoi faire tout de suite (banque, police, Centre antifraude du Canada, signalement de l'annonce).</p></details>
 <details><summary>HabitaScan garantit-il qu'une annonce est fiable ?</summary><p>Non. Nous t'aidons à repérer les signes d'arnaque à partir des informations disponibles. La règle reste : visite, puis signe le bail avant de payer quoi que ce soit.</p></details>
 </div></div></section>
 
-<section class="alt"><div class="wrap" style="text-align:center"><h2>Une minute pour vérifier. Des mois de loyer protégés.</h2><p class="lead">Gratuit, sans publicité.</p><a class="btn" href="/app">Vérifier une annonce maintenant</a></div></section>
+<!-- Appel final -->
+<section class="final"><div class="wrap"><div class="boite">
+<h2>Une minute pour vérifier.<br>Des mois de loyer protégés.</h2>
+<p>Gratuit, sans publicité, sans rien demander à l'annonceur.</p>
+<div class="ctas"><a class="btn blanc" href="/app" target="_blank" rel="noopener">Vérifier une annonce maintenant<svg class="ic" aria-hidden="true"><use href="#i-fleche"/></svg><span class="sr"> (nouvel onglet)</span></a><a class="btn ghost" href="/guides/arnaques-courantes">Lire les guides</a></div>
+</div></div></section>
 </main>
-<footer><div class="wrap"><span>© 2026 HabitaScan · Fait au Québec</span><span><a href="/a-propos">Qui sommes-nous</a> · <a href="/guides/arnaques-courantes">Arnaques courantes</a> · <a href="/guides/verifier-un-proprietaire">Vérifier un propriétaire</a> · <a href="/en">English</a></span></div></footer>
+
+<footer><div class="wrap">
+<div class="pied-grille">
+<div><a class="marque" href="/"><img src="/icon.svg" alt="">HabitaScan</a><p style="margin-top:14px;max-width:320px">Avant de payer, vérifie. L'outil des locataires du Québec contre les fausses annonces de logement.</p></div>
+<div><h4>Produit</h4><ul><li><a href="#fonctions">Fonctionnalités</a></li><li><a href="#etapes">Comment ça marche</a></li><li><a href="#tarifs">Tarifs</a></li><li><a href="/app" target="_blank" rel="noopener">Ouvrir l'app</a></li></ul></div>
+<div><h4>Ressources</h4><ul><li><a href="/guides/arnaques-courantes">Arnaques courantes</a></li><li><a href="/guides/verifier-un-proprietaire">Vérifier un propriétaire</a></li><li><a href="#faq">Questions fréquentes</a></li></ul></div>
+<div><h4>Entreprise</h4><ul><li><a href="/a-propos">Qui sommes-nous</a></li><li><a href="/en" lang="en" hreflang="en">English</a></li></ul></div>
+</div>
+<div class="pied-bas"><span>© 2026 HabitaScan · Fait au Québec</span><span>HabitaScan ne remplace pas un avis juridique. En cas de doute, consulte le <a href="https://www.tal.gouv.qc.ca">Tribunal administratif du logement</a>.</span></div>
+</div></footer>
 <script>
 /* Prix et délai à jour, lus dans les réglages publics (modifiables dans la console) */
 fetch("https://oyiiaqyepihkawzkkjpi.supabase.co/rest/v1/parametres?select=cle,valeur&cle=in.(prix_verif,delai_verif_heures)",{headers:{apikey:"sb_publishable_LhDVlSvpyM-bkW-QSp0lsw_wgNIsELX"}})
