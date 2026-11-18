@@ -1,112 +1,67 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr-CA">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#0b3d91">
-<title>HabitaScan</title>
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="icon-180.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
-/* VOICE: calme et digne de confiance, comme un service public bien fait.
-   IDEA: un bail officiel qui reçoit un sceau de vérification.
-   PICTURE: le sceau et la fiche de résultat en couleur sont l'image principale.
-   COLOUR and TYPE: bleu du drapeau québécois, blanc, rouge vermillon pour l'alerte ; Figtree.
-   LAYOUT: une seule colonne mobile, 460 px max, boutons pleine largeur. */
-:root{color-scheme:light dark;
---bg:light-dark(#f4f6fb,#0a1226);--card:light-dark(#ffffff,#121c36);--ink:light-dark(#0c1630,#eef2fb);
---soft:light-dark(#5a6684,#a9b4cf);--line:light-dark(#dfe4ef,#26324f);--blue:light-dark(#0b3d91,#6f9cff);
---blueink:#ffffff;--red:light-dark(#c8341b,#ff7a5c);--redbg:light-dark(#fdece8,#3a1610);
---amber:light-dark(#a35c00,#ffbf5e);--amberbg:light-dark(#fff3e0,#35260c);--ok:light-dark(#1d6b3a,#6fd69a);--okbg:light-dark(#e8f5ec,#11301d)}
-:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
-*{box-sizing:border-box;min-width:0}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Figtree,system-ui,sans-serif;overflow-x:clip}
-.app{max-width:460px;margin:0 auto;min-height:100vh;padding:16px 16px 40px;display:flex;flex-direction:column;gap:16px}
-.demo{font-size:13px;color:var(--soft);background:var(--card);border:1px dashed var(--line);border-radius:10px;padding:8px 12px}
-.top{display:flex;align-items:center;gap:10px}
-.top b{font-size:18px;font-weight:800;letter-spacing:-.01em}
-.top .sp{flex:1}
-.back{background:none;border:0;color:var(--blue);font:inherit;font-weight:600;min-height:44px;padding:0 4px;cursor:pointer}
-h1{font-size:32px;line-height:1.08;margin:0;text-wrap:balance;font-weight:800;letter-spacing:-.02em}
-h2{font-size:21px;line-height:1.2;margin:0;font-weight:700}
-p{margin:0}.soft{color:var(--soft)}
-.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:14px}
-label{font-weight:600;font-size:15px;display:flex;flex-direction:column;gap:6px}
-input,select,textarea{font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;min-height:48px;width:100%}
-textarea{min-height:96px;resize:vertical}
-input:focus,select:focus,textarea:focus,button:focus-visible{outline:3px solid color-mix(in srgb,var(--blue) 45%,transparent);outline-offset:2px;border-color:var(--blue)}
-.btn{font:inherit;font-weight:700;font-size:17px;min-height:52px;border-radius:14px;border:0;background:var(--blue);color:var(--blueink);cursor:pointer;width:100%;padding:0 16px}
-.btn.ghost{background:transparent;color:var(--blue);border:1.5px solid var(--line)}
-.btn:disabled{opacity:.45;cursor:not-allowed}
-.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px}
-.seg button{font:inherit;font-weight:600;min-height:44px;border:0;border-radius:9px;background:transparent;color:var(--soft);cursor:pointer}
-.seg button[aria-pressed=true]{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgb(0 0 0/.12)}
-.otp{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
-.otp input{text-align:center;font-size:24px;font-weight:700;padding:0;min-height:58px}
-.err{color:var(--red);font-weight:600;font-size:15px}
-.hint{font-size:14px;color:var(--soft)}
-.seal{width:min(240px,62vw);aspect-ratio:1;margin:8px auto 0;display:block}
-.yn{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.yn button{font:inherit;font-weight:600;min-height:48px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
-.yn button[aria-pressed=true]{border-color:var(--blue);background:color-mix(in srgb,var(--blue) 12%,var(--card));color:var(--blue)}
-.q{display:flex;flex-direction:column;gap:8px;font-weight:600}
-.drop{border:2px dashed var(--line);border-radius:14px;padding:16px;text-align:center;color:var(--soft);cursor:pointer;display:block;font-weight:500}
-.drop img{max-width:100%;max-height:180px;border-radius:10px;display:block;margin:0 auto 8px}
-.drop input{display:none}
-.drop-grand{padding:22px 16px;border-color:var(--blue);color:var(--ink);display:grid;gap:6px}
-.drop-grand b{font-size:18px;color:var(--blue)}
-.drop .vignettes{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
-.drop .vignettes img{width:70px;height:110px;object-fit:cover;margin:0;border-radius:8px}
-.coller summary{color:var(--blue);font-weight:600;min-height:44px;display:flex;align-items:center;cursor:pointer}
-.coller{display:grid;gap:12px}
-
-.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
-.verdict{border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:6px}
-.verdict.r{background:var(--redbg);color:var(--red)}.verdict.y{background:var(--amberbg);color:var(--amber)}.verdict.g{background:var(--okbg);color:var(--ok)}
-.verdict strong{font-size:26px;line-height:1.1;font-weight:800}
-.verdict span{color:var(--ink)}
-ul.reasons{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
-ul.reasons li{display:grid;grid-template-columns:14px 1fr;gap:10px;align-items:start}
-.dot{width:12px;height:12px;border-radius:50%;margin-top:6px}
-.dot.r{background:var(--red)}.dot.y{background:var(--amber)}.dot.g{background:var(--ok)}.dot.i{background:var(--blue)}
-.law{font-size:14px;color:var(--soft)}
-a{color:var(--blue);font-weight:600}
-.rule{background:var(--bg);border-radius:12px;padding:12px 14px;font-weight:600}
-.hist{display:flex;flex-direction:column;gap:8px}
-.hist div{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:15px}
-.hist div:last-child{border-bottom:0}
-.tag{font-size:13px;font-weight:700;padding:2px 10px;border-radius:99px;white-space:nowrap;align-self:flex-start;flex-shrink:0}
-.tag.r{background:var(--redbg);color:var(--red)}.tag.y{background:var(--amberbg);color:var(--amber)}.tag.g{background:var(--okbg);color:var(--ok)}
-.badge{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:700;color:var(--ok)}
-.spin{width:56px;height:56px;border-radius:50%;border:5px solid var(--line);border-top-color:var(--blue);margin:24px auto;animation:s 1s linear infinite}
-@keyframes s{to{transform:rotate(360deg)}}
-@media (prefers-reduced-motion:reduce){.spin{animation:none}}
-.num{white-space:nowrap;font-variant-numeric:tabular-nums}
-.profil{border:1.5px solid var(--line);border-radius:12px;padding:4px 12px 12px;display:grid;gap:12px}
-.profil summary{font-weight:700;min-height:44px;display:flex;align-items:center;cursor:pointer}
-.lu{margin:0;padding:10px 12px;border-radius:10px;background:color-mix(in srgb,var(--blue) 10%,var(--card));font-size:15px}
-.choix{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
-.choix button{font:inherit;font-weight:600;font-size:15px;line-height:1.25;min-height:60px;padding:8px 10px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer;text-align:left}
-.choix button[aria-pressed=true]{border-color:var(--blue);background:color-mix(in srgb,var(--blue) 12%,var(--card));color:var(--blue)}
-</style>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HabitaScan · Vérifier une annonce de logement avant de payer</title>
+<meta name="description" content="Repère les fausses annonces de logement au Québec en une minute, gratuitement. Trouve le vrai propriétaire sans poser une seule question gênante.">
+<link rel="canonical" href="https://habitascan.vercel.app/">
+<link rel="alternate" hreflang="fr-CA" href="https://habitascan.vercel.app/"><link rel="alternate" hreflang="en-CA" href="https://habitascan.vercel.app/en">
+<meta property="og:title" content="HabitaScan · Vérifier une annonce de logement avant de payer"><meta property="og:description" content="Repère les fausses annonces de logement au Québec en une minute, gratuitement. Trouve le vrai propriétaire sans poser une seule question gênante."><meta property="og:type" content="website">
+<link rel="icon" href="/icon.svg" type="image/svg+xml"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="/site.css">
 </head>
 <body>
-<main class="app" id="app" aria-live="polite"></main>
-<svg width="0" height="0" style="position:absolute" aria-hidden="true">
- <symbol id="logo" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#0b3d91"/><g fill="none" stroke="#ffffff" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"><path d="M100 168V124a24 24 0 0 1 24-24h44"/><path d="M344 100h44a24 24 0 0 1 24 24v44"/><path d="M100 344v44a24 24 0 0 0 24 24h44"/></g><path d="M256 150 368 240v112a12 12 0 0 1-12 12H156a12 12 0 0 1-12-12V240Z" fill="#ffffff"/><rect x="231" y="290" width="50" height="74" rx="10" fill="#0b3d91"/><circle cx="370" cy="370" r="74" fill="#16a05a" stroke="#0b3d91" stroke-width="14"/><path d="M336 372l24 24 46-50" fill="none" stroke="#ffffff" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/></symbol>
- <symbol id="seal" viewBox="0 0 200 200">
-  <rect x="38" y="22" width="112" height="146" rx="10" fill="var(--card)" stroke="var(--line)" stroke-width="3"/>
-  <rect x="54" y="44" width="64" height="8" rx="4" fill="var(--blue)"/>
-  <rect x="54" y="64" width="80" height="6" rx="3" fill="var(--line)"/><rect x="54" y="80" width="72" height="6" rx="3" fill="var(--line)"/>
-  <rect x="54" y="96" width="80" height="6" rx="3" fill="var(--line)"/><rect x="54" y="112" width="52" height="6" rx="3" fill="var(--line)"/>
-  <circle cx="138" cy="140" r="40" fill="var(--blue)"/><circle cx="138" cy="140" r="31" fill="none" stroke="#fff" stroke-width="3" stroke-dasharray="4 5"/>
-  <path d="M121 140l12 12 22-24" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
- </symbol>
-</svg>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
-<script src="app.js"></script>
+<header class="nav"><div class="wrap"><a class="marque" href="/app"><img src="/icon.svg" alt="">HabitaScan</a><nav><a class="cacher" href="/guides/arnaques-courantes">Arnaques courantes</a><a class="cacher" href="/guides/verifier-un-proprietaire">Vérifier un propriétaire</a><a class="cacher" href="/a-propos">Qui sommes-nous</a><a href="/en" lang="en" hreflang="en">English</a><a class="btn sm" href="/app">Ouvrir l'app</a></nav></div></header>
+<main>
+<div class="hero"><div class="wrap"><div><span class="eti">Gratuit · Fait au Québec</span>
+<h1>Avant de payer un logement, vérifie l'annonce.</h1>
+<p class="lead">Colle une capture d'écran de l'annonce Kijiji, Facebook ou LesPAC. HabitaScan te dit en une minute si elle présente des signes d'arnaque, sans que tu aies une seule question gênante à poser à l'annonceur.</p>
+<div class="ctas"><a class="btn" href="/app">Vérifier une annonce gratuitement</a><a class="btn ghost" href="#comment">Comment ça marche</a></div>
+<p class="petit">Gratuit · Tes captures restent sur ton téléphone · Conforme à la Loi 25</p></div>
+<div class="maquette" aria-label="Exemple de résultat"><div class="v r"><strong>Ne paie pas</strong><span>Exemple de résultat pour une fausse annonce</span></div>
+<div class="li"><span class="pt r"></span><span>On te demande un dépôt avant le bail. Au Québec, seul le premier mois peut être exigé, et aucun dépôt.</span></div>
+<div class="li"><span class="pt r"></span><span>L'annonceur dit être à l'étranger et ne peut pas faire visiter.</span></div>
+<div class="li"><span class="pt y"></span><span>Le loyer est bien plus bas que la moyenne de la ville.</span></div>
+<div class="li"><span class="pt y"></span><span>Le compte de l'annonceur a été créé il y a moins d'un an.</span></div></div></div></div>
+
+<section class="alt" id="comment"><div class="wrap"><h2>Trois étapes, aucune question gênante</h2>
+<p class="lead">Dans un marché serré, celui qui pose dix questions passe après les autres. HabitaScan vérifie sans rien demander à l'annonceur.</p>
+<div class="grille g3">
+<div class="carte"><div class="etape">1</div><h3>Vérifie l'annonce</h3><p>Une capture d'écran suffit : prix comparé aux loyers moyens de la SCHL, profil de l'annonceur, photos copiées, phrases typiques d'arnaque.</p></div>
+<div class="carte"><div class="etape">2</div><h3>Envoie le message-filtre</h3><p>Un seul message poli, prêt à copier. Un vrai propriétaire répond oui ; un fraudeur insiste pour un dépôt. Colle sa réponse : l'app l'analyse.</p></div>
+<div class="carte"><div class="etape">3</div><h3>Compare au moment de signer</h3><p>L'adresse suffit pour trouver le vrai propriétaire au Registre foncier. Avant de payer, l'app compare son nom avec celui écrit sur le bail.</p></div></div></div></section>
+
+<section><div class="wrap grille g2" style="align-items:center"><div><span class="eti">Nouveau</span><h2>Le message-filtre</h2>
+<p>Il ne pose aucune question. Il annonce simplement les règles normales au Québec : visite d'abord, paiement du premier mois à la signature du bail. C'est ce que fait n'importe quel propriétaire honnête, et c'est exactement ce qu'un fraudeur veut éviter.</p>
+<p class="source">Au Québec, exiger un dépôt de garantie est illégal : seul le premier mois de loyer peut être exigé à l'avance. <a href="https://www.quebec.ca/nouvelles/actualites/details/exiger-un-depot-de-garantie-est-illegal">Québec.ca</a></p></div>
+<div class="carte"><div class="msg">Bonjour, votre logement m'intéresse beaucoup. Est-ce que je peux le visiter cette semaine ? Si tout me convient, je suis prêt(e) à signer le bail sur place et à payer le premier mois à la signature. Merci !</div>
+<p class="petit" style="margin:0">Disponible en français et en anglais dans l'app.</p></div></div></section>
+
+<section class="alt" id="prix"><div class="wrap"><h2>Gratuit pour l'essentiel</h2>
+<div class="grille g2">
+<div class="carte"><h3>Vérification automatique</h3><div class="prix">0 $</div>
+<ul class="coche"><li>Analyse de l'annonce en une minute</li><li>Message-filtre et analyse de la réponse</li><li>Guide pour trouver le vrai propriétaire</li><li>Comparaison avec le bail avant de payer</li><li>Historique de tes vérifications</li></ul>
+<a class="btn ghost" href="/app">Commencer gratuitement</a></div>
+<div class="carte" style="border:2px solid var(--blue)"><h3>Vérification complète par notre équipe</h3><div class="prix"><span data-prix>15</span> $ <small>par annonce</small></div>
+<ul class="coche"><li>Le propriétaire de l'immeuble, au Registre foncier</li><li>Si c'est une entreprise : qu'elle est active, et qui la dirige</li><li>Les photos : copiées d'une autre annonce ?</li><li>Le même logement annoncé ailleurs</li><li>Un rapport écrit avec un verdict clair</li></ul>
+<span class="garantie">Rapport en <span data-delai>24</span> h, sinon remboursé</span><p class="petit">Paiement par carte, dans l'app. Ce n'est pas une garantie contre la fraude : visite toujours, et signe le bail avant de payer.</p></div></div></div></section>
+
+<section><div class="wrap"><h2>Questions fréquentes</h2><div class="faq">
+<details><summary>Est-ce vraiment gratuit ?</summary><p>Oui. La vérification automatique, le message-filtre et le guide du propriétaire sont gratuits. Seule la vérification complète faite par notre équipe est payante.</p></details>
+<details><summary>Est-ce que l'annonceur saura que je l'ai vérifié ?</summary><p>Non. Tout se fait à partir de l'annonce, de l'adresse et des registres publics. Tu n'as rien à lui demander.</p></details>
+<details><summary>Que deviennent mes captures d'écran ?</summary><p>Elles restent sur ton téléphone. Si tu actives l'analyse intelligente, l'image est envoyée pour la lecture puis n'est pas conservée par HabitaScan. Détails dans la <a href="/app">politique de confidentialité de l'app</a>.</p></details>
+<details><summary>Et si c'est le locataire actuel qui annonce (cession de bail) ?</summary><p>C'est permis, mais c'est le propriétaire qui doit donner son accord écrit, avec ton nom. L'app te dit qui doit signer cet accord, à partir de l'adresse seulement. <a href="/guides/verifier-un-proprietaire">Lire le guide</a>.</p></details>
+<details><summary>HabitaScan garantit-il qu'une annonce est fiable ?</summary><p>Non. Nous t'aidons à repérer les signes d'arnaque à partir des informations disponibles. La règle reste : visite, puis signe le bail avant de payer quoi que ce soit.</p></details>
+</div></div></section>
+
+<section class="alt"><div class="wrap" style="text-align:center"><h2>Une minute pour vérifier. Des mois de loyer protégés.</h2><p class="lead">Gratuit, sans publicité.</p><a class="btn" href="/app">Vérifier une annonce maintenant</a></div></section>
+</main>
+<footer><div class="wrap"><span>© 2026 HabitaScan · Fait au Québec</span><span><a href="/a-propos">Qui sommes-nous</a> · <a href="/guides/arnaques-courantes">Arnaques courantes</a> · <a href="/guides/verifier-un-proprietaire">Vérifier un propriétaire</a> · <a href="/en">English</a></span></div></footer>
+<script>
+/* Prix et délai à jour, lus dans les réglages publics (modifiables dans la console) */
+fetch("https://oyiiaqyepihkawzkkjpi.supabase.co/rest/v1/parametres?select=cle,valeur&cle=in.(prix_verif,delai_verif_heures)",{headers:{apikey:"sb_publishable_LhDVlSvpyM-bkW-QSp0lsw_wgNIsELX"}})
+.then(r=>r.ok?r.json():[]).then(L=>{const v=Object.fromEntries(L.map(x=>[x.cle,+x.valeur]));
+ if(v.prix_verif)document.querySelectorAll("[data-prix]").forEach(e=>e.textContent=String(v.prix_verif).replace(".",document.documentElement.lang.startsWith("fr")?",":"."));
+ if(v.delai_verif_heures)document.querySelectorAll("[data-delai]").forEach(e=>e.textContent=v.delai_verif_heures)}).catch(()=>{});
+</script>
 </body>
 </html>

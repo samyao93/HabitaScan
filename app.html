@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f4f6fa" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#0b1120" media="(prefers-color-scheme: dark)">
+<title>HabitaScan</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;650;700;750;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<main class="app" id="app" aria-live="polite"></main>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+ <symbol id="logo" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#0b3d91"/><g fill="none" stroke="#ffffff" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"><path d="M100 168V124a24 24 0 0 1 24-24h44"/><path d="M344 100h44a24 24 0 0 1 24 24v44"/><path d="M100 344v44a24 24 0 0 0 24 24h44"/></g><path d="M256 150 368 240v112a12 12 0 0 1-12 12H156a12 12 0 0 1-12-12V240Z" fill="#ffffff"/><rect x="231" y="290" width="50" height="74" rx="10" fill="#0b3d91"/><circle cx="370" cy="370" r="74" fill="#16a05a" stroke="#0b3d91" stroke-width="14"/><path d="M336 372l24 24 46-50" fill="none" stroke="#ffffff" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+ <symbol id="seal" viewBox="0 0 200 200">
+  <rect x="38" y="22" width="112" height="146" rx="10" fill="var(--card)" stroke="var(--line)" stroke-width="3"/>
+  <rect x="54" y="44" width="64" height="8" rx="4" fill="var(--blue)"/>
+  <rect x="54" y="64" width="80" height="6" rx="3" fill="var(--line)"/><rect x="54" y="80" width="72" height="6" rx="3" fill="var(--line)"/>
+  <rect x="54" y="96" width="80" height="6" rx="3" fill="var(--line)"/><rect x="54" y="112" width="52" height="6" rx="3" fill="var(--line)"/>
+  <circle cx="138" cy="140" r="40" fill="var(--blue)"/><circle cx="138" cy="140" r="31" fill="none" stroke="#fff" stroke-width="3" stroke-dasharray="4 5"/>
+  <path d="M121 140l12 12 22-24" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+ </symbol>
+</svg>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
