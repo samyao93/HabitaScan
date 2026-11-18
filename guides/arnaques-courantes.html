@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="fr-CA">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arnaques au logement au Québec : les repérer · HabitaScan</title>
+<meta name="description" content="Les arnaques au logement les plus courantes au Québec, avec des exemples fictifs, et les réflexes qui protègent avant de payer.">
+<link rel="canonical" href="https://habitascan.vercel.app/guides/arnaques-courantes">
+<meta property="og:title" content="Arnaques au logement au Québec : les repérer · HabitaScan"><meta property="og:description" content="Les arnaques au logement les plus courantes au Québec, avec des exemples fictifs, et les réflexes qui protègent avant de payer."><meta property="og:type" content="article">
+<link rel="icon" href="/icon.svg" type="image/svg+xml"><link rel="stylesheet" href="/site.css">
+</head>
+<body>
+<header class="nav"><div class="wrap"><a class="marque" href="/decouvrir"><img src="/icon.svg" alt="">HabitaScan</a><nav><a class="cacher" href="/guides/arnaques-courantes">Arnaques courantes</a><a class="cacher" href="/guides/verifier-un-proprietaire">Vérifier un propriétaire</a><a class="cacher" href="/a-propos">Qui sommes-nous</a><a href="/en" lang="en" hreflang="en">English</a><a class="btn sm" href="/">Ouvrir l'app</a></nav></div></header>
+<article><p class="fil"><a href="/decouvrir">Accueil</a> › Guides</p>
+<h1>Les arnaques au logement les plus courantes, et comment les repérer</h1>
+<p class="lead">Les exemples ci-dessous sont fictifs. Ils illustrent des scénarios souvent décrits par les autorités et les médias.</p>
+<div class="carte cas"><span class="fictif">Cas fictif</span><h3>Le propriétaire « à l'étranger »</h3><p>Un beau 4 ½ bien situé, à un prix bas. Le propriétaire est « en mission à l'étranger » et enverra les clés par la poste dès réception d'un dépôt par Interac. Il n'y a pas de logement pour toi.</p>
+<p><b>Le signe :</b> pas de visite possible, et de l'argent demandé à distance.</p></div><br>
+<div class="carte cas"><span class="fictif">Cas fictif</span><h3>Le « dépôt pour réserver »</h3><p>« Beaucoup de gens sont intéressés, envoie 500 $ aujourd'hui pour le réserver. » Au Québec, aucun dépôt ne peut être exigé : seulement le premier mois de loyer (<a href="https://www.quebec.ca/nouvelles/actualites/details/exiger-un-depot-de-garantie-est-illegal">Québec.ca</a>).</p>
+<p><b>Le signe :</b> la pression, et un montant demandé avant le bail.</p></div><br>
+<div class="carte cas"><span class="fictif">Cas fictif</span><h3>Les photos volées</h3><p>Les photos viennent d'une autre annonce, d'une autre ville ou du site d'une agence. L'annonceur n'a aucun lien avec le logement.</p>
+<p><b>Le signe :</b> une recherche d'image inversée (Google Lens) retrouve les photos ailleurs.</p></div><br>
+<div class="carte cas"><span class="fictif">Cas fictif</span><h3>La fausse cession de bail</h3><p>Une personne se présente comme le locataire actuel et demande des « frais de reprise ». Une vraie cession demande l'accord écrit du propriétaire, et le locataire qui part ne peut rien exiger du nouveau locataire (<a href="https://www.tal.gouv.qc.ca/sites/default/files/notices/TAL_802_E.pdf">TAL</a>).</p>
+<p><b>Le signe :</b> de l'argent demandé par le locataire, ou aucun contact possible avec le propriétaire.</p></div>
+<h2>Les réflexes qui protègent</h2>
+<ul><li>Visite toujours le logement avant de payer.</li><li>Paie seulement le premier mois, à la signature du bail, par un moyen traçable.</li><li>Compare le nom du locateur sur le bail avec le propriétaire inscrit au Registre foncier (<a href="/guides/verifier-un-proprietaire">voir le guide</a>).</li><li>Garde la conversation sur la plateforme jusqu'à la visite.</li><li>N'envoie jamais ton NAS, ton passeport ou un relevé bancaire avant la visite.</li></ul>
+<h2>Tu as été victime ?</h2>
+<p>Signale-le au Centre antifraude du Canada au 1-888-495-8501, et à ton service de police (<a href="https://www.canada.ca/fr/bureau-concurrence/nouvelles/2018/08/fraudes-liees-au-logement-pas-de-place-a-lerreur.html">Bureau de la concurrence</a>). Signale aussi l'annonce à la plateforme.</p>
+<div class="encart"><h3>Vérifie une annonce en une minute</h3><p>Gratuit, sans rien demander à l'annonceur.</p><a class="btn" href="/">Vérifier une annonce</a></div>
+<p class="source">Ce guide est informatif et ne remplace pas un avis juridique. Mis à jour en novembre 2026.</p></article>
+<footer><div class="wrap"><span>© 2026 HabitaScan · Fait au Québec</span><span><a href="/decouvrir">Accueil</a> · <a href="/a-propos">Qui sommes-nous</a> · <a href="/guides/arnaques-courantes">Arnaques courantes</a> · <a href="/guides/verifier-un-proprietaire">Vérifier un propriétaire</a> · <a href="/en">English</a></span></div></footer>
+<script>
+fetch("https://oyiiaqyepihkawzkkjpi.supabase.co/rest/v1/parametres?select=cle,valeur&cle=in.(prix_verif,delai_verif_heures)",{headers:{apikey:"sb_publishable_LhDVlSvpyM-bkW-QSp0lsw_wgNIsELX"}})
+.then(r=>r.ok?r.json():[]).then(L=>{const v=Object.fromEntries(L.map(x=>[x.cle,+x.valeur]));
+ if(v.prix_verif)document.querySelectorAll("[data-prix]").forEach(e=>e.textContent=String(v.prix_verif).replace(".",","));
+ if(v.delai_verif_heures)document.querySelectorAll("[data-delai]").forEach(e=>e.textContent=v.delai_verif_heures)}).catch(()=>{});
+</script>
+</body>
+</html>
