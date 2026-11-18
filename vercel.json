@@ -1,11 +1,59 @@
 {
   "cleanUrls": true,
   "redirects": [
-    { "source": "/decouvrir", "destination": "/", "permanent": true },
-    { "source": "/index.html", "destination": "/app", "permanent": false },
-    { "source": "/", "has": [{ "type": "query", "key": "paye" }], "destination": "/app", "permanent": false },
-    { "source": "/", "has": [{ "type": "query", "key": "url" }], "destination": "/app", "permanent": false },
-    { "source": "/", "has": [{ "type": "query", "key": "text" }], "destination": "/app", "permanent": false }
+    {
+      "source": "/decouvrir",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/index.html",
+      "destination": "/app",
+      "permanent": false
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "query",
+          "key": "paye"
+        }
+      ],
+      "destination": "/app",
+      "permanent": false
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "query",
+          "key": "url"
+        }
+      ],
+      "destination": "/app",
+      "permanent": false
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "query",
+          "key": "text"
+        }
+      ],
+      "destination": "/app",
+      "permanent": false
+    },
+    {
+      "source": "/confidentialite",
+      "destination": "/app?v=confidentialite",
+      "permanent": false
+    },
+    {
+      "source": "/conditions",
+      "destination": "/app?v=conditions",
+      "permanent": false
+    }
   ],
   "headers": [
     {
