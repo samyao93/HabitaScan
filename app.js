@@ -15,17 +15,24 @@ const MOTS_ARGENT=["dépôt","depot","deposit","acompte","frais de dossier","fra
 const MOYENS_FRAUDE=["western union","moneygram","carte-cadeau","carte cadeau","cartes-cadeaux","cartes cadeaux","gift card","bitcoin","crypto"];
 const MOTS_SCENARIO=["à l'étranger","a l'etranger","hors du pays","out of the country","pas de visite","pas possible de visiter","je suis en voyage","missionnaire","clés par la poste","cles par la poste","envoyer les clés","courrier les clés","whatsapp","telegram","beaucoup de demandes","plusieurs personnes intéressées","many people interested","premier arrivé","first come"];
 const NEGATION=/(?:\bpas\s+(?:de|d['’]|besoin)|\baucune?\b|\bsans\b|\bno\b|\bnot?\b|\bnon\b|\bjamais\b|\bnever\b|\bwithout\b|\bni\b)[^.!?\n]{0,20}$/i;
-/* ===== Profil de l'annonceur (Facebook bloque la lecture automatique : 3 questions facultatives) ===== */
-const estFacebook=F=>/facebook\.com|fb\.com|fb\.me|marketplace|messenger/i.test((F.lien||"")+" "+(F.annonce||"")+" "+(F.ocrTxt||""));
-const blocProfil=F=>`<details class="profil" ${estFacebook(F)||F.pAncien||F.pAmis||F.pPlusieurs?"open":""}><summary>Vérifier le profil de l'annonceur (facultatif)</summary>
-<p class="hint" style="margin:0">Sur Facebook, touche le nom de la personne dans l'annonce, puis « À propos ».</p>
-${yn("pAncien","Son compte existe depuis plus d'un an ?")}${yn("pAmis","Son profil a des amis et des publications ?")}${yn("pPlusieurs","Publie-t-elle plusieurs logements, ou dans plusieurs villes ?")}</details>`;
+/* ===== Profil de l'annonceur (toutes les plateformes ; Facebook bloque la lecture automatique : questions facultatives) ===== */
+const PLATEFORMES=[[/facebook\.com|fb\.com|fb\.me|marketplace|messenger/i,"Facebook","Touche le nom de la personne dans l'annonce, puis « À propos »."],
+ [/kijiji/i,"Kijiji","Touche le nom de l'annonceur pour ouvrir son profil et voir ses autres annonces."],
+ [/lespac/i,"LesPAC","Touche le nom de l'annonceur pour ouvrir son profil et voir ses autres annonces."],
+ [/craigslist/i,"Craigslist","Craigslist n'affiche pas de profil : réponds seulement aux questions que tu peux vérifier."],
+ [/instagram|tiktok/i,"un réseau social","Ouvre le profil du compte : regarde depuis quand il publie et ce qu'il publie."]];
+const plateforme=F=>{const t=(F.lien||"")+" "+(F.annonce||"")+" "+(F.ocrTxt||"");const p=PLATEFORMES.find(x=>x[0].test(t));return p?{nom:p[1],aide:p[2]}:null};
+const estFacebook=F=>{const p=plateforme(F);return !!p&&p.nom==="Facebook"};
+const blocProfil=F=>{const p=plateforme(F);return `<details class="profil" ${p||F.pAncien||F.pAmis||F.pPlusieurs||F.pHors?"open":""}><summary>Vérifier le profil de l'annonceur${p?` sur ${p.nom}`:""} (facultatif)</summary>
+<p class="hint" style="margin:0">${p?p.aide:"Sur Facebook, Kijiji, LesPAC ou ailleurs : touche le nom ou la photo de l'annonceur pour ouvrir son profil."}</p>
+${yn("pAncien","Son compte existe depuis plus d'un an ?")}${yn("pAmis","Son profil a l'air réel (photo, nom complet, publications, évaluations ou autres annonces normales) ?")}${yn("pPlusieurs","Publie-t-il plusieurs logements, ou dans plusieurs villes ?")}${yn("pHors","Veut-il continuer la conversation ailleurs (texto, courriel, WhatsApp) dès le début ?")}</details>`};
 function itemsProfil(F){const it=[];
  if(F.pAncien==="non")it.push({c:"y",t:"<b>Compte de moins d'un an.</b> Les faux profils sont souvent récents."});
- if(F.pAmis==="non")it.push({c:"y",t:"<b>Profil sans amis ni publications.</b> C'est typique d'un faux compte."});
+ if(F.pAmis==="non")it.push({c:"y",t:"<b>Profil vide ou impersonnel.</b> C'est typique d'un faux compte."});
  if(F.pPlusieurs==="oui")it.push({c:"y",t:"<b>Plusieurs logements ou plusieurs villes.</b> Un particulier en loue rarement autant : vérifie qu'il s'agit d'une vraie entreprise de gestion."});
- if(F.pAncien==="oui"&&F.pAmis==="oui"&&F.pPlusieurs==="non")it.push({c:"g",t:"Profil d'apparence normale. Attention : un vieux compte peut avoir été piraté."});
- else if(!it.length&&estFacebook(F)&&!F.pAncien&&!F.pAmis&&!F.pPlusieurs)it.push({c:"i",t:"Annonce Facebook : réponds aux 3 questions sur le profil de l'annonceur pour une vérification plus complète."});
+ if(F.pHors==="oui")it.push({c:"y",t:"<b>Il veut quitter la plateforme dès le début.</b> Ailleurs, tu ne peux plus signaler ses messages à la plateforme. Garde la conversation sur la plateforme jusqu'à la visite."});
+ if(F.pAncien==="oui"&&F.pAmis==="oui"&&F.pPlusieurs==="non"&&F.pHors!=="oui")it.push({c:"g",t:"Profil d'apparence normale. Attention : un vieux compte peut avoir été piraté."});
+ else if(!it.length&&!F.pAncien&&!F.pAmis&&!F.pPlusieurs&&!F.pHors){const p=plateforme(F);if(p)it.push({c:"i",t:`Annonce ${p.nom==="un réseau social"?"sur un réseau social":p.nom} : réponds aux questions sur le profil de l'annonceur pour une vérification plus complète.`})}
  return it}
 const boutonCarte=F=>F.adr&&F.adr.trim()?`<a class="btn ghost" style="display:grid;place-items:center;text-decoration:none" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(F.adr.trim()+(F.ville&&F.ville!=="Autre"?", "+F.ville:"")+", QC")}">Voir l'adresse sur Google Maps</a><p class="hint">Avec Street View, compare l'immeuble avec les photos de l'annonce.</p>`:"";
 
@@ -59,7 +66,7 @@ function extraireAnnonce(brut,villes){
  const norm=s=>s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
  const nb=norm(t);const v=(villes||[]).find(x=>new RegExp("\\b"+norm(x).replace(/[-\s]/g,"[-\\s]")+"\\b").test(nb));
  if(v)r.ville=v;
- if(/\bcession\b|\btransfert de bail\b|\blease transfer\b/.test(bas))r.cession="oui";
+ if(/\bcession\b|\btransfert de bail\b|\blease transfer\b|sous-loca|sous-lou|\bsublet|\bsublease/.test(bas))r.cession="oui";
  return r;
 }
 function resumeLecture(r){const p=[];if(r.prix)p.push(Number(r.prix).toLocaleString("fr-CA")+" $");if(r.ch)p.push(r.ch==="3"?"3 ch. et plus":r.ch+" ch.");if(r.ville)p.push(r.ville);if(r.cession)p.push("cession de bail");return p.join(" · ")}
@@ -213,7 +220,7 @@ const $=s=>document.querySelector(s);
 const app=$("#app");
 const esc=t=>String(t??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const money=n=>Number(n).toLocaleString("fr-CA")+" $";
-const top=(back,title)=>`<div class="top">${back?`<button class="back" data-go="${back}">‹ Retour</button>`:""}<b>${title||"HabitaScan"}</b><span class="sp"></span></div>`;
+const top=(back,title)=>`<div class="top">${back?`<button class="back" data-go="${back}">‹ Retour</button>`:""}${title?"":`<svg class="logo-mini" aria-hidden="true"><use href="#logo"/></svg>`}<b>${title||"HabitaScan"}</b><span class="sp"></span></div>`;
 const STATUT={aucune:"Identité non confirmée",en_attente:"Identité en vérification",confirmee:"Identité confirmée",refusee:"Identité refusée : recommence"};
 
 /* ===== HabitaScan : propriétaire, budget, annonces vérifiées (commun démo + Supabase) =====
@@ -262,76 +269,69 @@ function comparerProprio(texte,nom,adr){
   adr:no?(T.includes(" "+no+" ")&&(!rue||T.includes(" "+rue+" "))?"oui":"non"):null,
   lot:lot&&lot.length>=7&&lot.length<=8?fmtLot(lot):null}
 }
-function verdictProprio(P){
- if(P.refus==="oui")return {c:"r",t:"Ne paie pas",s:"Un vrai propriétaire peut prouver qu'il possède le logement. Un refus est un signal grave."};
- const c=P.cmp||{};const nomOk=c.nom==="oui"||P.nomManuel==="oui",nomKo=c.nom==="non"||P.nomManuel==="non";
- const lotKo=c.lot&&P.geo&&P.geo.lots&&P.geo.lots.length&&!P.geo.lots.includes(chiffresLot(c.lot));
- const role=P.nomRole?memeNom(P.nomRole,P.nom):null;
- if(lotKo)return {c:"y",t:"Le numéro de lot ne correspond pas",s:"Le lot du compte de taxes n'est pas celui de l'adresse. Demande le compte de taxes de ce logement-ci."};
- if(nomKo)return {c:"y",t:"Le nom ne correspond pas",s:P.role==="gestionnaire"?"Demande le mandat écrit signé par le propriétaire inscrit sur le compte de taxes.":"Demande pourquoi. Un gestionnaire doit montrer un mandat écrit du propriétaire."};
- if(c.adr==="non")return {c:"y",t:"L'adresse ne correspond pas",s:"Le compte de taxes doit être celui de l'adresse du logement."};
- if(role==="non"&&P.role!=="gestionnaire")return {c:"y",t:"Le nom au rôle est différent",s:"Le propriétaire au rôle n'est pas ton interlocuteur. Demande le mandat écrit, ou confirme au Registre foncier : le rôle peut dater."};
- if(nomOk||role==="oui")return {c:"g",t:"Les documents correspondent",s:"Pour une preuve sûre, confirme au Registre foncier (étape 3) avant de signer."};
- return null
-}
-function vueProprio(F,back){const P=F.P||(F.P={adr:F.adr?(F.adr+(F.ville&&F.ville!=="Autre"?", "+F.ville:"")):"",role:"proprietaire"});const V=verdictProprio(P),c=P.cmp,G=P.geo;
+function verdictProprio(P,F){const ces=F&&F.cession==="oui";const c=P.cmp||{};
+ const doc=ces?"l'accord écrit":"le bail";
+ if(P.nomReg&&P.nomBail){const m=memeNom(P.nomBail,P.nomReg);
+  if(m==="oui")return ces?{c:"g",t:"L'accord vient du propriétaire inscrit",s:"Tu peux signer la cession. Paie ensuite le loyer au propriétaire, jamais au locataire qui part."}:{c:"g",t:"Le bail est au nom du propriétaire inscrit",s:"Tu peux signer. Paie le premier mois à la signature, par un moyen traçable."};
+  if(m==="partiel")return {c:"y",t:"Le nom ressemble en partie",s:`Vérifie l'orthographe sur ${doc} et au Registre foncier avant de payer (deuxième prénom, entreprise apparentée).`};
+  return ces?{c:"r",t:"Ce n'est pas le propriétaire inscrit",s:"L'accord écrit n'est pas signé par le propriétaire inscrit au Registre foncier. Ne paie rien."}
+   :{c:"y",t:"Le bail n'est pas au nom du propriétaire inscrit",s:"Si c'est un gestionnaire, exige son mandat écrit signé par le propriétaire inscrit. Sinon, ne paie pas."}}
+ if(P.nomReg&&c.nom){if(c.nom==="non")return {c:"y",t:`Le propriétaire inscrit n'apparaît pas sur ${doc}`,s:"Si c'est un gestionnaire, exige son mandat écrit. Sinon, ne paie pas."};
+  if(c.adr==="non")return {c:"y",t:`L'adresse n'apparaît pas sur ${doc}`,s:`${ces?"L'accord":"Le bail"} doit être celui du logement que tu as visité.`};
+  if(c.nom==="oui")return {c:"g",t:`Le propriétaire inscrit apparaît sur ${doc}`,s:"Tu peux signer. Paie à la signature, par un moyen traçable."}}
+ return null}
+function vueProprio(F,back){const P=F.P||(F.P={adr:F.adr?(F.adr+(F.ville&&F.ville!=="Autre"?", "+F.ville:"")):""});const V=verdictProprio(P,F),c=P.cmp,G=P.geo;
  const ligne=(etat,t)=>`<li><span class="dot ${etat}"></span><div>${t}</div></li>`;
- const lots=G&&G.lots||[];const role=P.nomRole?memeNom(P.nomRole,P.nom):null;
+ const lots=G&&G.lots||[];const ces=F.cession==="oui";const doc=ces?"l'accord écrit du propriétaire":"le bail";
  return `${top(back,"Propriétaire")}
 <h2>Vérifier le propriétaire</h2>
-<p class="soft">Le rôle d'évaluation en ligne n'affiche pas toujours le nom : à Montréal, un propriétaire peut demander qu'on retire son nom et ses coordonnées (${lienExt(L_RETRAIT_MTL,"Loi sur la fiscalité municipale")}). Voici comment le confirmer quand même.</p>
+<p class="soft"><b>Aucune question à poser à l'annonceur.</b> L'adresse suffit pour trouver le vrai propriétaire. La comparaison se fait au moment de signer, avant de payer : c'est le seul moment où ton argent est en jeu.</p>
 ${V?`<div class="verdict ${V.c}" id="pv"><strong>${V.t}</strong><span>${V.s}</span></div>`:""}
 <form class="card" id="f-pro" novalidate>
-<h2>1. L'adresse et le numéro de lot</h2>
-<label>Adresse du logement<input id="padr" autocomplete="off" placeholder="1234, rue Exemple, Ville" value="${esc(P.adr||"")}"></label>
+<h2>1. L'adresse du logement</h2>
+<p class="hint">Dans l'annonce, ou celle qu'on te donne pour la visite.</p>
+<label>Adresse<input id="padr" autocomplete="off" placeholder="1234, rue Exemple, Ville" value="${esc(P.adr||"")}"></label>
 <button type="button" class="btn ghost" id="b-lot">${P.chercheLot?"Recherche…":"Trouver le numéro de lot"}</button>
 ${G?G.trouve?`<ul class="reasons">${ligne("g",`Adresse trouvée : ${esc(G.adresse)}.`)}
-${lots.length?ligne("g",`Numéro de lot : ${lots.map(l=>`<b class="num">${esc(fmtLot(l))}</b>`).join(", ")}. Il sert au Registre foncier (étape 3).`):ligne("y",`Numéro de lot non trouvé automatiquement. Cherche l'adresse sur ${lienExt(L_INFOLOT,"Infolot")}.`)}
-</ul><p class="hint">Sources : Adresses Québec et cadastre du Québec, données ouvertes du gouvernement. La carte officielle reste ${lienExt(L_INFOLOT,"Infolot")}.</p>`
+${lots.length?ligne("g",`Numéro de lot : ${lots.map(l=>`<b class="num">${esc(fmtLot(l))}</b>`).join(", ")}.`):ligne("y",`Numéro de lot non trouvé automatiquement. Cherche l'adresse sur ${lienExt(L_INFOLOT,"Infolot")}.`)}
+</ul><p class="hint">Sources : Adresses Québec et cadastre du Québec, données ouvertes du gouvernement.</p>`
 :`<p class="lu">${esc(G.erreur||"Adresse introuvable. Ajoute la ville, ou cherche-la sur la carte Infolot.")} ${lienExt(L_INFOLOT,"Ouvrir Infolot")}</p>`:""}
-<h2>2. Demande le compte de taxes municipales</h2>
-<p class="hint">Le propriétaire le reçoit chaque année pour cette adresse. Demande-lui une photo : il peut cacher les montants. Le nom, l'adresse et le numéro de lot suffisent.</p>
-<div class="seg" role="group" aria-label="Qui te loue le logement"><button type="button" data-role="proprietaire" aria-pressed="${P.role!=="gestionnaire"}">Il dit être le propriétaire</button><button type="button" data-role="gestionnaire" aria-pressed="${P.role==="gestionnaire"}">Il dit être gestionnaire</button></div>
-<label>Nom de ton interlocuteur${P.role==="gestionnaire"?" (ou du propriétaire qu'il représente)":""}<input id="pnom" autocomplete="off" placeholder="Prénom Nom" value="${esc(P.nom||"")}"></label>
-<label class="drop">${P.photo?`<img src="${P.photo}" alt="Compte de taxes">Changer la photo`:"Ajouter la photo du compte de taxes"}<input type="file" accept="image/*" data-taxe="1"></label>
-${P.lecture?`<p class="lu" role="status">${P.lecture}</p>`:""}
-${c?`<ul class="reasons">
-${c.nom?ligne(c.nom==="oui"?"g":c.nom==="partiel"?"y":"r",c.nom==="oui"?"Le nom de ton interlocuteur est sur le compte de taxes.":c.nom==="partiel"?"Une partie du nom seulement est sur le compte de taxes. Vérifie toi-même.":"Le nom de ton interlocuteur n'est pas sur le compte de taxes."):""}
-${c.adr?ligne(c.adr==="oui"?"g":"r",c.adr==="oui"?"L'adresse du logement est sur le compte de taxes.":"L'adresse du logement n'a pas été trouvée sur le compte de taxes."):""}
-${c.lot?ligne(lots.length?(lots.includes(chiffresLot(c.lot))?"g":"r"):"i",lots.length?(lots.includes(chiffresLot(c.lot))?`Le numéro de lot du compte de taxes (<b class="num">${esc(c.lot)}</b>) est bien celui de l'adresse.`:`Le numéro de lot du compte de taxes (<b class="num">${esc(c.lot)}</b>) n'est pas celui de l'adresse.`):`Numéro de lot lu : <b class="num">${esc(c.lot)}</b>.`):ligne("y","Numéro de lot non lu sur le compte de taxes.")}</ul>`:""}
-${P.photo&&P.echec?yn("pnomManuel","Le nom sur le compte de taxes est-il celui de ton interlocuteur ?"):""}
-${P.role==="gestionnaire"?`<p class="hint"><b>Gestionnaire :</b> demande aussi le mandat écrit signé par le propriétaire inscrit sur le compte de taxes.</p>`:""}
-${yn("prefus","Refuse-t-il de montrer le compte de taxes ou une pièce d'identité ?")}
-<p class="hint">La photo reste sur ton téléphone. Elle n'est envoyée nulle part.</p>
 </form>
-<div class="card"><h2>3. Confirme au Registre foncier</h2>
-<p class="hint">C'est la preuve qui ne peut pas être retirée : le dernier acte de vente indique à qui appartient l'immeuble.</p>
+<div class="card"><h2>2. Trouve le vrai propriétaire</h2>
+<p class="hint">Le Registre foncier dit à qui appartient l'immeuble. Personne ne peut le falsifier ni le faire retirer.</p>
 <ul class="reasons">
-${ligne("i",lots.length?`<b>Ton numéro de lot :</b> <span class="num">${lots.map(fmtLot).join(", ")}</span>.`:`<b>Trouve le numéro de lot</b> à l'étape 1, ou avec ${lienExt(L_INFOLOT,"Infolot")} (gratuit).`)}
-${ligne("i",`<b>Consulte l'index des immeubles</b> de ce lot au ${lienExt(L_REGISTRE,"Registre foncier du Québec")} : 1 $ par document, compte requis.<div class="law">${lienExt(L_TARIF,"Grille tarifaire du Registre foncier, 1er janvier 2026")}</div>`)}
-${ligne("i","<b>Compare le nom</b> du dernier acheteur avec celui du compte de taxes et de ton interlocuteur.")}</ul></div>
-<div class="card"><h2>4. Rôle d'évaluation (facultatif)</h2>
-<p class="hint">${F.ville==="Montréal"||!F.ville?`À Montréal : ${lienExt(L_ROLE_MTL,"rôle d'évaluation en ligne")}.`:`Plusieurs villes publient leur rôle d'évaluation en ligne ; cherche « rôle d'évaluation » et le nom de ta ville.`} Si le nom n'apparaît pas, ce n'est pas un signal d'arnaque : le propriétaire a pu demander son retrait.</p>
-<label>Nom inscrit au rôle, si tu l'as trouvé<input id="prole" autocomplete="off" placeholder="Prénom Nom" value="${esc(P.nomRole||"")}"></label>
-${role?`<ul class="reasons">${ligne(role==="oui"?"g":role==="partiel"?"y":"r",role==="oui"?"Le nom au rôle est celui de ton interlocuteur.":role==="partiel"?"Le nom au rôle ressemble en partie à celui de ton interlocuteur.":"Le nom au rôle n'est pas celui de ton interlocuteur.")}</ul>`:""}
-</div>
+${ligne("i",lots.length?`<b>Ton numéro de lot :</b> <span class="num">${lots.map(fmtLot).join(", ")}</span>.`:`<b>Le numéro de lot</b> : à l'étape 1, ou avec ${lienExt(L_INFOLOT,"Infolot")} (gratuit).`)}
+${ligne("i",`<b>Consulte l'index des immeubles</b> de ce lot au ${lienExt(L_REGISTRE,"Registre foncier du Québec")}, puis le dernier acte de vente : 1 $ par document, compte requis.<div class="law">${lienExt(L_TARIF,"Grille tarifaire du Registre foncier, 1er janvier 2026")}</div>`)}
+${ligne("i",`<b>Si c'est une entreprise</b>, regarde ses dirigeants au ${lienExt("https://www.registreentreprises.gouv.qc.ca/","registre des entreprises")} (gratuit).`)}</ul>
+<label>Nom du propriétaire inscrit<input id="preg" autocomplete="off" placeholder="Prénom Nom, ou nom de l'entreprise" value="${esc(P.nomReg||"")}"></label>
+<p class="hint">L'app le garde sur ton téléphone pour la comparaison de l'étape 3.${F.ville==="Montréal"?` À Montréal, le ${lienExt(L_ROLE_MTL,"rôle d'évaluation en ligne")} donne parfois le nom gratuitement ; s'il n'y est pas, le propriétaire a pu demander son retrait (${lienExt(L_RETRAIT_MTL,"Loi sur la fiscalité municipale")}).`:""}</p></div>
 ${carteApprofondie()}
+<form class="card" id="f-sig" novalidate><h2>3. Au moment de signer, avant de payer</h2>
+${ces?`<div class="rule" style="text-align:left"><b>C'est le locataire actuel qui annonce</b> (cession ou sous-location). Le document à comparer est <b>l'accord écrit du propriétaire, avec ton nom</b> : le locataire doit aviser le propriétaire par écrit et obtenir son accord. Le propriétaire a 15 jours pour répondre ; sans réponse, il est réputé avoir accepté. En cession, le locataire qui part ne peut rien te demander en échange.
+<span class="law">Code civil du Québec, art. 1870 et 1871 · ${lienExt("https://www.tal.gouv.qc.ca/sites/default/files/notices/TAL_802_E.pdf","TAL, avis de cession")}</span></div>`
+:`<p class="hint">Le nom du locateur est écrit en haut du bail, dans la section « Entre le locateur et le locataire » du formulaire obligatoire. Tu n'as rien à demander : il suffit de le lire.</p>`}
+<label>Nom du ${ces?"propriétaire sur l'accord écrit":"locateur écrit sur le bail"}<input id="pbail" autocomplete="off" placeholder="Prénom Nom, ou nom de l'entreprise" value="${esc(P.nomBail||"")}"></label>
+<label class="drop">${P.photo?`<img src="${P.photo}" alt="Document">Changer la photo`:`Ou prends ${doc} en photo`}<input type="file" accept="image/*" data-taxe="1"></label>
+${P.lecture?`<p class="lu" role="status">${P.lecture}</p>`:""}
+${c&&P.nomReg?`<ul class="reasons">
+${c.nom?ligne(c.nom==="oui"?"g":c.nom==="partiel"?"y":"r",c.nom==="oui"?`Le propriétaire inscrit apparaît sur ${doc}.`:c.nom==="partiel"?`Une partie seulement du nom du propriétaire inscrit apparaît sur ${doc}.`:`Le propriétaire inscrit n'apparaît pas sur ${doc}.`):""}
+${c.adr?ligne(c.adr==="oui"?"g":"r",c.adr==="oui"?`L'adresse du logement est sur ${doc}.`:`L'adresse du logement n'a pas été trouvée sur ${doc}.`):""}</ul>`:""}
+${!P.nomReg&&(P.nomBail||P.photo)?`<p class="lu">Inscris d'abord le nom du propriétaire trouvé à l'étape 2, pour que l'app compare.</p>`:""}
+<p class="hint">La photo reste sur ton téléphone. Elle n'est envoyée nulle part.</p></form>
 <button class="btn" data-go="${back}">Retour au résultat</button>`}
 function lierProprio(F){const P=F.P;
- const garder=()=>{P.nom=$("#pnom").value;P.adr=$("#padr").value;P.nomRole=$("#prole").value};
- const recomparer=()=>{if(P.texte)P.cmp=comparerProprio(P.texte,P.nom,P.adr)};
- app.querySelectorAll("[data-role]").forEach(b=>b.onclick=()=>{garder();P.role=b.dataset.role;go("proprio")});
- app.querySelectorAll("[data-yn=prefus],[data-yn=pnomManuel]").forEach(b=>b.addEventListener("click",()=>{garder();P.refus=F.prefus;P.nomManuel=F.pnomManuel;go("proprio")}));
- ["#pnom","#padr","#prole"].forEach(s=>$(s).onchange=()=>{const avant=P.adr;garder();if(P.adr!==avant)P.geo=null;recomparer();go("proprio")});
+ const garder=()=>{P.adr=$("#padr").value;P.nomReg=$("#preg").value.trim();P.nomBail=$("#pbail").value.trim()};
+ const recomparer=()=>{if(P.texte&&P.nomReg)P.cmp=comparerProprio(P.texte,P.nomReg,P.adr)};
+ ["#padr","#preg","#pbail"].forEach(s=>$(s).onchange=()=>{const avant=P.adr;garder();if(P.adr!==avant)P.geo=null;recomparer();go("proprio")});
  $("#b-lot").onclick=async()=>{garder();if(P.adr.trim().length<6||!/\d/.test(P.adr)){P.geo={trouve:false,erreur:"Entre l'adresse complète, avec le numéro et la ville."};return go("proprio")}
-  P.chercheLot=true;go("proprio");
+  P.chercheLot=true;go("proprio");try{MES.noter("lot_cherche")}catch(e){}
   try{P.geo=await INFO.adresse(P.adr.trim())}catch(e){P.geo={trouve:false,erreur:"La recherche automatique n'a pas fonctionné ici."}}
   P.chercheLot=false;if($("#f-pro"))go("proprio")};
  const inp=app.querySelector("input[data-taxe]");
- inp.onchange=()=>{const f=inp.files[0];if(!f)return;garder();const r=new FileReader();r.onload=()=>{P.photo=r.result;P.cmp=null;P.echec=false;P.lecture="Lecture du compte de taxes…";go("proprio");
-  lireCapture(P.photo).then(t=>{P.texte=t;P.cmp=comparerProprio(t,P.nom,P.adr);P.lecture=P.nom?null:"Écris le nom de ton interlocuteur pour comparer.";})
-  .catch(()=>{P.echec=true;P.lecture="La lecture automatique n'a pas fonctionné ici. Compare le nom toi-même ci-dessous."})
-  .finally(()=>{if($("#f-pro"))go("proprio")})};r.readAsDataURL(f)}}
+ inp.onchange=()=>{const f=inp.files[0];if(!f)return;garder();const r=new FileReader();r.onload=()=>{P.photo=r.result;P.cmp=null;P.lecture="Lecture du document…";go("proprio");
+  lireCapture(P.photo).then(t=>{P.texte=t;recomparer();P.lecture=null})
+  .catch(()=>{P.lecture="La lecture automatique n'a pas fonctionné ici. Écris le nom toi-même ci-dessus."})
+  .finally(()=>{if($("#f-sig"))go("proprio")})};r.readAsDataURL(f)}}
 
 /* ---------- 2. Simulateur de budget d'installation 2026 ---------- */
 const TRANSIT={ // laissez-passer mensuel régulier, tarif 2026
@@ -494,9 +494,10 @@ function lierTrouver(F){const f=F.filtre;
   $("#sites").innerHTML=liensSites(f)};
  const chercher=async()=>{f.ville=$("#t-ville").value;f.ch=$("#t-ch").value;f.max=nombre($("#t-max").value)||"";
   if(!f.max)return err("Entre ton budget maximum.");err("");
+  try{MES.noter("recherche_lancee")}catch(e){}
   const b=$("#go");b.disabled=true;b.textContent="Recherche…";$("#liste").innerHTML=`<p class="hint">Recherche des annonces récentes…</p>`;
   try{const brut=await ANN.chercher(f);F.resultats=trierResultats(brut,f);F.noteRecherche=ANN.note||""}
-  catch(x){F.resultats=[];F.noteRecherche="La recherche n'a pas fonctionné. Réessaie, ou cherche directement sur les sites ci-dessous."}
+  catch(x){F.resultats=[];F.noteRecherche=x&&x.message==="quota"?"Tu as atteint la limite de recherches pour aujourd'hui. Réessaie demain, ou cherche directement sur les sites ci-dessous.":"La recherche n'a pas fonctionné. Réessaie, ou cherche directement sur les sites ci-dessous."}
   if(!$("#f-tr"))return;b.disabled=false;b.textContent="Chercher";afficher()};
  $("#f-tr").onsubmit=e=>{e.preventDefault();chercher()};
  if(F.resultats)afficher();else if(f.max)chercher();else $("#sites").innerHTML=liensSites(f)}
@@ -524,13 +525,14 @@ const CSS_PLUS=`.lienbtn{background:none;border:0;padding:0;font:inherit;color:v
 .tvilles{width:100%;border-collapse:collapse;font-size:14px}.tvilles th{text-align:left;color:var(--soft);font-weight:600;padding:6px 4px;border-bottom:1px solid var(--line)}
 .tvilles td{padding:8px 4px;border-bottom:1px solid var(--line)}.tvilles tr.ici td{font-weight:700}.tvilles .ok{color:var(--ok);font-weight:700}.tvilles .non{color:var(--red);font-weight:700}
 .btn small{display:block;font-weight:500;font-size:14px;opacity:.85}`;
+
 /* Adaptateur adresse (Supabase : fonction info-adresse, qui appelle les services publics) */
 const INFO={async adresse(a){const {data,error}=await sb.functions.invoke("info-adresse",{body:{adresse:a}});if(error||!data||data.error)return trouverLotDirect(a);return data}};
 
 /* Adaptateur recherche (Supabase : fonction chercher-annonces → Brave Search API) */
 const ANN={note:"",
- async chercher(f){const {data,error}=await sb.functions.invoke("chercher-annonces",{body:{ville:f.ville,ch:f.ch,max:f.max}});
-  if(error)throw error;return (data&&data.resultats)||[]}};
+ async chercher(f){if(!CFG.recherche)return [];const {data,error}=await sb.functions.invoke("chercher-annonces",{body:{ville:f.ville,ch:f.ch,max:f.max}});
+  if(error){if(error.context&&error.context.status===429)throw new Error("quota");throw error}return (data&&data.resultats)||[]}};
 document.head.insertAdjacentHTML("beforeend","<style>"+CSS_PLUS+"</style>");
 /* ===== HabitaScan : confidentialité, suppression du compte, espace admin (commun démo + Supabase) =====
    Dépend de : F, $, app, go, esc, top, err, LOYERS, TRANSIT, ASSURANCE, EPICERIE, GARDE, m0, nouveauF
@@ -551,9 +553,11 @@ function vueConfidentialite(back){const R=RESPONSABLE;
 <p class="hint">En vigueur le ${R.vigueur}.</p>
 <div class="card"><h2>En bref</h2>
 <ul class="liste"><li>Nous recueillons le minimum : ton courriel ou ton numéro pour te connecter, et le résumé de tes vérifications pour ton historique.</li>
-<li>Le texte des annonces, tes conversations et tes captures d'écran sont lus <b>sur ton téléphone</b>. Nous ne les conservons pas.</li>
+<li>Le texte des annonces, tes conversations et tes captures d'écran sont lus <b>sur ton téléphone</b>. Si tu actives l'analyse intelligente, ils sont envoyés à Anthropic pour l'analyse. Nous ne les conservons jamais.</li>
 <li>Aucune vente de renseignements, aucune publicité, aucun profilage ni suivi publicitaire.</li>
+<li>Ta ville de connexion n'est jamais notée sans ton accord : cette fonction est désactivée par défaut et tu l'actives toi-même dans Mon compte.</li>
 <li>Tu peux consulter, corriger ou supprimer tes renseignements en tout temps.</li></ul>
+<p class="hint">Voir aussi les ${lienConditions}.</p>
 <p class="hint">Cette politique respecte la ${lienExt(L_LOI,"Loi sur la protection des renseignements personnels dans le secteur privé")}, modifiée par la Loi 25. L'app s'adresse aux personnes de 14 ans et plus.</p></div>
 <div class="card"><h2>Personne responsable</h2><p>${R.nom}, ${R.titre}, ${R.entreprise}<br>Courriel : ${R.courriel}<br>${R.adresse}</p>
 <p class="hint">Écris-lui pour toute question, demande d'accès, de correction ou de suppression, ou pour porter plainte.</p></div>
@@ -563,30 +567,35 @@ function vueConfidentialite(back){const R=RESPONSABLE;
  ["Signalement : lien et motif","Avertir les autres. Ils voient seulement un nombre"],
  ["Photo de pièce d'identité, seulement pour signaler","Éviter les fausses accusations. Supprimée après la vérification"],
  ["Ville, chambres et budget de « Trouver »","Chercher des annonces. Non conservés"],
- ["Vérification approfondie : adresse, lot, nom de ton interlocuteur, lien","Faire la vérification que tu as payée. Seul le verdict t'est remis"]],["Renseignement","Pourquoi"])}
+ ["Vérification complète : adresse, lot, lien de l'annonce et, si tu le donnes, le nom de l'annonceur","Faire la vérification que tu as payée et te remettre le rapport. Le rapport donne le nom du propriétaire inscrit au Registre foncier (information publique), sans aucun document"],
+ ["Compteurs d'utilisation (écrans ouverts par jour) et erreurs techniques","Améliorer l'app. Compteurs sans lien avec ton compte ; erreurs sans renseignement personnel"],
+ ["Ville approximative de connexion, seulement si tu l'actives dans Mon compte : ville, région, pays (déduits de l'adresse IP, sans GPS ni adresse IP conservée) et type d'appareil","Repérer une connexion inhabituelle sur ton compte et savoir quelles régions nous servons. Visible seulement par les administrateurs"],
+ ["Analyse intelligente, seulement si tu l'actives : captures et texte de l'annonce et de la conversation","Extraire les informations et repérer les signaux d'arnaque. Envoyés à Anthropic pour l'analyse, jamais conservés par HabitaScan"]],["Renseignement","Pourquoi"])}
 <p class="hint"><b>Restent sur ton téléphone :</b> le texte des annonces et des conversations, tes captures (sauf si la recherche des photos est activée : envoyée à Google Cloud Vision puis oubliée), la photo du compte de taxes, ton budget et ton revenu.</p>
 <p class="hint"><b>Résultat automatique :</b> le verdict est calculé à partir de règles publiques. Il porte sur l'annonce, pas sur toi. Tu peux demander quelles règles ont mené à un résultat.</p></div>
 <div class="card"><h2>Fournisseurs, dont hors du Québec</h2>${t([
  ["Supabase (base de données, connexion)","Données à Montréal (AWS Canada Centre) ; entreprise américaine"],
- ["Vercel (pages de l'app)","États-Unis : adresse IP"],
+ ["Vercel (pages de l'app)","États-Unis : adresse IP ; si tu l'actives, Vercel en déduit ta ville approximative"],
  ["jsDelivr (bibliothèques de l'app)","Réseau mondial : adresse IP"],
  ["Brave Search (« Trouver »)","États-Unis : mots de la recherche, sans ton nom"],
  ["Google Cloud Vision, si activé","États-Unis : capture envoyée pour la recherche"],
- ["Stripe (paiement de la vérification approfondie)","Entreprise américaine : courriel et carte. HabitaScan ne voit jamais le numéro de carte"]],["Fournisseur","Où et quoi"])}
+ ["Stripe (paiement de la vérification complète)","Entreprise américaine : courriel et carte. HabitaScan ne voit jamais le numéro de carte"],
+ ["Anthropic (analyse intelligente, si tu l'actives)","Entreprise américaine : captures et texte envoyés pour l'analyse"]],["Fournisseur","Où et quoi"])}
 <p class="hint">Avant de confier des renseignements hors du Québec, nous évaluons s'ils seront protégés adéquatement (art. 17 de la loi). Nous ne communiquons rien d'autre sans ton consentement, sauf dans les cas prévus par la loi.</p></div>
 <div class="card"><h2>Conservation et sécurité</h2>
 <ul class="liste"><li>Compte et historique : jusqu'à la suppression du compte, ou [24] mois sans connexion.</li>
 <li>Pièce d'identité : supprimée dès la vérification, au plus tard [30] jours après l'envoi.</li>
 <li>Signalements : [12] mois.</li>
+<li>Ville approximative de connexion : 90 jours au plus, 20 connexions au plus ; effacée dès que tu désactives la fonction.</li>
 <li>Échanges chiffrés (HTTPS) ; chaque utilisateur ne lit que ses propres renseignements.</li>
 <li>En cas d'incident présentant un risque de préjudice sérieux, nous avisons la Commission d'accès à l'information et les personnes touchées.</li></ul></div>
 <div class="card"><h2>Tes droits</h2>
 <p>Accès et copie de tes renseignements, correction, suppression, retrait du consentement. Réponse dans les 30 jours, gratuitement.</p>
-<p class="hint">Tu peux supprimer ton compte toi-même depuis l'accueil. En cas de désaccord, tu peux t'adresser à la ${lienExt(L_CAI,"Commission d'accès à l'information")}.</p></div>`}
+<p class="hint">Tu peux supprimer ton compte toi-même dans Mon compte, et retirer une vérification de ton historique à partir de son détail. En cas de désaccord, tu peux t'adresser à la ${lienExt(L_CAI,"Commission d'accès à l'information")}.</p></div>`}
 const lienConfidentialite=`<button type="button" class="lienbtn" data-go="confidentialite">politique de confidentialité</button>`;
 
 /* ---------- Suppression du compte ---------- */
-const vueSupprimer=()=>`${top("accueil","Supprimer mon compte")}
+const vueSupprimer=()=>`${top("compte","Supprimer mon compte")}
 <h2>Supprimer mon compte</h2>
 <div class="card"><p>Ton compte, ton historique, tes signalements et, s'il y en a, les photos de ta pièce d'identité seront supprimés. C'est définitif.</p>
 <label style="flex-direction:row;align-items:flex-start;gap:10px;font-weight:500"><input type="checkbox" id="sup-ok" style="width:22px;min-height:22px;margin-top:2px">Je comprends que la suppression est définitive.</label>
@@ -604,13 +613,17 @@ const PARAMS=[ // clé en base → où l'app l'utilise
  {cle:"assurance",n:"Assurance locataire par mois",get:()=>ASSURANCE.p,set:v=>ASSURANCE.p=v},
  {cle:"epicerie",n:"Épicerie par personne par mois",get:()=>EPICERIE.p,set:v=>EPICERIE.p=v},
  {cle:"garde_jour",n:"Garderie subventionnée par jour",get:()=>GARDE.jour,set:v=>GARDE.jour=v}];
-function appliquerParametres(rows){(rows||[]).forEach(r=>{const p=PARAMS.find(x=>x.cle===r.cle);const v=+r.valeur;if(p&&v>0)p.set(v)})}
+/* Réglages modifiables dans la console d'administration */
+const CFG={ia:true,recherche:true,approfondie:true,message:"",support:""};
+const DRAPEAUX={ia_active:"ia",recherche_active:"recherche",approfondie_active:"approfondie"};
+function appliquerParametres(rows){(rows||[]).forEach(r=>{const p=PARAMS.find(x=>x.cle===r.cle);const v=+r.valeur;if(p&&v>0)p.set(v);if(DRAPEAUX[r.cle])CFG[DRAPEAUX[r.cle]]=v!==0})}
 const nb=v=>Number(v||0).toLocaleString("fr-CA");
 function vueAdmin(){const onglet=F.onglet||"chiffres";
  const o=(k,t)=>`<button type="button" data-onglet="${k}" aria-pressed="${onglet===k}">${t}</button>`;
- return `${top("accueil","Admin")}
+ return `${top("compte","Admin")}
 <h2>Espace admin</h2>${ADM.demo?`<p class="demo">Démo : données fictives, rien n'est envoyé.</p>`:""}
-<div class="seg seg5" role="group" aria-label="Section">${o("chiffres","Chiffres")}${o("demandes","Demandes")}${o("identites","Identités")}${o("signalements","Signalements")}${o("montants","Montants")}</div>
+${ADM.console?`<a class="btn" href="${ADM.console}" target="_blank" rel="noopener">Ouvrir la console complète (ordinateur) ↗</a><p class="hint">Utilisateurs, réglages, quotas, loyers, administrateurs, journal : tout se gère dans la console.</p>`:""}
+<div class="seg seg6" role="group" aria-label="Section">${o("chiffres","Chiffres")}${o("demandes","Demandes")}${o("connexions","Connexions")}${o("identites","Identités")}${o("signalements","Signalements")}${o("montants","Montants")}</div>
 <div id="adm" aria-live="polite"><p class="hint">Chargement…</p></div>`}
 async function lierAdmin(){const onglet=F.onglet||"chiffres";
  app.querySelectorAll("[data-onglet]").forEach(b=>b.onclick=()=>{F.onglet=b.dataset.onglet;go("admin")});
@@ -660,80 +673,102 @@ input.mini{min-height:40px;padding:6px 8px;font-size:15px}#adm{display:flex;flex
    Dépend de : F, $, app, go, esc, top, err, nouveauF, lienExt, fmtLot, chiffresLot, PARAMS, ADM
    et d'un adaptateur VAP : VAP.creer(d) → id ; VAP.mes() ; VAP.adminListe() ; VAP.adminMaj(id, statut, verdict, note)
    VAP.sauverTexte(cle, valeur) ; VAP.courriel() → courriel du compte ; VAP.demo */
-const VCFG={prix:10,delai:24,lien:""};
-PARAMS.push({cle:"prix_verif",n:"Prix de la vérification approfondie ($)",get:()=>VCFG.prix,set:v=>VCFG.prix=v},
+const VCFG={prix:15,delai:24,lien:""};
+PARAMS.push({cle:"prix_verif",n:"Prix de la vérification complète ($)",get:()=>VCFG.prix,set:v=>VCFG.prix=v},
  {cle:"delai_verif_heures",n:"Délai de réponse promis (heures)",get:()=>VCFG.delai,set:v=>VCFG.delai=v});
 const prixTxt=()=>String(VCFG.prix).replace(".",",")+" $";
 const VERDICTS={correspond:["g","Le nom correspond au propriétaire inscrit au Registre foncier."],
  ne_correspond_pas:["r","Le nom ne correspond pas au propriétaire inscrit. Ne paie rien avant d'avoir une explication et un mandat écrit du propriétaire."],
  compagnie:["y","Le propriétaire inscrit est une entreprise. Demande la preuve que ton interlocuteur la représente (mandat écrit, registre des entreprises)."],
- introuvable:["y","Nous n'avons pas pu confirmer le propriétaire (lot introuvable ou vente trop récente). Écris-nous pour un remboursement."]};
+ introuvable:["y","Nous n'avons pas pu confirmer le propriétaire (lot introuvable ou vente trop récente). Écris-nous pour un remboursement."],
+ trouve:["g","Nous avons trouvé le propriétaire inscrit au Registre foncier."]};
 const STATUTS={a_payer:["i","Paiement non reçu"],payee:["y","En cours"],terminee:["g","Terminée"],remboursee:["i","Remboursée"]};
 
-const carteApprofondie=()=>`<div class="card offre"><h2>Pas le temps ? On le fait pour toi</h2>
-<p>Notre équipe consulte le Registre foncier et te dit si ton interlocuteur est bien le propriétaire inscrit. Réponse en ${VCFG.delai} h maximum.</p>
-<button class="btn" data-go="approfondie">Vérification approfondie · ${prixTxt()}</button>
+const carteApprofondie=()=>(typeof CFG!=="undefined"&&CFG.approfondie===false)?"":`<div class="card offre"><h2>Pas le temps ? On le fait pour toi</h2>
+<p>Notre équipe fait toute la vérification et t'envoie un rapport dans l'app, en ${VCFG.delai} h maximum, sinon remboursé.</p>
+<ul class="inclus"><li>Le <b>propriétaire</b> de l'immeuble, au Registre foncier</li><li>Si c'est une <b>entreprise</b> : qu'elle est active, et qui la dirige</li><li>Les <b>photos</b> : copiées d'une autre annonce ou d'un autre site ?</li><li>Le même logement <b>annoncé ailleurs</b>, sous un autre nom ou un autre prix</li><li>Un <b>rapport écrit</b> avec un verdict clair</li></ul>
+<button class="btn" data-va-de="proprio">Vérification complète · ${prixTxt()}</button>
 <p class="hint">Paiement par carte de crédit ou de débit. Ce n'est pas une garantie : visite toujours et signe le bail avant de payer.</p></div>`;
 
-function vueApprofondie(F,back){const P=F.P||{};const A=F.VA||(F.VA={adresse:P.adr||F.adr||"",lot:(P.geo&&P.geo.lots&&P.geo.lots[0])||(P.cmp&&P.cmp.lot&&chiffresLot(P.cmp.lot))||"",nom:P.nom||"",role:P.role||"proprietaire",lien:F.lien||""});
- return `${top(back,"Vérification approfondie")}
-<h2>Vérification approfondie</h2>
-<p class="soft">Nous consultons le Registre foncier pour ce logement et comparons le propriétaire inscrit avec le nom de ton interlocuteur. Tu reçois le verdict dans l'app, en ${VCFG.delai} h maximum.</p>
+/* Offre visible sur le résultat et l'accueil */
+const offreApprofondie=de=>(typeof CFG!=="undefined"&&CFG.approfondie===false)?"":`<div class="card offre offre-res"><p class="offre-eti">Service HabitaScan</p><h2>Vérification complète · ${prixTxt()}</h2>
+<p>Sans que tu aies une seule question à poser, notre équipe vérifie l'annonce à fond et t'envoie un rapport écrit, en ${VCFG.delai} h maximum, sinon remboursé.</p>
+<ul class="inclus"><li>Le <b>propriétaire</b> de l'immeuble, au Registre foncier</li><li>Si c'est une <b>entreprise</b> : qu'elle est active, et qui la dirige</li><li>Les <b>photos</b> : copiées d'une autre annonce ou d'un autre site ?</li><li>Le même logement <b>annoncé ailleurs</b>, sous un autre nom ou un autre prix</li><li>Un <b>rapport écrit</b> avec un verdict clair</li></ul>
+<button class="btn" data-va-de="${de}">Demander la vérification · ${prixTxt()}</button>
+<p class="hint">Paiement sécurisé par carte de crédit ou de débit. Ce n'est pas une garantie : visite toujours et signe le bail avant de payer.</p></div>`;
+function vueApprofondie(F,back){const P=F.P||{};const A=F.VA||(F.VA={adresse:P.adr||F.adr||"",lot:(P.geo&&P.geo.lots&&P.geo.lots[0])||(P.cmp&&P.cmp.lot&&chiffresLot(P.cmp.lot))||"",nom:"",role:F.cession==="oui"?"locataire":null,lien:F.lien||""});
+ return `${top(back,"Vérification complète")}
+<h2>Vérification complète · ${prixTxt()}</h2>
+<p class="soft">Notre équipe vérifie pour toi, puis t'envoie un rapport écrit dans l'app, en ${VCFG.delai} h maximum, sinon remboursé.</p>
+<ul class="inclus"><li>Le <b>propriétaire</b> de l'immeuble, au Registre foncier</li><li>Si c'est une <b>entreprise</b> : qu'elle est active, et qui la dirige</li><li>Les <b>photos</b> : copiées d'une autre annonce ou d'un autre site ?</li><li>Le même logement <b>annoncé ailleurs</b>, sous un autre nom ou un autre prix</li><li>Un <b>rapport écrit</b> avec un verdict clair</li></ul>
 <form class="card" id="f-va" novalidate>
 <label>Adresse du logement<input id="va-adresse" autocomplete="off" placeholder="1234, rue Exemple, Ville" value="${esc(A.adresse)}"></label>
 <label>Numéro de lot (facultatif)<input id="va-lot" inputmode="numeric" autocomplete="off" placeholder="1 234 567" value="${esc(A.lot?fmtLot(A.lot):"")}"></label>
-<label>Nom de ton interlocuteur<input id="va-nom" autocomplete="off" placeholder="Prénom Nom, ou nom de l'entreprise" value="${esc(A.nom)}"></label>
-<div class="seg" role="group" aria-label="Il dit être"><button type="button" data-varole="proprietaire" aria-pressed="${A.role!=="gestionnaire"}">Propriétaire</button><button type="button" data-varole="gestionnaire" aria-pressed="${A.role==="gestionnaire"}">Gestionnaire</button></div>
+<p class="hint" style="margin-top:0"><b>Aucune question à poser à l'annonceur :</b> l'adresse suffit. Nous trouvons le vrai propriétaire, vérifions les photos et les autres annonces, et te disons quel nom doit figurer sur ${A.role==="locataire"?"l'accord écrit du propriétaire":"le bail"}.</p>
+<label>Nom de l'annonceur, si tu l'as (facultatif)<input id="va-nom" autocomplete="off" placeholder="Tel qu'il apparaît dans l'annonce ou les messages" value="${esc(A.nom)}"></label>
 <label>Lien de l'annonce (facultatif)<input id="va-lien" type="url" inputmode="url" autocomplete="off" value="${esc(A.lien)}"></label>
-<label style="flex-direction:row;align-items:flex-start;gap:10px;font-weight:500"><input type="checkbox" id="va-ok" style="width:22px;min-height:22px;margin-top:2px">Je comprends que HabitaScan confirme seulement si ce nom correspond au propriétaire inscrit. Ce n'est pas une garantie : je visite et je signe le bail avant de payer quoi que ce soit.</label>
+<label style="flex-direction:row;align-items:flex-start;gap:10px;font-weight:500"><input type="checkbox" id="va-ok" style="width:22px;height:22px;min-height:22px;margin-top:2px;flex-shrink:0;appearance:auto;-webkit-appearance:checkbox;accent-color:var(--blue);padding:0">Je comprends que le rapport se base sur les registres publics et le Web à la date de la vérification. Ce n'est pas une garantie : je visite et je signe le bail avant de payer quoi que ce soit.</label>
 <p class="err" id="e" hidden></p>
 <button class="btn" id="go">Payer ${prixTxt()} par carte</button>
-<p class="hint">Le paiement se fait sur la page sécurisée de Stripe : HabitaScan ne voit jamais ton numéro de carte. Nous ne te transmettons aucun document sur le propriétaire, seulement le verdict.</p>
+<p class="hint">En payant, tu acceptes les ${lienConditions}.</p>
+<p class="hint">Le paiement se fait sur la page sécurisée de Stripe : HabitaScan ne voit jamais ton numéro de carte. Nous ne te transmettons aucun document sur le propriétaire, seulement le rapport.</p>
 </form>${VAP.demo?`<p class="demo">Démo : aucun paiement réel, tu pourras simuler le paiement.</p>`:""}`}
 function lierApprofondie(F){const A=F.VA;
  const garder=()=>{A.adresse=$("#va-adresse").value;A.lot=chiffresLot($("#va-lot").value);A.nom=$("#va-nom").value;A.lien=$("#va-lien").value};
- app.querySelectorAll("[data-varole]").forEach(b=>b.onclick=()=>{garder();A.role=b.dataset.varole;go("approfondie")});
  $("#f-va").onsubmit=async e=>{e.preventDefault();garder();
   if(A.adresse.trim().length<6||!/\d/.test(A.adresse))return err("Entre l'adresse complète, avec le numéro et la ville.");
   if(A.lot&&!/^\d{7,8}$/.test(A.lot))return err("Le numéro de lot a 7 chiffres, par exemple 1 234 567. Laisse vide si tu ne l'as pas.");
-  if(A.nom.trim().length<2)return err("Entre le nom de ton interlocuteur.");
   if(!$("#va-ok").checked)return err("Coche la case pour continuer.");
   if(!VAP.demo&&!VCFG.lien)return err("Le paiement n'est pas encore ouvert. Réessaie bientôt.");
   const b=$("#go");b.disabled=true;b.textContent="Préparation du paiement…";
-  try{const id=await VAP.creer({adresse:A.adresse.trim(),lot:A.lot||null,nom_interlocuteur:A.nom.trim(),role:A.role,lien:A.lien.trim()||null});
+  try{const id=await VAP.creer({adresse:A.adresse.trim(),lot:A.lot||null,nom_interlocuteur:A.nom.trim()||null,role:A.role,lien:A.lien.trim()||null});
+   try{MES.noter("demande_creee")}catch(e){}
    if(VAP.demo){nouveauF({});return go("accueil")}
    const u=new URL(VCFG.lien);u.searchParams.set("client_reference_id",id);const c=VAP.courriel();if(c)u.searchParams.set("prefilled_email",c);
    location.href=u.toString()}
   catch(x){b.disabled=false;b.textContent=`Payer ${prixTxt()} par carte`;err("La demande n'a pas pu être créée. Réessaie.")}}}
 
-/* Liste « Mes vérifications approfondies » sur l'accueil */
+/* Rapport de la vérification complète */
+const RAPPORT={global:{continuer:["g","Tu peux continuer","Rien d'anormal n'a été trouvé. Visite, puis signe le bail avant de payer."],precautions:["y","Continue avec précaution","Obtiens ce qui est indiqué ci-dessous avant de payer quoi que ce soit."],arreter:["r","Arrête","Ne paie rien et ne donne aucun document à cette personne."]},
+ entreprise:{lie:["g","L'entreprise propriétaire est active ; ses dirigeants sont indiqués ci-dessous. Le bail doit être à son nom."],non_lie:["y","Le nom de l'annonceur ne figure pas parmi les dirigeants de l'entreprise propriétaire. Le bail doit être au nom de l'entreprise ; si quelqu'un d'autre signe, exige un mandat écrit de l'entreprise."],inactive:["r","L'entreprise propriétaire n'est pas active au registre des entreprises."],non_verifie:["i","Lien avec l'entreprise non vérifié."]},
+ photos:{aucune:["g","Les photos n'ont pas été trouvées ailleurs sur le Web."],reutilisees:["r","Les photos apparaissent ailleurs : autre annonce, autre ville ou site d'agence."],non_verifie:["i","Photos non vérifiées (aucune photo fournie)."]},
+ doublons:{aucun:["g","Aucune autre annonce du même logement n'a été trouvée."],trouves:["y","Le même logement est annoncé ailleurs, sous un autre nom ou à un autre prix."],non_verifie:["i","Autres annonces non vérifiées."]}};
+function htmlRapport(d){const r=d.rapport||{},g=RAPPORT.global[d.verdict_global||r.global];const L=[];
+ const ajout=(m,k,det)=>{const x=m&&m[k];if(x)L.push(`<li><span class="dot ${x[0]}"></span><div>${x[1]}${det?`<div class="law">${esc(det)}</div>`:""}</div></li>`)};
+ const reg=r.registre||{},e=r.entreprise||{};if(reg.nom)L.push(`<li><span class="dot i"></span><div><b>Au moment de signer, le bail doit être au nom de : ${esc(reg.nom)}</b>${d.role==="locataire"?" (c'est aussi ce nom qui doit signer l'accord écrit de cession)":""}. Sinon, ne paie pas avant d'avoir un mandat écrit de ce propriétaire.</div></li>`);if((reg.resultat||d.verdict)==="compagnie"&&e.applicable)L.push(`<li><span class="dot i"></span><div>Le propriétaire inscrit au Registre foncier est une entreprise.${reg.details?`<div class="law">${esc(reg.details)}</div>`:""}</div></li>`);else ajout(VERDICTS,reg.resultat||d.verdict,reg.details);
+ if(e.applicable){ajout(RAPPORT.entreprise,e.lien,[e.nom,e.neq?`NEQ ${e.neq}`:"",e.details].filter(Boolean).join(" · "))}
+ ajout(RAPPORT.photos,(r.photos||{}).resultat,(r.photos||{}).details);ajout(RAPPORT.doublons,(r.doublons||{}).resultat,(r.doublons||{}).details);
+ return `${g?`<div class="verdict ${g[0]}"><strong>${g[1]}</strong><span>${g[2]}</span></div>`:""}
+${L.length?`<ul class="reasons">${L.join("")}</ul>`:""}
+${r.recommandations||d.note?`<div class="rule" style="text-align:left"><b>Ce qu'on te recommande</b><br>${esc(r.recommandations||d.note)}</div>`:""}
+${d.termine_le?`<p class="hint">Rapport du ${esc(new Date(d.termine_le).toLocaleDateString("fr-CA",{dateStyle:"long"}))}, selon les registres publics et le Web à cette date.</p>`:""}`}
+
+/* Liste « Mes vérifications complètes » sur l'accueil */
 const blocMesApprofondies=`<div id="mes-approf"></div>`;
 async function remplirMesApprofondies(){const el=$("#mes-approf");if(!el)return;
  const paye=/[?&]paye=1/.test(location.search);if(paye)try{history.replaceState(null,"",location.pathname)}catch(e){}
  let L=[];try{L=await VAP.mes()}catch(e){}
  if(!$("#mes-approf"))return;
  if(!L.length&&!paye){el.innerHTML="";return}
- el.innerHTML=`<div class="card"><h2>Vérifications approfondies</h2>${paye?`<p class="lu">Paiement reçu. Ta réponse arrive ici en ${VCFG.delai} h maximum.</p>`:""}
+ el.innerHTML=`<div class="card"><h2>Vérifications complètes</h2>${paye?`<p class="lu">Paiement reçu. Ton rapport arrive ici en ${VCFG.delai} h maximum.</p>`:""}
 ${L.map(d=>{const s=STATUTS[d.statut]||["i",d.statut];const v=d.verdict&&VERDICTS[d.verdict];
  return `<div class="demande"><p><b>${esc(d.adresse)}</b><span class="tag ${s[0]}">${s[1]}</span></p>
-${v?`<ul class="reasons"><li><span class="dot ${v[0]}"></span><div>${v[1]}${d.note?`<div class="law">${esc(d.note)}</div>`:""}</div></li></ul>`:""}
-${d.statut==="payee"?`<p class="hint">Réponse au plus tard ${VCFG.delai} h après le paiement.</p>`:""}
+${d.statut==="terminee"?(d.rapport||d.verdict_global?htmlRapport(d):v?`<ul class="reasons"><li><span class="dot ${v[0]}"></span><div>${v[1]}${d.note?`<div class="law">${esc(d.note)}</div>`:""}</div></li></ul>`:""):""}
+${d.statut==="payee"?`<p class="hint">Rapport au plus tard ${VCFG.delai} h après le paiement.</p>${VAP.demo?`<button type="button" class="lienbtn" data-simrapport="${esc(d.id)}">(Démo) Voir un exemple de rapport</button>`:""}`:""}
 ${d.statut==="a_payer"&&VAP.demo?`<button type="button" class="lienbtn" data-simpaye="${esc(d.id)}">(Démo) Simuler le paiement</button>`:""}</div>`}).join("")}</div>`;
- el.querySelectorAll("[data-simpaye]").forEach(b=>b.onclick=async()=>{await VAP.simulerPaiement(b.dataset.simpaye);remplirMesApprofondies()})}
+ el.querySelectorAll("[data-simpaye]").forEach(b=>b.onclick=async()=>{await VAP.simulerPaiement(b.dataset.simpaye);remplirMesApprofondies()});
+ el.querySelectorAll("[data-simrapport]").forEach(b=>b.onclick=async()=>{await VAP.simulerRapport(b.dataset.simrapport);remplirMesApprofondies()})}
 
 /* Onglet admin « Demandes » */
 async function remplirAdminDemandes(el){const L=await VAP.adminListe();if(!el.isConnected)return;
  el.innerHTML=L.length?L.map(d=>{const s=STATUTS[d.statut]||["i",d.statut];const v=d.verdict&&VERDICTS[d.verdict];
  return `<div class="card"><p><b>${esc(d.adresse)}</b> <span class="tag ${s[0]}">${s[1]}</span></p>
 <p class="hint">${esc(d.contact||"")} · demandée le ${esc(String(d.created_at||"").slice(0,16).replace("T"," "))}${d.paye_le?` · payée le ${esc(String(d.paye_le).slice(0,16).replace("T"," "))}`:""}${d.montant?` · ${esc(String(d.montant))} $`:""}</p>
-<p>Interlocuteur : <b>${esc(d.nom_interlocuteur)}</b> (${d.role==="gestionnaire"?"dit être gestionnaire":"dit être propriétaire"})${d.lot?` · lot <span class="num">${esc(fmtLot(d.lot))}</span>`:""}</p>
+<p>Interlocuteur : <b>${esc(d.nom_interlocuteur)}</b> (${d.role==="gestionnaire"?"dit être gestionnaire":d.role==="locataire"?"propriétaire nommé par le locataire":"dit être propriétaire"})${d.lot?` · lot <span class="num">${esc(fmtLot(d.lot))}</span>`:""}</p>
 ${d.lien?`<p class="hint">${lienExt(esc(d.lien),"Annonce")}</p>`:""}
-${v?`<ul class="reasons"><li><span class="dot ${v[0]}"></span><div>${v[1]}${d.note?`<div class="law">${esc(d.note)}</div>`:""}</div></li></ul>`:""}
+${d.statut==="terminee"&&(d.rapport||d.verdict_global)?htmlRapport(d):v?`<ul class="reasons"><li><span class="dot ${v[0]}"></span><div>${v[1]}${d.note?`<div class="law">${esc(d.note)}</div>`:""}</div></li></ul>`:""}
 ${d.statut==="a_payer"?`<button class="btn ghost" data-maj="${esc(d.id)}" data-statut="payee">Marquer payée (vu dans Stripe)</button>`:""}
-${d.statut==="payee"?`<label>Note pour le client (facultatif)<textarea data-note="${esc(d.id)}" maxlength="600" placeholder="Ex. : le propriétaire inscrit depuis 2019 est une autre personne."></textarea></label>
-<div class="grid2"><button class="btn" data-maj="${esc(d.id)}" data-statut="terminee" data-verdict="correspond">Correspond</button><button class="btn danger" data-maj="${esc(d.id)}" data-statut="terminee" data-verdict="ne_correspond_pas">Ne correspond pas</button>
-<button class="btn ghost" data-maj="${esc(d.id)}" data-statut="terminee" data-verdict="compagnie">Entreprise</button><button class="btn ghost" data-maj="${esc(d.id)}" data-statut="terminee" data-verdict="introuvable">Introuvable</button></div>
-<p class="hint">${lienExt(L_REGISTRE,"Registre foncier")} · ${lienExt(L_INFOLOT,"Infolot")} · ${lienExt("https://www.registreentreprises.gouv.qc.ca","Registre des entreprises")}</p>`:""}
+${d.statut==="payee"?`${ADM.console?`<a class="btn" href="${ADM.console}" target="_blank" rel="noopener">Remplir le rapport dans la console ↗</a>`:""}<p class="hint">Le rapport complet (registre, entreprise, photos, autres annonces, verdict) se remplit dans la console, sur ordinateur.</p>`:""}
 ${["payee","terminee"].includes(d.statut)?`<button type="button" class="lienbtn" data-maj="${esc(d.id)}" data-statut="remboursee">Marquer remboursée</button>`:""}</div>`}).join(""):`<div class="card"><p>Aucune demande.</p></div>`;
  el.querySelectorAll("[data-maj]").forEach(b=>b.onclick=async()=>{const id=b.dataset.maj,n=el.querySelector(`[data-note="${id}"]`);b.disabled=true;
   try{await VAP.adminMaj(id,b.dataset.statut,b.dataset.verdict||null,n?n.value.trim():"");remplirAdminDemandes(el)}catch(x){b.disabled=false;b.textContent="Erreur, réessaie"}})}
@@ -747,8 +782,68 @@ function bindPlus4(v){
   $("#va-sauverlien").onclick=async()=>{const val=$("#va-lienpay").value.trim();if(val&&!/^https:\/\/(buy\.stripe\.com|checkout\.stripe\.com)\//.test(val)){$("#va-sauverlien").textContent="Lien invalide";return}
    try{await VAP.sauverTexte("lien_paiement",val);VCFG.lien=val;$("#va-sauverlien").textContent="Enregistré"}catch(x){$("#va-sauverlien").textContent="Erreur"}}},0)}
 }
-const CSS_PLUS4=`.offre{border-color:var(--blue);border-width:2px}.demande{display:flex;flex-direction:column;gap:6px;padding:10px 0;border-bottom:1px solid var(--line)}
+const CSS_PLUS4=`.inclus{margin:6px 0 12px;padding-left:20px;display:flex;flex-direction:column;gap:4px;font-size:15px}
+.offre{border-color:var(--blue);border-width:2px}.demande{display:flex;flex-direction:column;gap:6px;padding:10px 0;border-bottom:1px solid var(--line)}
 .demande:last-child{border-bottom:0}.demande p:first-child{display:flex;justify-content:space-between;gap:10px}.seg5{grid-template-columns:repeat(5,1fr)}.seg5 button{font-size:12px;padding:0 1px}`;
+/* ===== HabitaScan : conditions d'utilisation, mesure d'usage anonyme, erreurs (commun démo + Supabase) =====
+   Dépend de : F, $, app, go, esc, top, lienExt, RESPONSABLE, VCFG, prixTxt, L_CAI
+   et d'un adaptateur MES : MES.noter(type) ; MES.erreur(message, vue) ; MES.admin() → {j7, j30, payees30, erreurs7, dernieres} */
+
+/* ---------- Conditions d'utilisation ---------- */
+const L_LPC="https://www.legisquebec.gouv.qc.ca/fr/document/lc/P-40.1";
+function vueConditions(back){const R=RESPONSABLE;
+ const s=(t,c)=>`<div class="card"><h2>${t}</h2>${c}</div>`;
+ return `${top(back,"Conditions")}
+<h2>Conditions d'utilisation</h2>
+<p class="hint">En vigueur le ${R.vigueur}. HabitaScan est exploité par ${R.entreprise}, ${R.adresse}. Courriel : ${R.courriel}.</p>
+${s("1. Ce que fait HabitaScan","<p>HabitaScan aide à repérer les signes de fraude dans une annonce de logement, à vérifier qui est le propriétaire, à estimer un budget d'installation et à vérifier un entrepreneur en rénovation. Les résultats sont calculés à partir de règles publiques, de données gouvernementales et de ce que tu entres.</p>")}
+${s("2. Ce n'est pas une garantie","<p><b>Un résultat vert ne garantit pas qu'une annonce est honnête,</b> et un résultat rouge ne prouve pas une fraude. HabitaScan ne remplace ni un avocat, ni un notaire, ni le Tribunal administratif du logement. Avant de payer quoi que ce soit : visite le logement, confirme le propriétaire et signe le bail.</p>")}
+${s("3. Ton compte","<p>Tu dois avoir 14 ans ou plus. Ton compte est personnel : garde l'accès à ton courriel ou à ton cellulaire pour toi. Tu peux supprimer ton compte en tout temps depuis l'accueil.</p>")}
+${s("4. Vérification complète payante",`<ul class="liste"><li>Prix : ${prixTxt()}, taxes incluses s'il y a lieu, payé par carte sur la page sécurisée de Stripe.</li>
+<li>Nous vérifions : le propriétaire au Registre foncier ; si c'est une entreprise, son statut et ses dirigeants au registre des entreprises ; les photos de l'annonce ; les autres annonces du même logement. Tu reçois un rapport écrit avec un verdict et le nom du propriétaire inscrit (information publique du Registre foncier), à retrouver sur ton bail. Jamais de document sur le propriétaire.</li>
+<li>Délai : ${VCFG.delai} h maximum après le paiement.</li>
+<li><b>Remboursement complet</b> si nous ne livrons pas le rapport dans ce délai, ou si nous ne pouvons pas identifier le propriétaire. Écris-nous à ${R.courriel}.</li>
+<li>Le rapport reflète les registres publics et le Web au moment de la vérification. Une vente récente peut ne pas encore être publiée, et une recherche sur le Web ne trouve pas tout.</li></ul>`)}
+${s("5. Signalements","<p>Signale seulement une annonce que tu crois vraiment frauduleuse, et choisis le bon motif. Un faux signalement peut nuire à une personne honnête : nous pouvons retirer un signalement et fermer un compte qui en abuse.</p>")}
+${s("6. Utilisation interdite","<ul class=\"liste\"><li>Utiliser l'app pour harceler, ficher ou retrouver une personne.</li><li>Collecter ou revendre automatiquement le contenu de l'app (robots, aspiration).</li><li>Contourner les limites d'usage ou la sécurité.</li><li>Entrer de fausses informations pour nuire à quelqu'un.</li></ul><p class=\"hint\">Des limites quotidiennes s'appliquent aux recherches automatiques, pour garder le service gratuit pour tout le monde.</p>")}
+${s("7. Responsabilité",`<p>Nous faisons tout pour que l'information soit exacte et à jour, mais des données publiques peuvent contenir des erreurs ou dater. Dans les limites permises par la ${lienExt(L_LPC,"Loi sur la protection du consommateur")}, nous ne sommes pas responsables d'une décision prise seulement sur la base d'un résultat de l'app. Rien dans ces conditions ne limite les droits que cette loi te donne.</p>`)}
+${s("8. Contenu et marque","<p>Le nom HabitaScan, le logo et le code de l'app nous appartiennent. Les données gouvernementales utilisées restent soumises à leurs licences (par exemple CC-BY 4.0), et leurs sources sont citées dans l'app.</p>")}
+${s("9. Modifications et droit applicable",`<p>Si ces conditions changent, nous l'indiquons dans l'app. Elles sont régies par les lois du Québec. En cas de désaccord, écris-nous d'abord à ${R.courriel}. Pour tes renseignements personnels, consulte la <button type="button" class="lienbtn" data-go="confidentialite">politique de confidentialité</button>.</p>`)}`}
+const lienConditions=`<button type="button" class="lienbtn" data-go="conditions">conditions d'utilisation</button>`;
+
+/* ---------- Mesure d'usage anonyme ---------- */
+const VUES_MESUREES=["bienvenue","inscription","accueil","verifier","resultat","proprio","budget","trouver","approfondie","reno","renoResultat","victime","conditions","confidentialite"];
+let derniereVue="";
+function bindPlus5(v){derniereVue=v;
+ if(VUES_MESUREES.includes(v))try{MES.noter("vue_"+v)}catch(e){}
+ if(v==="admin"&&(F.onglet||"chiffres")==="chiffres")remplirMesure();
+}
+/* Erreurs techniques : 5 par session au maximum, message court, sans données de l'utilisateur */
+let nbErreurs=0;
+function noterErreur(m){if(++nbErreurs>5)return;try{MES.erreur(String(m||"").slice(0,300),derniereVue)}catch(e){}}
+window.addEventListener("error",e=>noterErreur((e.message||"erreur")+(e.filename?` @${String(e.filename).split("/").pop()}:${e.lineno}`:"")));
+window.addEventListener("unhandledrejection",e=>noterErreur("promesse : "+((e.reason&&e.reason.message)||e.reason||"")));
+
+/* Entonnoir dans l'onglet Chiffres de l'admin */
+const ETAPES=[["vue_bienvenue","Écran d'accueil (avant connexion)"],["vue_accueil","Accueil (connecté)"],["vue_verifier","Vérification commencée"],["vue_resultat","Vérification terminée"],
+ ["vue_proprio","Vérifier le propriétaire"],["vue_approfondie","Offre payante ouverte"],["demande_creee","Demande payante créée"],["vue_budget","Budget"],["vue_trouver","Trouver un logement"],["recherche_lancee","Recherches lancées"],["vue_reno","Vérif-Réno"]];
+async function remplirMesure(){let M;try{M=await MES.admin()}catch(e){return}
+ const el=$("#adm");if(!el||!M||el.querySelector("#mesure"))return;
+ const n=(o,k)=>Number((o||{})[k]||0).toLocaleString("fr-CA");
+ el.insertAdjacentHTML("beforeend",`<div class="card" id="mesure"><h2>Utilisation (anonyme)</h2>
+<table class="tvilles"><thead><tr><th>Étape</th><th>7 jours</th><th>30 jours</th></tr></thead><tbody>
+${ETAPES.map(([k,l])=>`<tr><td>${l}</td><td class="num">${n(M.j7,k)}</td><td class="num">${n(M.j30,k)}</td></tr>`).join("")}
+<tr><td><b>Vérifications payées</b></td><td></td><td class="num"><b>${Number(M.payees30||0).toLocaleString("fr-CA")}</b></td></tr></tbody></table>
+<p class="hint">Compte d'ouvertures d'écrans, sans lien avec les comptes. Le taux à surveiller : « Vérification terminée » ÷ « Vérification commencée ».</p></div>
+<div class="card"><h2>Erreurs techniques</h2><p>${Number(M.erreurs7||0)} erreur${M.erreurs7>1?"s":""} sur 7 jours.</p>
+${(M.dernieres||[]).length?`<ul class="liste">${M.dernieres.map(e=>`<li><span class="hint">${esc(String(e.cree_le).slice(0,16).replace("T"," "))} · ${esc(e.vue||"")}</span><br>${esc(e.message)}</li>`).join("")}</ul>`:`<p class="hint">Aucune erreur.</p>`}</div>`)}
+const CSS_PLUS5=`.logo-grand{width:112px;height:112px;margin:12px auto 0;display:block;filter:drop-shadow(0 8px 20px rgb(11 61 145/.25))}
+.logo-mini{width:28px;height:28px;flex-shrink:0}
+.atouts{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
+.atouts li{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px 12px 44px;position:relative}
+.atouts li::before{content:"✓";position:absolute;left:14px;top:14px;width:20px;height:20px;border-radius:50%;background:var(--ok);color:#fff;font-weight:800;font-size:12px;line-height:20px;text-align:center}
+.centre{text-align:center}
+`;
 /* Adaptateur admin (Supabase : fonctions admin_*, tables parametres et loyers_reference, compartiment pieces-identite) */
 let EST_ADMIN=false;
 const rpc=async(n,a)=>{const {data,error}=await sb.rpc(n,a);if(error)throw error;return data};
@@ -769,20 +864,290 @@ document.head.insertAdjacentHTML("beforeend","<style>"+CSS_PLUS3+"</style>");
 /* Adaptateur vérification approfondie (Supabase : table demandes_verif, paiement par lien Stripe, webhook stripe-webhook) */
 const VAP={demo:false,courriel:()=>(PROFIL&&PROFIL.contact&&PROFIL.contact.includes("@"))?PROFIL.contact:"",
  async creer(d){const {data,error}=await sb.from("demandes_verif").insert(d).select("id").single();if(error)throw error;return data.id},
- async mes(){if(!SESSION)return [];const {data,error}=await sb.from("demandes_verif").select("id,adresse,statut,verdict,note,created_at,paye_le").order("created_at",{ascending:false}).limit(10);if(error)throw error;return data||[]},
- adminListe:async()=>(await rpc("admin_demandes"))||[],
+ async mes(){if(!SESSION)return [];const {data,error}=await sb.from("demandes_verif").select("id,adresse,statut,verdict,note,created_at,paye_le,termine_le,rapport,verdict_global").order("created_at",{ascending:false}).limit(10);if(error)throw error;return data||[]},
+ adminListe:async()=>(await rpc("admin_demandes_liste",{p_statut:""}))||[],
  adminMaj:(id,statut,verdict,note)=>rpc("admin_maj_demande",{p_id:id,p_statut:statut,p_verdict:verdict,p_note:note||""}),
  async sauverTexte(cle,valeur){const {error}=await sb.from("parametres_texte").upsert({cle,valeur,maj_le:new Date().toISOString()});if(error)throw error}};
-async function chargerTextes(){try{const {data}=await sb.from("parametres_texte").select("cle,valeur");(data||[]).forEach(r=>{if(r.cle==="lien_paiement")VCFG.lien=r.valeur||""})}catch(e){}}
+async function chargerTextes(){try{const {data}=await sb.from("parametres_texte").select("cle,valeur");(data||[]).forEach(r=>{if(r.cle==="lien_paiement")VCFG.lien=r.valeur||"";if(r.cle==="message_accueil")CFG.message=r.valeur||"";if(r.cle==="courriel_support")CFG.support=r.valeur||""})}catch(e){}}
 document.head.insertAdjacentHTML("beforeend","<style>"+CSS_PLUS4+"</style>");
+
+/* Adaptateur mesure (Supabase : fonctions noter, noter_erreur, admin_mesure) */
+const MES={noter(t){sb.rpc("noter",{p_type:t}).then(()=>{},()=>{})},erreur(m,v){sb.rpc("noter_erreur",{p_message:m,p_vue:v||null,p_agent:navigator.userAgent.slice(0,160)}).then(()=>{},()=>{})},admin:()=>rpc("admin_mesure")};
+document.head.insertAdjacentHTML("beforeend","<style>"+CSS_PLUS5+"</style>");
+/* ===== HabitaScan : analyse intelligente (IA) de l'annonce et de la conversation (commun démo + Supabase) =====
+   L'IA extrait les champs et repère les signaux, avec citation. Le verdict reste calculé par les règles.
+   Dépend de : F, $, app, go, esc, keep, LOYERS, appliquerLecture, MES ; adaptateur IA_ADAPT : {dispo, analyser({images, texte})} */
+const CLE_IA="hs_ia";
+const iaActif=()=>{try{return localStorage.getItem(CLE_IA)==="1"&&IA_ADAPT.dispo}catch(e){return false}};
+const SIGNAUX_IA={argent_avant_bail:"Argent demandé avant la signature du bail",depot:"Dépôt ou frais de réservation",paiement_suspect:"Moyen de paiement typique des fraudes",
+ proprietaire_absent:"Propriétaire « à l'étranger » ou absent",refus_visite:"Visite refusée ou repoussée",urgence:"Pression pour décider vite",
+ changement_plateforme:"Demande de continuer sur une autre messagerie",pieces_identite_demandees:"Documents personnels demandés trop tôt",
+ prix_anormal_annonce:"Prix présenté comme exceptionnellement bas",autre:"Autre élément inhabituel"};
+const blocIA=()=>IA_ADAPT.dispo?`<label class="ia-opt"><input type="checkbox" id="ia-ok" ${iaActif()?"checked":""}><span><b>Analyse intelligente</b> (IA)<span class="hint">Comprend mieux les captures et la conversation, aussi en anglais. Les images et le texte sont envoyés à Anthropic pour l'analyse, puis oubliés par HabitaScan.</span></span></label>`
+ :`<p class="hint">L'analyse intelligente (IA) est offerte dans la vraie app, pas dans cette démo.</p>`;
+/* Réduit une capture à 1 280 px de large au maximum, en JPEG, pour limiter l'envoi */
+function reduireImage(source){return new Promise((ok,ko)=>{const im=new Image();const dataUrl=typeof source==="string"?source:URL.createObjectURL(source);im.onload=()=>{const k=Math.min(1,1280/Math.max(im.width,1));
+ const c=document.createElement("canvas");c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext("2d").drawImage(im,0,0,c.width,c.height);
+ ok(c.toDataURL("image/jpeg",0.8).split(",")[1])};im.onerror=ko;im.src=dataUrl})}
+async function analyserIA(captures,texte){const images=[];for(const c of (captures||[]).slice(0,4))images.push(await reduireImage(c));
+ return IA_ADAPT.analyser({images,texte:String(texte||"").slice(0,8000)})}
+function appliquerIA(r){F.ia=r;const villes=Object.keys(LOYERS);
+ if(r.prix)F.prix=String(r.prix);
+ if(r.chambres)F.ch=String(Math.min(r.chambres,3));
+ if(r.ville){const v=villes.find(x=>x.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase()===r.ville.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase());F.ville=v||"Autre"}
+ if(r.cession!=null)F.cession=r.cession?"oui":"non";
+ if(r.adresse&&!F.adr)F.adr=r.adresse;
+ const lus=[r.prix?`${r.prix} $`:"",r.ville||"",r.chambres?`${r.chambres} ch.`:"",r.cession?"cession de bail":""].filter(Boolean).join(", ");
+ const n=(r.signaux||[]).length;
+ F.lu=`<b>Lu par l'IA :</b> ${esc((lus||"aucune information claire").replace(/\.$/,""))}. ${n?`<b>${n>1?n+" signaux repérés":"1 signal repéré"}</b> : tu les verras dans le résultat.`:"Aucun signal d'arnaque repéré dans le texte."} Vérifie les champs et réponds aux questions.`}
+function itemsIA(F){const r=F.ia;if(!r)return [];const it=(r.signaux||[]).map(s=>({c:"y",t:`<b>${esc(SIGNAUX_IA[s.type]||"Élément inhabituel")}</b> : « ${esc(s.extrait)} »${s.explication?` ${esc(s.explication)}`:""}`,law:"Repéré par l'analyse intelligente (IA). Vérifie dans l'annonce."}));
+ if(r.resume)it.push({c:"i",t:`<b>Résumé de l'IA :</b> ${esc(r.resume)}`});return it}
+function bindPlus6(v){if(v!=="verifier")return;const c=$("#ia-ok");if(c)c.onchange=()=>{try{localStorage.setItem(CLE_IA,c.checked?"1":"0")}catch(e){}}}
+/* Lance l'analyse IA sur les captures (remplace la lecture locale) ; en cas d'échec, revient à la lecture locale */
+function lancerIA(texteSeul){const n=(F.captures||[]).length;F.lu=null;
+ const f=$("#f-ver");if(f)f.insertAdjacentHTML("afterbegin",`<p class="lu" role="status">Analyse intelligente ${texteSeul?"du texte":n>1?`de ${n} captures`:"de la capture"}…</p>`);
+ analyserIA(texteSeul?[]:F.captures,`${F.annonce||""}\n${F.txt||""}`)
+ .then(r=>{if($("#f-ver"))keep();appliquerIA(r);try{MES.noter("ia_analyse")}catch(e){};go("verifier")})
+ .catch(x=>{try{MES.noter("ia_echec")}catch(e){};F.iaOff=true;
+  F.lu=x&&x.message==="quota"?"Limite d'analyses IA atteinte pour aujourd'hui : lecture simple utilisée.":"L'analyse intelligente n'a pas fonctionné : lecture simple utilisée.";
+  if(!texteSeul)F.ocr=true;if($("#f-ver"))go("verifier")})}
+const CSS_PLUS6=`.ia-opt{flex-direction:row;align-items:flex-start;gap:10px;font-weight:500;background:color-mix(in srgb,var(--blue) 7%,var(--card));border:1.5px solid color-mix(in srgb,var(--blue) 30%,var(--line));border-radius:12px;padding:12px}
+.ia-opt input{width:22px;min-height:22px;margin-top:2px;flex-shrink:0}.ia-opt .hint{display:block;margin-top:2px}`;
+
+/* Adaptateur IA (Supabase : fonction analyser-annonce → Claude Haiku 5.5) */
+const IA_ADAPT={get dispo(){return CFG.ia},async analyser(p){const {data,error}=await sb.functions.invoke("analyser-annonce",{body:p});
+ if(error){if(error.context&&error.context.status===429)throw new Error("quota");throw error}if(!data||data.error)throw new Error((data&&data.error)||"ia");return data}};
+document.head.insertAdjacentHTML("beforeend","<style>"+CSS_PLUS6+"</style>");
+/* ===== HabitaScan : historique détaillé, mon compte, lieu de connexion (commun démo + Supabase) =====
+   Dépend de : F, $, app, go, esc, money, top, lienExt, TRAVAUX, formatLicence, ADM, lienConditions, lienConfidentialite
+   Adaptateurs :
+   HIS  : liste() → [{id, module:"logement"|"reno", date, ville, ch, prix, c, lien, travaux, licence, raisons:[{c,t,law}]}] ; supprimer(id) → Promise
+   CPT  : courriel() ; statut() → {t, couleur}
+   LIEU : dispo ; actif() → bool ; definir(bool) → Promise ; demo (bool)
+   ADM  : connexions() ; lieuxResume() ; partageStats() */
+const TITRE_VERDICT={logement:{r:"Ne paie pas",y:"Visite d'abord, puis vérifie le propriétaire",g:"Aucun signal. Tu peux visiter."},
+ reno:{r:"Ne signe pas, ne paie pas",y:"Prudence",g:"Aucun signal d'alarme"}};
+const TAG_VERDICT={logement:{r:"Ne paie pas",y:"Visite d'abord",g:"Aucun signal"},reno:{r:"Ne pas signer",y:"Prudence",g:"Aucun signal"}};
+const REGLE_VERDICT={logement:{r:"N'envoie aucun argent et ne donne aucune pièce d'identité à cette personne.",y:"Ne paie rien avant d'avoir visité et confirmé qui est le propriétaire.",g:"Avant de payer : confirme le propriétaire, puis signe le bail. Le premier mois se paie à la signature, jamais avant, et jamais de dépôt."},
+ reno:{r:"Ne signe rien et ne verse aucun acompte.",y:"Vérifie la licence et les plaintes avant de signer.",g:"Paie selon l'avancement des travaux, jamais tout d'avance."}};
+const PROVINCES={QC:"Québec",ON:"Ontario",NB:"Nouveau-Brunswick",NS:"Nouvelle-Écosse",PE:"Île-du-Prince-Édouard",NL:"Terre-Neuve-et-Labrador",MB:"Manitoba",SK:"Saskatchewan",AB:"Alberta",BC:"Colombie-Britannique",YT:"Yukon",NT:"Territoires du Nord-Ouest",NU:"Nunavut"};
+const lieuTexte=x=>[x.ville,x.pays==="CA"?(PROVINCES[x.region]||x.region):x.region,x.pays&&x.pays!=="CA"?x.pays:""].filter(Boolean).join(", ")||"Inconnu";
+/* Texte enregistré : on échappe tout, puis on ne réautorise que <b>, <strong>, <em> et les liens https */
+function nettoyerHTML(s){let h=esc(String(s||""));
+ h=h.replace(/&lt;(\/?)(b|strong|em)&gt;/g,"<$1$2>");
+ h=h.replace(/&lt;a href=&quot;(https:\/\/[^\s"<>]*?)&quot;.*?&gt;/g,(m,u)=>`<a href="${u}" target="_blank" rel="noopener">`).replace(/&lt;\/a&gt;/g,"</a>");
+ if((h.match(/<a /g)||[]).length>(h.match(/<\/a>/g)||[]).length)h+="</a>";return h}
+const dateCourte=d=>{if(!d)return "";try{return new Date(d).toLocaleDateString("fr-CA",{day:"numeric",month:"short",year:"numeric"})}catch(e){return ""}};
+const dateLongue=d=>{if(!d)return "";try{return new Date(d).toLocaleString("fr-CA",{dateStyle:"long",timeStyle:"short"})}catch(e){return ""}};
+const nomTravaux=k=>((TRAVAUX[k]||{l:"Travaux"}).l.split(/ \(|,/)[0]);
+function titreVerif(x){return x.module==="reno"?`Réno · ${esc(nomTravaux(x.travaux))}`:`${esc(x.ville||"Ville inconnue")} · ${x.ch==3?"3+":esc(x.ch??"?")} ch.`}
+function sousTitreVerif(x){const p=[dateCourte(x.date)];
+ if(x.module==="reno"){if(x.licence)p.push(`RBQ ${esc(formatLicence(x.licence))}`)}else if(x.prix)p.push(money(+x.prix)+"/mois");return p.filter(Boolean).join(" · ")}
+const ligneVerif=x=>`<button type="button" class="hrow" data-verif="${esc(x.id)}" aria-label="Voir le détail : ${titreVerif(x).replace(/<[^>]+>/g,"")}">
+<span class="hdot ${x.c}"></span><span class="hmain"><b>${titreVerif(x)}</b><small>${sousTitreVerif(x)}</small></span><span class="tag ${x.c}">${(TAG_VERDICT[x.module]||TAG_VERDICT.logement)[x.c]||""}</span><span class="chev" aria-hidden="true">›</span></button>`;
+
+/* Carte d'accueil : les 3 dernières, cliquables */
+function blocHistorique(){const L=HIS.liste();
+ return `<div class="card"><div class="card-tete"><h2>Mes vérifications</h2>${L.length?`<button type="button" class="lienbtn" data-go="historique">Tout voir${L.length>3?` (${L.length})`:""}</button>`:""}</div>
+${L.length?`<div class="hlist">${L.slice(0,3).map(ligneVerif).join("")}</div>`:`<div class="vide"><p><b>Aucune vérification pour l'instant.</b></p><p class="soft">Chaque annonce que tu vérifies est gardée ici, avec son résultat complet.</p></div>`}</div>`}
+
+function vueHistorique(){const L=HIS.liste(),f=F.hfiltre||"tout";
+ const nbL=L.filter(x=>x.module!=="reno").length,nbR=L.length-nbL;
+ const V=L.filter(x=>f==="tout"||(f==="reno"?x.module==="reno":x.module!=="reno"));
+ const o=(k,t,n)=>`<button type="button" data-hfiltre="${k}" aria-pressed="${f===k}">${t} <span class="num">${n}</span></button>`;
+ return `${top("accueil","Mes vérifications")}
+<h1>Mes vérifications</h1><p class="soft">Touche une vérification pour revoir son résultat complet.</p>
+${L.length?`${nbR?`<div class="seg seg3" role="group" aria-label="Filtrer">${o("tout","Toutes",L.length)}${o("logement","Logement",nbL)}${o("reno","Réno",nbR)}</div>`:""}
+<div class="card"><div class="hlist">${V.map(ligneVerif).join("")||`<p class="soft">Rien dans cette catégorie.</p>`}</div></div>`
+:`<div class="card vide"><p><b>Aucune vérification pour l'instant.</b></p><p class="soft">Vérifie une annonce pour la retrouver ici.</p><button class="btn" data-go="verifier">Vérifier une annonce</button></div>`}`}
+
+function vueDetailVerif(){const x=HIS.liste().find(v=>String(v.id)===String(F.verifId));const retour=F.retourVerif||"historique";
+ if(!x)return `${top(retour,"Détail")}<div class="card vide"><p><b>Cette vérification n'existe plus.</b></p><button class="btn" data-go="historique">Mes vérifications</button></div>`;
+ const m=x.module==="reno"?"reno":"logement",R=x.raisons||[];
+ const ligne=(k,v)=>v?`<div><dt>${k}</dt><dd>${v}</dd></div>`:"";
+ const lienOk=x.lien&&/^https?:\/\//i.test(x.lien);
+ return `${top(retour,"Détail")}
+<div class="verdict ${x.c}"><strong>${TITRE_VERDICT[m][x.c]||""}</strong><span>${titreVerif(x)}</span></div>
+<div class="card"><h2>Détails</h2><dl class="details">
+${ligne("Vérifiée le",esc(dateLongue(x.date)))}
+${m==="logement"?ligne("Ville",esc(x.ville||""))+ligne("Chambres",x.ch==3?"3 et plus":esc(x.ch??""))+ligne("Loyer demandé",x.prix?`<span class="num">${money(+x.prix)}</span> par mois`:"")+ligne("Annonce",lienOk?lienExt(esc(x.lien),"Ouvrir l'annonce ↗"):"Aucun lien fourni")
+:ligne("Travaux",esc((TRAVAUX[x.travaux]||{l:""}).l))+ligne("Licence RBQ",x.licence?`<span class="num">${esc(formatLicence(x.licence))}</span>`:"Non fournie")}
+${ligne("Référence",`<span class="num">${esc(String(x.id).slice(0,8).toUpperCase())}</span>`)}
+</dl></div>
+<div class="card"><h2>Ce que l'app a vérifié</h2>${R.length?`<ul class="reasons">${R.map(i=>`<li><span class="dot ${esc(i.c)}"></span><div>${nettoyerHTML(i.t)}${i.law?`<div class="law">${nettoyerHTML(i.law)}</div>`:""}</div></li>`).join("")}</ul>`:`<p class="soft">Le détail n'a pas été conservé pour cette ancienne vérification.</p>`}</div>
+<p class="rule">${REGLE_VERDICT[m][x.c]||""}</p>
+<p class="hint">Résultat calculé le ${esc(dateCourte(x.date))} avec les informations fournies à ce moment. Une annonce peut changer : vérifie-la de nouveau avant de payer.</p>
+${m==="logement"?`<button class="btn" data-go="verifier">Vérifier une autre annonce</button>`:`<button class="btn" data-go="reno">Vérifier un autre entrepreneur</button>`}
+<button class="btn ghost danger-txt" id="h-suppr">Retirer de mon historique</button>
+<p class="err" id="err" role="alert"></p>`}
+
+/* Mon compte */
+function vueCompte(){const st=CPT.statut();const nbH=HIS.liste().length;
+ return `${top("accueil","Mon compte")}
+<div class="card compte-tete"><span class="avatar" aria-hidden="true">${esc((CPT.courriel()||"?").charAt(0).toUpperCase())}</span><div><b>${esc(CPT.courriel()||"")}</b><small style="color:${st.couleur}">● ${esc(st.t)}</small></div></div>
+<div class="card menu">
+<button type="button" class="mrow" data-go="historique"><span>Mes vérifications</span><span class="soft num">${nbH}</span><span class="chev">›</span></button>
+${ADM.estAdmin()?`<button type="button" class="mrow" data-go="admin" id="nouvA"><span>Espace admin</span><span class="soft">Réservé</span><span class="chev">›</span></button>`:""}
+</div>
+${LIEU.dispo?`<div class="card"><h2>Confidentialité</h2>
+<label class="interrupteur"><span><b>Partager ma ville approximative de connexion</b><small>Désactivé par défaut. Si tu l'actives, nous gardons la ville et la région déduites de ton adresse IP (pas ton adresse, pas ta position GPS) à chaque connexion, pendant 90 jours au plus. Seuls les administrateurs la voient, pour détecter l'usage frauduleux d'un compte et savoir quelles régions nous servons. Tu peux le désactiver en tout temps : l'historique de lieux est alors effacé.</small></span>
+<input type="checkbox" role="switch" id="lieu-ok" ${LIEU.actif()?"checked":""}></label><p class="hint" id="lieu-msg" aria-live="polite"></p></div>`:""}
+<div class="card menu">
+<button type="button" class="mrow" data-go="conditions"><span>Conditions d'utilisation</span><span class="chev">›</span></button>
+<button type="button" class="mrow" data-go="confidentialite"><span>Politique de confidentialité</span><span class="chev">›</span></button>
+<button type="button" class="mrow" data-go="victime"><span>J'ai été victime d'une arnaque</span><span class="chev">›</span></button>
+${typeof CFG!=="undefined"?`<a class="mrow" href="/a-propos" style="text-decoration:none"><span>Qui sommes-nous</span><span class="chev">›</span></a>`:""}
+${typeof CFG!=="undefined"&&CFG.support?`<a class="mrow" href="mailto:${esc(CFG.support)}" style="text-decoration:none"><span>Nous joindre</span><span class="soft">${esc(CFG.support)}</span><span class="chev">›</span></a>`:""}
+</div>
+<button class="btn ghost" id="deco">Se déconnecter</button>
+<button type="button" class="lienbtn centre danger-txt" data-go="supprimer">Supprimer mon compte et mes données</button>`}
+
+/* Invitation unique et non cochée (Loi 25, art. 8.1) */
+const CLE_LIEU_REP="hs_lieu_rep";
+function blocInvitationLieu(){if(!LIEU.dispo||LIEU.actif())return "";try{if(localStorage.getItem(CLE_LIEU_REP))return ""}catch(e){return ""}
+ return `<div class="card invite" id="inv-lieu"><p><b>Protéger ton compte</b></p><p class="soft">Veux-tu partager ta ville approximative de connexion ? Elle nous aide à repérer une connexion inhabituelle. Pas de GPS, gardée 90 jours au plus, visible seulement par les administrateurs. C'est désactivé tant que tu ne l'actives pas.</p>
+<div class="duo"><button class="btn" id="inv-oui">Activer</button><button class="btn ghost" id="inv-non">Non merci</button></div></div>`}
+
+/* Onglet admin « Connexions » */
+async function remplirAdminConnexions(el){const [s,res,L]=await Promise.all([ADM.partageStats(),ADM.lieuxResume(),ADM.connexions()]);if(!$("#adm"))return;
+ const q=(F.qcx||"").toLowerCase();
+ const filtre=L.filter(x=>!q||[x.contact,x.ville,x.region,x.pays].join(" ").toLowerCase().includes(q)).sort((a,b)=>new Date(b.derniere)-new Date(a.derniere));
+ el.innerHTML=`<div class="tuiles"><div class="tuile fort"><span>Partagent leur ville</span><b class="num">${nb(s.partagent)}</b></div><div class="tuile"><span>Comptes</span><b class="num">${nb(s.total)}</b></div></div>
+<p class="hint">Seules les personnes qui ont activé le partage apparaissent. Ville déduite de l'adresse IP par l'hébergeur : approximative (un réseau mobile ou un VPN peut indiquer une autre ville).</p>
+<div class="card"><h2>Par ville, 30 derniers jours</h2>${res.length?`<div class="hist">${res.map(r=>`<div><span>${esc(lieuTexte({ville:r.ville,region:r.region,pays:"CA"}))}</span><span class="num">${nb(r.personnes)} pers.</span></div>`).join("")}</div>`:`<p class="soft">Aucune donnée.</p>`}</div>
+<div class="card"><h2>Dernière connexion par personne</h2>
+<label class="sr" for="qcx">Rechercher</label><input id="qcx" type="search" placeholder="Courriel ou ville" value="${esc(F.qcx||"")}">
+${filtre.length?`<div class="cxlist">${filtre.map(x=>`<div class="cx"><p><b>${esc(x.contact||"(sans courriel)")}</b><span class="soft">${esc(dateLongue(x.derniere))}</span></p><p>${esc(lieuTexte(x))}${x.appareil?` · <span class="soft">${esc(x.appareil)}</span>`:""} · <span class="soft">${nb(x.nb)} connexion${x.nb>1?"s":""}</span></p></div>`).join("")}</div>`:`<p class="soft">Aucun résultat.</p>`}</div>`;
+ const i=$("#qcx");if(i)i.oninput=()=>{F.qcx=i.value;clearTimeout(i._t);i._t=setTimeout(()=>{remplirAdminConnexions(el).then(()=>{const j=$("#qcx");if(j){j.focus();j.setSelectionRange(j.value.length,j.value.length)}})},250)}}
+
+function bindPlus7(v){
+ if(v==="verifier"&&$("#lien")&&typeof plateforme==="function")$("#lien").addEventListener("change",()=>{const p=plateforme({lien:$("#lien").value});const d=app.querySelector("details.profil");if(!p||!d)return;
+  d.open=true;d.querySelector("summary").textContent=`Vérifier le profil de l'annonceur sur ${p.nom} (facultatif)`;const h=d.querySelector(".hint");if(h)h.textContent=p.aide});
+ app.querySelectorAll("[data-va-de]").forEach(b=>b.onclick=()=>{F.retourVA=b.dataset.vaDe;go("approfondie")});
+ app.querySelectorAll("[data-verif]").forEach(b=>b.onclick=()=>{F.verifId=b.dataset.verif;F.retourVerif=v==="historique"?"historique":"accueil";go("detailVerif")});
+ if(v==="historique")app.querySelectorAll("[data-hfiltre]").forEach(b=>b.onclick=()=>{F.hfiltre=b.dataset.hfiltre;go("historique")});
+ if(v==="detailVerif"&&$("#h-suppr")){const b=$("#h-suppr");b.onclick=async()=>{
+  if(!b.dataset.ok){b.dataset.ok="1";b.textContent="Confirmer : retirer définitivement";return}
+  b.disabled=true;try{await HIS.supprimer(F.verifId);go("historique")}catch(e){b.disabled=false;b.textContent="Réessayer";const er=$("#err");if(er)er.textContent="Le retrait n'a pas fonctionné. Réessaie."}}}
+ if(v==="compte"&&$("#lieu-ok")){const c=$("#lieu-ok"),m=$("#lieu-msg");c.onchange=async()=>{c.disabled=true;
+  try{await LIEU.definir(c.checked);try{localStorage.setItem(CLE_LIEU_REP,"1")}catch(e){}m.textContent=c.checked?"Activé. Ta ville approximative sera notée à ta prochaine connexion.":"Désactivé. Ton historique de lieux a été effacé."}
+  catch(e){c.checked=!c.checked;m.textContent="Le changement n'a pas fonctionné. Réessaie."}c.disabled=false}}
+ if(v==="accueil"&&$("#inv-lieu")){const fin=async oui=>{try{localStorage.setItem(CLE_LIEU_REP,"1")}catch(e){}
+   if(oui){try{await LIEU.definir(true)}catch(e){}}const el=$("#inv-lieu");if(el)el.outerHTML=oui?`<p class="hint centre">Merci. Tu peux changer ce choix dans Mon compte.</p>`:""};
+  $("#inv-oui").onclick=()=>fin(true);$("#inv-non").onclick=()=>fin(false)}
+ if(v==="admin"&&F.onglet==="connexions"){const el=$("#adm");if(el)remplirAdminConnexions(el).catch(()=>{el.innerHTML=`<p class="err">Chargement impossible.</p>`})}
+}
+const CSS_PLUS7=`.offre-eti{margin:0 0 2px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--blue)}.btn-va small{color:var(--soft)}
+.card-tete{display:flex;justify-content:space-between;align-items:baseline;gap:10px}.card-tete h2{margin:0}
+.hlist{display:flex;flex-direction:column}
+.hrow{display:flex;align-items:center;gap:10px;width:100%;min-height:60px;padding:10px 2px;background:none;border:0;border-bottom:1px solid var(--line);color:inherit;font:inherit;text-align:left;cursor:pointer}
+.hrow:last-child{border-bottom:0}.hrow:hover .hmain b,.hrow:focus-visible .hmain b{color:var(--blue)}
+.hdot{width:10px;height:10px;border-radius:50%;flex-shrink:0;background:var(--line)}.hdot.r{background:var(--red)}.hdot.y{background:var(--amber)}.hdot.g{background:var(--ok)}
+.hmain{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.hmain b{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hmain small{font-size:13px;color:var(--soft)}.chev{color:var(--soft);font-size:22px;line-height:1}
+.vide{text-align:center}.vide p{margin:4px 0}
+.seg3{grid-template-columns:repeat(3,1fr)}.seg6{grid-template-columns:repeat(3,1fr)}.seg6 button{font-size:13px}
+.details{margin:0;display:flex;flex-direction:column}.details div{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);font-size:15px}
+.details div:last-child{border-bottom:0}.details dt{color:var(--soft)}.details dd{margin:0;text-align:right;font-weight:500;overflow-wrap:anywhere}
+.compte-tete{display:flex;align-items:center;gap:14px}.compte-tete div{display:flex;flex-direction:column;min-width:0}.compte-tete b{overflow-wrap:anywhere}.compte-tete small{font-size:13px;font-weight:600}
+.avatar{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:var(--blue);color:#fff;font-weight:700;font-size:19px;flex-shrink:0}
+.menu{padding-top:4px;padding-bottom:4px}.mrow{display:flex;align-items:center;gap:10px;width:100%;min-height:52px;background:none;border:0;border-bottom:1px solid var(--line);color:inherit;font:inherit;font-size:16px;text-align:left;cursor:pointer;padding:0 2px}
+.mrow:last-child{border-bottom:0}.mrow span:first-child{flex:1}
+.interrupteur{display:flex;flex-direction:row;align-items:flex-start;gap:14px;font-weight:500}.interrupteur span{flex:1;display:flex;flex-direction:column;gap:4px}.interrupteur small{font-size:13px;font-weight:400;color:var(--soft);line-height:1.45}
+.interrupteur input{appearance:none;-webkit-appearance:none;width:50px;min-height:30px;height:30px;border-radius:15px;background:var(--line);position:relative;flex-shrink:0;cursor:pointer;transition:background .2s;border:0;padding:0;margin-top:2px}
+.interrupteur input::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgb(0 0 0/.3);transition:transform .2s}
+.interrupteur input:checked{background:var(--ok)}.interrupteur input:checked::after{transform:translateX(20px)}
+.danger-txt{color:var(--red)!important}.centre{display:block;margin:6px auto;text-align:center}
+.invite{border:1.5px solid color-mix(in srgb,var(--blue) 30%,var(--line));background:color-mix(in srgb,var(--blue) 6%,var(--card))}.invite p{margin:0 0 6px}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}.duo .btn{margin:0}
+.compte-lien{display:flex;align-items:center;gap:10px;width:100%;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;color:inherit;font:inherit;cursor:pointer;text-align:left;margin-bottom:12px}
+.compte-lien .avatar{width:34px;height:34px;font-size:15px}.compte-lien span.t{flex:1;display:flex;flex-direction:column;min-width:0}.compte-lien span.t b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.compte-lien small{font-size:12px;font-weight:600}
+.cxlist{display:flex;flex-direction:column;margin-top:10px}.cx{padding:10px 0;border-bottom:1px solid var(--line)}.cx:last-child{border-bottom:0}.cx p{margin:2px 0;font-size:14px}.cx p:first-child{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}`;
+/* Bouton compact « Mon compte » en tête de l'accueil */
+function barreCompte(){const st=CPT.statut();return `<button type="button" class="compte-lien" data-go="compte" aria-label="Mon compte"><span class="avatar" aria-hidden="true">${esc((CPT.courriel()||"?").charAt(0).toUpperCase())}</span><span class="t"><b>${esc(CPT.courriel()||"Mon compte")}</b><small style="color:${st.couleur}">● ${esc(st.t)}</small></span><span class="chev" aria-hidden="true">›</span></button>`}
+
+/* ===== HabitaScan : le message-filtre (commun démo + Supabase) =====
+   Un seul message, poli et normal, qui pose les règles du Québec (visite d'abord, paiement à la signature).
+   Un vrai propriétaire répond oui ; un fraudeur insiste pour un dépôt ou disparaît. Puis l'app lit sa réponse.
+   Dépend de : F, $, app, esc */
+const FILTRE_MSG={
+ fr:{std:"Bonjour, votre logement m'intéresse beaucoup. Est-ce que je peux le visiter cette semaine ? Si tout me convient, je suis prêt(e) à signer le bail sur place et à payer le premier mois à la signature. Merci !",
+  ces:"Bonjour, votre logement m'intéresse beaucoup. Est-ce que je peux le visiter cette semaine ? Si tout me convient, je suis prêt(e) à signer la cession dès que le propriétaire aura donné son accord écrit. Merci !"},
+ en:{std:"Hello, I'm very interested in your apartment. Could I visit it this week? If everything suits me, I'm ready to sign the lease on the spot and pay the first month's rent at signing. Thank you!",
+  ces:"Hello, I'm very interested in your apartment. Could I visit it this week? If everything suits me, I'm ready to sign the lease transfer as soon as the landlord has given written consent. Thank you!"}};
+/* Ce que la réponse peut révéler (le texte est mis en minuscules et sans accents avant la recherche) */
+const FILTRE_SIGNAUX=[
+ ["r",/depot|deposit|pour reserver|reservation|to (hold|reserve)|caution|paiement d.avance|en avance|payer d.avance|in advance/, "Il demande de l'argent pour réserver ou garantir le logement. Au Québec, le propriétaire peut exiger seulement le premier mois, à la signature, et aucun dépôt."],
+ ["r",/interac|virement|e-?transfer|western union|moneygram|paypal|crypto|bitcoin|carte[s]? cadeau|gift card|wise\b/, "Il veut un paiement par virement, transfert ou carte-cadeau avant la signature."],
+ ["r",/etranger|a l.exterieur du pays|hors du pays|en mission|out of (the )?country|abroad|overseas|missionnaire|militaire|offshore/, "Il dit être à l'étranger ou loin. C'est un scénario typique des fausses annonces."],
+ ["r",/(cle|cles|key|keys).{0,40}(poste|courrier|mail|livr|envoy|ship)|(poste|courrier|airbnb|livr).{0,40}(cle|cles|key)/, "Il propose d'envoyer les clés par la poste ou par un service : on ne visite donc jamais."],
+ ["r",/pas de visite|aucune visite|visite (n.est pas|impossible|pas possible)|pas possible de (le )?visiter|ne (peux|peut|pouvez|pourrez) pas (le )?visiter|no visit|can.?t (visit|show)|cannot (visit|show)|unable to show/, "Il refuse ou évite la visite."],
+ ["r",/numero d.assurance sociale|\bnas\b|\bsin\b|passeport|passport|permis de conduire|driver.?s licen|releve bancaire|bank statement/, "Il demande tes papiers (NAS, passeport, relevé bancaire) avant la visite. Ne les envoie pas."],
+ ["y",/beaucoup de (gens|personnes|demandes)|plusieurs (personnes|candidats)|many (people|applicants)|vite|rapidement|aujourd.hui seulement|urgent|asap|first come/, "Il te presse. La pression est une technique courante ; une vraie visite peut attendre un jour."],
+ ["y",/whatsapp|telegram|signal|texto|sms|courriel|e-?mail/, "Il veut continuer ailleurs (WhatsApp, courriel). Garde la conversation sur la plateforme jusqu'à la visite."],
+ ["g",/(samedi|dimanche|lundi|mardi|mercredi|jeudi|vendredi|demain|ce soir|saturday|sunday|monday|tuesday|wednesday|thursday|friday|tomorrow)|\b\d{1,2} ?h\b|\b\d{1,2}:\d{2}\b|\d{1,2} ?(am|pm)/, "Il propose un moment précis pour la visite."],
+ ["g",/(oui|yes|bien sur|sure|parfait|ok|d.accord).{0,60}(visite|visiter|visit)|(visite|visit).{0,40}(possible|disponible|available)/, "Il accepte la visite."],
+ ["g",/(signature|signer|sign).{0,60}(bail|lease)|(bail|lease).{0,60}(signature|signer|sign)/, "Il accepte de signer un bail."]];
+const sansAcc=t=>String(t||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[’']/g,"'");
+function analyserReponse(t){const x=sansAcc(t);const s=FILTRE_SIGNAUX.filter(([,re])=>re.test(x)).map(([c,,m])=>({c,m}));
+ const r=s.filter(z=>z.c==="r").length,y=s.filter(z=>z.c==="y").length,g=s.filter(z=>z.c==="g").length;
+ const c=r?"r":y?"y":g?"g":"i";
+ const t2={r:["Ne paie pas","Sa réponse contient un signal d'arnaque. Ne paie rien et n'envoie aucun document."],
+  y:["Prudence","Rien d'alarmant, mais garde la règle : visite d'abord, et paie seulement à la signature du bail."],
+  g:["Bonne réponse","Il accepte la visite et la signature. Continue : visite, puis compare le nom sur le bail avec le propriétaire inscrit."],
+  i:["Pas assez d'indices","Sa réponse ne dit ni oui ni non à la visite. Repose la question : « Quand puis-je visiter ? »"]}[c];
+ return {c,t:t2[0],s:t2[1],signaux:s}}
+function blocFiltre(){const lang=F.flang||"fr",ces=F.cession==="oui";const msg=FILTRE_MSG[lang][ces?"ces":"std"];const A=F.frep;
+ return `<div class="card filtre"><p class="offre-eti">Gratuit · nouveau</p><h2>Le message-filtre</h2>
+<p>Envoie ce seul message à l'annonceur. Il ne pose aucune question gênante : il annonce simplement les règles normales au Québec. <b>Un vrai propriétaire dira oui. Un fraudeur va insister pour un dépôt, ou disparaître.</b></p>
+<div class="seg" role="group" aria-label="Langue du message"><button type="button" data-flang="fr" aria-pressed="${lang==="fr"}">Français</button><button type="button" data-flang="en" aria-pressed="${lang==="en"}">English</button></div>
+<blockquote class="msg" id="f-msg" lang="${lang}">${esc(msg)}</blockquote>
+${typeof navigator!=="undefined"&&navigator.share?`<div class="duo"><button type="button" class="btn" id="f-copier">Copier le message</button><button type="button" class="btn ghost" id="f-partager">Partager</button></div>`:`<button type="button" class="btn" id="f-copier">Copier le message</button>`}
+<label for="f-rep" style="margin-top:14px">Colle sa réponse ici</label><textarea id="f-rep" rows="4" maxlength="3000" placeholder="La réponse de l'annonceur…">${esc(F.frepTxt||"")}</textarea>
+<button type="button" class="btn ghost" id="f-lire">Analyser sa réponse</button>
+${A?`<div class="verdict ${A.c}" id="f-res" role="status"><strong>${A.t}</strong><span>${A.s}</span></div>${A.signaux.length?`<ul class="reasons">${A.signaux.map(z=>`<li><span class="dot ${z.c}"></span><div>${z.m}</div></li>`).join("")}</ul>`:""}`:""}
+<p class="hint">L'analyse se fait sur ton téléphone ; le texte n'est envoyé nulle part. Elle repère des indices connus, sans certitude.</p></div>`}
+function bindPlus8(v){if(v!=="resultat"||!$("#f-msg"))return;
+ app.querySelectorAll("[data-flang]").forEach(b=>b.onclick=()=>{F.flang=b.dataset.flang;F.frepTxt=$("#f-rep").value;go("resultat");setTimeout(()=>{const e=$("#f-msg");if(e)e.scrollIntoView({block:"center"})},0)});
+ const msg=()=>$("#f-msg").textContent;
+ $("#f-copier").onclick=async()=>{const b=$("#f-copier");try{await navigator.clipboard.writeText(msg());b.textContent="Copié ✓"}catch(e){const r=document.createRange();r.selectNodeContents($("#f-msg"));const s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent="Sélectionné : copie-le"}setTimeout(()=>{if(b.isConnected)b.textContent="Copier le message"},2500)};
+ const p=$("#f-partager");if(p)p.onclick=()=>navigator.share({text:msg()}).catch(()=>{});
+ $("#f-lire").onclick=()=>{const t=$("#f-rep").value.trim();if(t.length<3){$("#f-rep").focus();return}F.frepTxt=t;F.frep=analyserReponse(t);try{MES.noter("filtre_analyse")}catch(e){}go("resultat");setTimeout(()=>{const e=$("#f-res");if(e)e.scrollIntoView({block:"center"})},0)}}
+const CSS_PLUS8=`.filtre .msg{margin:12px 0;padding:14px 16px;border-left:4px solid var(--blue);background:var(--bg);border-radius:0 12px 12px 0;font-size:15.5px;line-height:1.5}
+.filtre textarea{width:100%}.filtre .verdict{margin-top:12px}`;
+document.head.insertAdjacentHTML("beforeend","<style>"+CSS_PLUS8+"</style>");
+/* Adaptateurs historique, compte, lieu (Supabase : table verifications, profil, fonctions *_connexion, fonction Vercel /api/lieu) */
+const HIS={liste:()=>HIST.map(x=>({id:x.id,module:x.module==="reno"?"reno":"logement",date:x.created_at,ville:x.ville,ch:x.chambres,prix:x.prix,c:x.couleur,lien:x.lien,travaux:x.travaux,licence:x.licence,raisons:Array.isArray(x.raisons)?x.raisons:[]})),
+ async supprimer(id){const {error}=await sb.from("verifications").delete().eq("id",id);if(error)throw error;HIST=HIST.filter(x=>String(x.id)!==String(id))}};
+const CPT={courriel:()=>(PROFIL&&PROFIL.contact)||"",statut:()=>{const k=(PROFIL&&PROFIL.identite_statut)||"aucune";return {t:STATUT[k]||"Connecté",couleur:k==="confirmee"?"var(--ok)":k==="refusee"?"var(--red)":"var(--amber)"}}};
+const appareilCourt=()=>{const u=navigator.userAgent;const os=/iPhone|iPad/.test(u)?(/iPad/.test(u)?"iPad":"iPhone"):/Android/.test(u)?"Android":/Mac OS X/.test(u)?"Mac":/Windows/.test(u)?"Windows":/Linux/.test(u)?"Linux":"Autre";
+ const nav=/Edg\//.test(u)?"Edge":/SamsungBrowser/.test(u)?"Samsung":/Firefox|FxiOS/.test(u)?"Firefox":/Chrome|CriOS/.test(u)?"Chrome":/Safari/.test(u)?"Safari":"Autre";return os+" · "+nav};
+let LIEU_NOTE=false;
+const LIEU={dispo:true,demo:false,actif:()=>!!(PROFIL&&PROFIL.partage_lieu),
+ async definir(b){await rpc("definir_partage_lieu",{p_actif:b});if(PROFIL)PROFIL.partage_lieu=b;if(b){LIEU_NOTE=false;noterLieu()}},
+ };
+/* Une fois par ouverture de l'app, seulement si la personne l'a activé */
+async function noterLieu(){if(LIEU_NOTE||!SESSION||!LIEU.actif())return;LIEU_NOTE=true;
+ try{const r=await fetch("/api/lieu",{cache:"no-store"});if(!r.ok)return;const g=await r.json();
+  await sb.rpc("noter_connexion",{p_pays:g.pays||"",p_region:g.region||"",p_ville:g.ville||"",p_appareil:appareilCourt()})}catch(e){}}
+Object.assign(ADM,{console:"/admin",connexions:()=>rpc("admin_connexions").then(d=>d||[]),lieuxResume:()=>rpc("admin_lieux_resume").then(d=>d||[]),
+ partageStats:()=>rpc("admin_partage_stats").then(d=>(d&&d[0])||{partagent:0,total:0})});
+document.head.insertAdjacentHTML("beforeend","<style>"+CSS_PLUS7+"</style>");
 const V={
 bienvenue:()=>`${top()}
-<svg class="seal" role="img" aria-label="Bail avec sceau vérifié"><use href="#seal"/></svg>
+<svg class="logo-grand" role="img" aria-label="HabitaScan"><use href="#logo"/></svg>
 <h1>Avant de payer, vérifie.</h1>
-<p class="soft">Une annonce de logement ou la soumission d'un entrepreneur : l'app la vérifie en quelques secondes et te dit ce qui cloche, avec la loi qui s'applique.</p>
-<button class="btn" data-go="inscription" id="commencer">Commencer</button>
+<p class="soft">Une fausse annonce peut te faire perdre ton argent avant même d'avoir vu le logement. HabitaScan t'aide à la repérer avant d'envoyer un seul dollar.</p>
+<ul class="atouts">
+<li><b>Vérifie une annonce</b> en une minute, avec une capture d'écran.</li>
+<li><b>Confirme le vrai propriétaire</b> grâce aux registres publics du Québec.</li>
+<li><b>Calcule ton budget</b> et trouve un logement à ta mesure.</li></ul>
+<button class="btn" data-go="inscription" id="commencer">Commencer gratuitement</button>
 <button class="btn ghost" data-go="victime">J'ai été victime d'une arnaque</button>
-<p class="hint pied">${lienConfidentialite.replace("politique de confidentialité","Politique de confidentialité")}</p>`,
+<p class="hint centre">Fait au Québec · Tes captures restent sur ton téléphone</p>
+<p class="hint centre"><a href="/decouvrir">En savoir plus</a> · <a href="/guides/arnaques-courantes">Arnaques courantes</a> · <a href="/en" lang="en" hreflang="en">English</a></p>
+<p class="hint pied">${lienConditions.replace("conditions d'utilisation","Conditions d'utilisation")}${lienConfidentialite.replace("politique de confidentialité","Confidentialité")}</p>`,
 
 inscription:()=>{const t=F.canal||"courriel";return `${top("bienvenue","Inscription")}
 <h2>Crée ton compte ou connecte-toi</h2><p class="soft">Pas de mot de passe : tu reçois un code à 6 chiffres. Même chose pour te reconnecter sur un autre appareil.</p>
@@ -794,7 +1159,7 @@ ${t==="courriel"?`<label>Adresse courriel<input id="ident" type="email" inputmod
 :`<label>Numéro de cellulaire<input id="ident" type="tel" inputmode="tel" autocomplete="tel" placeholder="514 555-0123" value="${esc(F.ident)}"></label>`}
 <p class="err" id="e" hidden></p>
 <button class="btn" id="go">Recevoir le code par ${t==="courriel"?"courriel":"SMS"}</button>
-<p class="hint">Ton ${t==="courriel"?"courriel":"numéro"} sert seulement à te connecter. En continuant, tu acceptes la ${lienConfidentialite}.</p></form>`},
+<p class="hint">Ton ${t==="courriel"?"courriel":"numéro"} sert seulement à te connecter. En continuant, tu acceptes les ${lienConditions} et la ${lienConfidentialite}.</p></form>`},
 
 code:()=>`${top("inscription","Code")}
 <h2>Entre le code reçu</h2><p class="soft">Envoyé à <b>${esc(F.affiche)}</b>. Vérifie aussi tes courriels indésirables.</p>
@@ -826,26 +1191,29 @@ identiteOk:()=>`${top(null,"Identité")}
 <button class="btn" data-go="accueil">Continuer</button>`,
 
 accueil:()=>`${top(null)}
-${!ANONYME&&PROFIL?`<p class="badge" style="color:${PROFIL.identite_statut==="confirmee"?"var(--ok)":"var(--amber)"}">● ${STATUT[PROFIL.identite_statut]||"Connecté"} · ${esc(PROFIL.contact||"")}</p>`:""}
+${PROFIL?barreCompte():""}
+${PROFIL&&PROFIL.suspendu?`<div class="verdict r" role="alert"><strong>Compte suspendu</strong><span>Tu peux encore consulter tes vérifications, mais plus en enregistrer de nouvelles.${CFG.support?` Pour en parler : <a href="mailto:${esc(CFG.support)}">${esc(CFG.support)}</a>.`:""}</span></div>`:""}
+${CFG.message?`<div class="card invite" role="status"><p>${esc(CFG.message)}</p></div>`:""}
 <h1>Que veux-tu faire ?</h1>
 <div class="choix-accueil">
 <button class="btn" data-go="trouver" id="nouvT">Trouver un logement<small>Selon ta ville, tes chambres et ton budget</small></button>
 <button class="btn" data-go="verifier" id="nouv">Vérifier une annonce trouvée<small>Facebook, Kijiji et autres</small></button>
+${CFG.approfondie?`<button class="btn ghost btn-va" data-va-de="accueil">Vérification complète par notre équipe<small>Propriétaire, entreprise, photos, autres annonces · ${prixTxt()} · rapport en ${VCFG.delai} h</small></button>`:""}
 <button class="btn ghost" data-go="budget" id="nouvB">Calculer mon budget d'installation</button>
 <button class="btn ghost" data-go="reno" id="nouvR">Vérifier un entrepreneur en rénovation</button>
 </div>
 ${!ANONYME&&PROFIL&&["aucune","refusee"].includes(PROFIL.identite_statut)?`<button class="btn ghost" data-go="identite">Confirmer mon identité (pour signaler)</button>`:""}
 ${blocMesApprofondies}
-<div class="card"><h2>Mes vérifications</h2>${HIST.length?`<div class="hist">${HIST.map(x=>x.module==="reno"?`<div><span>Réno · ${esc((TRAVAUX[x.travaux]||{l:""}).l.split(/ \(|,/)[0])}${x.licence?` · <span class="num">${esc(formatLicence(x.licence))}</span>`:""}</span><span class="tag ${x.couleur}">${{r:"Ne pas signer",y:"Prudence",g:"Aucun signal"}[x.couleur]}</span></div>`:`<div><span>${esc(x.ville)} · ${x.chambres===3?"3+":x.chambres} ch. · <span class="num">${money(x.prix)}</span></span><span class="tag ${x.couleur}">${{r:"Ne paie pas",y:"Visite d'abord",g:"Aucun signal"}[x.couleur]}</span></div>`).join("")}</div>`:`<p class="soft">Aucune vérification pour l'instant.</p>`}</div>
+${blocInvitationLieu()}
+${blocHistorique()}
 <button class="btn ghost" data-go="victime">J'ai été victime d'une arnaque</button>
-${ADM.estAdmin()?`<button class="btn ghost" data-go="admin" id="nouvA">Espace admin${ADM.demo?" (démo)":""}</button>`:""}
-<button class="btn ghost" id="deco">Se déconnecter</button>
-<p class="hint pied">${lienConfidentialite.replace("politique de confidentialité","Confidentialité")}<button type="button" class="lienbtn" data-go="supprimer">Supprimer mon compte</button></p>`,
+<p class="hint pied">${lienConditions.replace("conditions d'utilisation","Conditions")}${lienConfidentialite.replace("politique de confidentialité","Confidentialité")}</p>`,
 
 verifier:()=>`${top("accueil","Vérifier")}
 <h2>L'annonce</h2>
 <form class="card" id="f-ver" novalidate>
 <label class="drop drop-grand">${F.vignettes&&F.vignettes.length?`<span class="vignettes">${F.vignettes.map(u=>`<img src="${u}" alt="Capture">`).join("")}</span>Changer les captures`:`<b>Ajoute des captures d'écran</b><span>L'annonce et, si tu l'as, la conversation. L'app lit tout.</span>`}<input type="file" accept="image/*" multiple data-captures="1"></label>
+${blocIA()}
 ${F.lu?`<p class="lu" role="status">${F.lu}</p>`:""}
 <details class="coller" ${F.coller?"open":""}><summary>ou coller le texte</summary>
 <label>Texte de l'annonce<textarea id="annonce" placeholder="Colle ici le texte de l'annonce">${esc(F.annonce||"")}</textarea></label>
@@ -859,19 +1227,21 @@ ${F.lu?`<p class="lu" role="status">${F.lu}</p>`:""}
 <label>Adresse (facultatif, reste sur ton téléphone)<input id="adr" autocomplete="off" placeholder="1234, rue Exemple" value="${esc(F.adr||"")}"></label>
 ${yn("argent","On te demande de l'argent avant la signature du bail ?")}
 ${yn("visite","As-tu pu visiter le logement en personne ?")}
-${yn("cession","Est-ce une cession de bail ?")}
-<div id="q-accord" ${F.cession!=="oui"?"hidden":""}>${yn("accord","Le propriétaire a-t-il accepté la cession par écrit ?")}</div>
+${yn("cession","Est-ce le locataire actuel qui annonce (cession de bail ou sous-location) ?")}
+<div id="q-accord" ${F.cession!=="oui"?"hidden":""}>${yn("accord","Le propriétaire a-t-il accepté par écrit ?")}<p class="hint">Le locataire doit aviser le propriétaire par écrit. Celui-ci a 15 jours pour répondre ; sans réponse, il est réputé avoir accepté.</p></div>
 ${blocProfil(F)}
 <p class="err" id="e" hidden></p>
 <button class="btn">Vérifier</button></form>
-<p class="hint">Le texte de l'annonce et la conversation restent sur ton téléphone. Seuls la ville, le nombre de chambres, le prix, le lien et le résultat sont gardés. Si la recherche d'images est activée, la capture est envoyée à Google Vision pour cette recherche, puis n'est pas conservée.</p>`,
+<p class="hint">Le texte de l'annonce et la conversation restent sur ton téléphone. Seuls la ville, le nombre de chambres, le prix, le lien et le résultat sont gardés. Si la recherche d'images est activée, la capture est envoyée à Google Vision pour cette recherche, puis n'est pas conservée. Si tu actives l'analyse intelligente, les captures et le texte sont envoyés à Anthropic pour l'analyse, puis oubliés.</p>`,
 
 resultat:()=>{const R=F.res;return `${top("accueil","Résultat")}
 <div class="verdict ${R.c}"><strong>${{r:"Ne paie pas",y:"Visite d'abord, puis vérifie le propriétaire",g:"Aucun signal. Tu peux visiter."}[R.c]}</strong><span>${esc(F.ville)} · ${F.ch==="3"?"3 ch. et plus":F.ch+" ch."} · <span class="num">${money(F.prixN)}</span></span></div>
 <div class="card"><h2>Ce que l'app a vérifié</h2><ul class="reasons">${R.items.map(i=>`<li><span class="dot ${i.c}"></span><div>${i.t}${i.law?`<div class="law">${i.law}</div>`:""}</div></li>`).join("")}</ul></div>
 <p class="rule">${{r:"N'envoie aucun argent et ne donne aucune pièce d'identité à cette personne.",y:"Ne paie rien avant d'avoir visité et confirmé qui est le propriétaire.",g:"Avant de payer : confirme le propriétaire, puis signe le bail. Le premier mois se paie à la signature, jamais avant, et jamais de dépôt."}[R.c]}</p>
 <button class="btn ghost" data-go="proprio" id="b-proprio">Vérifier le propriétaire</button>
-<p class="hint">Le nom n'est pas toujours sur le rôle en ligne. L'app te guide avec le compte de taxes et le Registre foncier.</p>
+<p class="hint">Sans rien demander à l'annonceur : l'adresse suffit, et la comparaison se fait au moment de signer.</p>
+${blocFiltre()}
+${offreApprofondie("resultat")}
 ${boutonCarte(F)}
 ${boutonSignaler(F)}
 <button class="btn" id="nouv">Vérifier une autre annonce</button>`},
@@ -885,7 +1255,11 @@ trouver:()=>vueTrouver(F,"accueil"),
 confidentialite:()=>vueConfidentialite(SESSION?"accueil":"bienvenue"),
 supprimer:()=>vueSupprimer(),
 admin:()=>vueAdmin(),
-approfondie:()=>vueApprofondie(F,"proprio"),
+historique:()=>vueHistorique(),
+detailVerif:()=>vueDetailVerif(),
+compte:()=>vueCompte(),
+approfondie:()=>vueApprofondie(F,F.retourVA||"proprio"),
+conditions:()=>vueConditions(SESSION?"accueil":"bienvenue"),
 reno:()=>vueReno(F,"accueil"),
 renoResultat:()=>vueRenoResultat(F,"accueil"),
 
@@ -901,8 +1275,8 @@ victime:()=>`${top(SESSION?"accueil":"bienvenue","Aide")}
 };
 function yn(k,q){return `<div class="q">${q}<div class="yn" role="group" aria-label="${esc(q)}"><button type="button" data-yn="${k}" data-v="oui" aria-pressed="${F[k]==="oui"}">Oui</button><button type="button" data-yn="${k}" data-v="non" aria-pressed="${F[k]==="non"}">Non</button></div></div>`}
 
-const PUBLIQUES=["bienvenue","inscription","code","victime","erreur","confidentialite"];
-function go(v){if(!SESSION&&!PUBLIQUES.includes(v)){if(F.partage)LS.set("vl_partage",{annonce:F.annonce,lien:F.lien});v="bienvenue"}app.innerHTML=V[v]();window.scrollTo(0,0);bind(v);bindPlus(v);bindPlus3(v);bindPlus4(v)}
+const PUBLIQUES=["bienvenue","inscription","code","victime","erreur","confidentialite","conditions"];
+function go(v){if(!SESSION&&!PUBLIQUES.includes(v)){if(F.partage)LS.set("vl_partage",{annonce:F.annonce,lien:F.lien});v="bienvenue"}if(v==="admin"&&!ADM.estAdmin())v="accueil";app.innerHTML=V[v]();window.scrollTo(0,0);bind(v);bindPlus(v);bindPlus3(v);bindPlus4(v);bindPlus5(v);bindPlus6(v);bindPlus7(v);bindPlus8(v)}
 const err=m=>{const e=$("#e");if(e){e.textContent=m;e.hidden=!m}};
 const busy=(on,label)=>{const b=$("#go");if(b){b.disabled=on;if(label)b.textContent=label}};
 function appliquerLecture(r){["prix","ch","ville","cession"].forEach(k=>{if(r[k])F[k]=r[k]});if(r.lien&&!F.lien)F.lien=r.lien;
@@ -925,7 +1299,8 @@ async function rechercheImages(f){try{const b64=await new Promise((ok,ko)=>{cons
 async function chargerProfil(){
  if(!SESSION){PROFIL=null;HIST=[];EST_ADMIN=false;return}
  const {data}=await sb.from("profiles").select("*").maybeSingle();PROFIL=data;try{EST_ADMIN=!!(await rpc("est_admin"))}catch(e){EST_ADMIN=false}
- const h=await sb.from("verifications").select("module,ville,chambres,prix,couleur,travaux,licence,created_at").order("created_at",{ascending:false}).limit(10);HIST=h.data||[];
+ const h=await sb.from("verifications").select("id,module,ville,chambres,prix,couleur,raisons,lien,travaux,licence,created_at").order("created_at",{ascending:false}).limit(100);HIST=h.data||[];
+ noterLieu();
 }
 async function chargerRegistre(){try{const {count,error}=await sb.from("licences_rbq").select("numero",{count:"exact",head:true});REGISTRE_PRET=!error&&count>0}catch(e){REGISTRE_PRET=false}}
 async function chargerLoyers(){
@@ -944,7 +1319,7 @@ function bind(v){
  app.querySelectorAll("[data-canal]").forEach(b=>b.onclick=()=>{F.canal=b.dataset.canal;F.ident="";go("inscription")});
  app.querySelectorAll("[data-yn]").forEach(b=>b.onclick=()=>{F[b.dataset.yn]=b.dataset.v;b.parentNode.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b));if(b.dataset.yn==="cession")$("#q-accord").hidden=b.dataset.v!=="oui"});
  app.querySelectorAll("input[data-captures]").forEach(inp=>inp.onchange=()=>{const fs=[...inp.files].slice(0,4);if(!fs.length)return;keep();
-  F.captures=fs;F.vignettes=fs.map(f=>URL.createObjectURL(f));F.capture=fs[0];F.ocr=true;go(v)});
+  F.captures=fs;F.vignettes=fs.map(f=>URL.createObjectURL(f));F.capture=fs[0];F.ocr=true;F.iaOff=false;F.ia=null;go(v)});
  app.querySelectorAll("input[type=file][data-side]").forEach(inp=>inp.onchange=()=>{const f=inp.files[0];if(!f)return;const s=inp.dataset.side;F[s]=f;F[s+"Url"]=URL.createObjectURL(f);keep();lireReno(F);if(v==="verifier"&&s==="capture")F.ocr=true;go(v)});
 
  if(v==="inscription")$("#f-ins").onsubmit=async e=>{e.preventDefault();err("");const val=$("#ident").value.trim();F.ident=val;
@@ -977,7 +1352,7 @@ function bind(v){
    const {error}=await sb.rpc("soumettre_identite",{doc_type:doc});if(error){busy(false,"Réessayer");return err("Une erreur est survenue. Réessaie.")}
    F={};await chargerProfil();go("identiteOk")}}
 
- if(v==="accueil"&&$("#deco"))$("#deco").onclick=async()=>{await sb.auth.signOut();PROFIL=null;HIST=[];F={};SESSION=false;go("bienvenue")};
+ if(v==="compte"&&$("#deco"))$("#deco").onclick=async()=>{await sb.auth.signOut();PROFIL=null;HIST=[];F={};SESSION=false;LIEU_NOTE=false;go("bienvenue")};
  if(v==="resultat"&&$("#signaler"))$("#signaler").onclick=()=>{const sig={lienN:F.lienN,ville:F.ville};LS.set("vl_sig",sig);
   if(ANONYME)return go("inscription");const st=PROFIL&&PROFIL.identite_statut;
   if(st==="confirmee"){F=sig;return go("signaler")}go(st==="en_attente"?"attente":"identite")};
@@ -985,8 +1360,9 @@ function bind(v){
   busy(true,"Envoi…");const {error}=await sb.from("signalements").insert({lien:F.lienN,motif:F.motif});
   if(error&&!String(error.code).includes("23505")){busy(false,"Réessayer");return err("Le signalement n'a pas pu être envoyé. Réessaie.")}
   LS.set("vl_sig",null);F={};go("signalOk")}}
- if(v==="verifier"){$("#lire").onclick=()=>{keep();F.coller=true;appliquerLecture(extraireAnnonce(F.annonce,Object.keys(LOYERS)));go("verifier")};
+ if(v==="verifier"){$("#lire").onclick=()=>{keep();F.coller=true;if(iaActif()&&!F.iaOff){go("verifier");return lancerIA(true)}appliquerLecture(extraireAnnonce(F.annonce,Object.keys(LOYERS)));go("verifier")};
   if(F.partage){F.partage=false;appliquerLecture(extraireAnnonce(F.annonce,Object.keys(LOYERS)));return go("verifier")}
+  if(F.ocr&&iaActif()&&!F.iaOff){F.ocr=false;lancerIA(false)}
   if(F.ocr){F.ocr=false;F.lu=null;const n=(F.captures||[]).length;$("#f-ver").insertAdjacentHTML("afterbegin",`<p class="lu" role="status">Lecture de ${n>1?n+" captures":"la capture"}…</p>`);
    (async()=>{let tout="";for(const c of F.captures||[])tout+="\n"+await lireCapture(c);return tout})()
    .then(txt=>{const ici=$("#f-ver");if(ici)keep();F.ocrTxt=txt.trim();appliquerLecture(extraireAnnonce(F.ocrTxt,Object.keys(LOYERS)));if(ici)go("verifier")})
@@ -1001,7 +1377,7 @@ function bind(v){
   if(F.lienN&&SESSION){const [a,b]=await Promise.all([sb.rpc("stats_lien",{p_lien:F.lienN}),sb.rpc("nb_signalements",{p_lien:F.lienN})]);F.stats=a.data&&a.data[0];F.nbSig=+b.data||0}
   if(F.capture)F.images=await rechercheImages(F.capture);
   F.res=analyser();
-  const brut=F.res.items.map(i=>({c:i.c,t:i.t.replace(/<[^>]+>/g,"")}));
+  const brut=F.res.items.map(i=>({c:i.c,t:String(i.t).slice(0,1500),law:String(i.law||"").slice(0,800)}));
   const ins=SESSION?sb.from("verifications").insert({ville:F.ville,chambres:+F.ch,prix:F.prixN,couleur:F.res.c,raisons:brut,lien:F.lienN}):Promise.resolve();
   await Promise.all([ins,new Promise(r=>setTimeout(r,900))]);await chargerProfil();go("resultat")}}
  if(v==="resultat")$("#nouv").onclick=()=>{F={};go("verifier")};
@@ -1011,7 +1387,7 @@ function bind(v){
   let R;/* undefined = registre pas encore importé : l'app renvoie au registre officiel */
   if(lic&&REGISTRE_PRET){const {data,error}=await sb.from("licences_rbq").select("numero,nom,autres_noms,sous_categories,mandataire").eq("numero",lic).maybeSingle();if(!error)R=data||null}
   F.res=analyserReno(F,R);
-  const brut=F.res.items.map(i=>({c:i.c,t:i.t.replace(/<[^>]+>/g,"")}));
+  const brut=F.res.items.map(i=>({c:i.c,t:String(i.t).slice(0,1500),law:String(i.law||"").slice(0,800)}));
   const ins=!SESSION?Promise.resolve():sb.from("verifications").insert({module:"reno",travaux:F.travaux,licence:lic||null,couleur:F.res.c,raisons:brut});
   await Promise.all([ins,new Promise(r=>setTimeout(r,700))]);await chargerProfil();go("renoResultat")}}
  if(v==="renoResultat"){lierResultatReno(F);$("#nouv").onclick=()=>{F={};go("reno")}}
@@ -1025,9 +1401,12 @@ function analyser(){
  if(motA&&F.argent!=="oui")it.push({c:"y",t:`<b>Il est question de « ${esc(motA)} ».</b> Si on te demande un dépôt ou des frais avant le bail, c'est illégal. Seul le premier mois de loyer peut être exigé d'avance.`,law:L1904});
  if(motS)it.push({c:"y",t:`<b>Scénario d'arnaque courant</b> repéré : « ${esc(motS)} ».`});
  itemsProfil(F).forEach(x=>it.push(x));
+ itemsIA(F).forEach(x=>it.push(x));
  if(F.visite==="non")it.push({c:"y",t:"<b>Tu n'as pas visité.</b> Ne paie rien sans avoir vu le logement en personne."});
  else it.push({c:"g",t:"Tu as visité le logement. Attention : un fraudeur peut louer un logement quelques jours pour le faire visiter."});
- if(F.cession==="oui")it.push(F.accord==="oui"?{c:"g",t:"Accord écrit du propriétaire pour la cession : bon signe."}:{c:"y",t:"<b>Cession sans accord écrit du propriétaire.</b> Il peut refuser ; ne paie rien avant sa réponse écrite.",law:'Code civil du Québec, art. 1870 et 1871 · <a href="https://www.tal.gouv.qc.ca/sites/default/files/notices/TAL_828_E.pdf" target="_blank" rel="noopener">TAL</a>'});
+ if(F.cession==="oui"&&F.argent==="oui")it.push({c:"r",t:"<b>Le locataire te demande de l'argent.</b> En cession de bail, le locataire qui part ne peut rien exiger de toi en échange : pas de « frais de reprise », pas de dépôt.",law:'Avis de cession du TAL · <a href="https://www.tal.gouv.qc.ca/sites/default/files/notices/TAL_802_E.pdf" target="_blank" rel="noopener">TAL</a>'});
+ if(F.cession==="oui")it.push({c:"i",t:"<b>Locataire actuel :</b> la preuve, c'est l'accord écrit du propriétaire, avec ton nom. « Vérifier le propriétaire » te dit qui doit le signer, à partir de l'adresse seulement."});
+ if(F.cession==="oui")it.push(F.accord==="oui"?{c:"g",t:"Accord écrit du propriétaire : bon signe."}:{c:"y",t:"<b>Pas encore d'accord écrit du propriétaire.</b> Il peut refuser pour un motif sérieux ; ne paie rien avant sa réponse écrite ou la fin du délai de 15 jours.",law:'Code civil du Québec, art. 1870 et 1871 · <a href="https://www.tal.gouv.qc.ca/sites/default/files/notices/TAL_828_E.pdf" target="_blank" rel="noopener">TAL</a>'});
  if(F.lienN){const h=new URL(F.lienN).hostname,site=SITES.find(s=>h===s.d||h.endsWith("."+s.d));
   if(!site)it.push({c:"y",t:`<b>Site inconnu : ${esc(h)}.</b> Les fraudeurs copient parfois de vrais sites d'annonces. Vérifie l'adresse lettre par lettre.`});
   const st=F.stats;if(st&&+st.rouges>0)it.push({c:"r",t:`<b>${st.rouges} vérification${st.rouges>1?"s":""} précédente${st.rouges>1?"s":""} de cette annonce ${st.rouges>1?"ont":"a"} donné « Ne paie pas ».</b>`});
