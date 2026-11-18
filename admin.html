@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="fr-CA">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>HabitaScan · Administration</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<style>
+:root{color-scheme:light dark;
+--bg:light-dark(#f4f6fb,#0a1226);--card:light-dark(#ffffff,#121c36);--ink:light-dark(#0c1630,#eef2fb);--soft:light-dark(#5a6684,#a9b4cf);
+--line:light-dark(#e3e7f0,#26324f);--blue:light-dark(#0b3d91,#6f9cff);--bluebg:light-dark(#e8eefb,#17264a);--side:light-dark(#0c1630,#070d1d);
+--red:light-dark(#c8341b,#ff7a5c);--redbg:light-dark(#fdece8,#3a1610);--amber:light-dark(#a35a00,#ffb547);--amberbg:light-dark(#fff4e0,#3a2a0e);
+--ok:light-dark(#1d7a3e,#5fd38a);--okbg:light-dark(#e7f6ec,#0f2e1c);--bar:light-dark(#2f5fbf,#6f9cff)}
+*{box-sizing:border-box}html,body{margin:0}body{font:14px/1.45 "Inter",system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink)}
+button,input,select,textarea{font:inherit;color:inherit}a{color:var(--blue)}
+.num{font-variant-numeric:tabular-nums}
+/* Mise en page */
+.shell{display:grid;grid-template-columns:248px 1fr;min-height:100vh}
+aside{background:var(--side);color:#dfe6f6;padding:18px 12px;position:sticky;top:0;height:100vh;overflow:auto;display:flex;flex-direction:column;gap:2px}
+.logo{display:flex;align-items:center;gap:10px;padding:4px 10px 18px;font-weight:700;font-size:16px;color:#fff}.logo img{width:30px;height:30px;border-radius:8px;background:#fff;padding:3px}
+.logo small{display:block;font-weight:500;font-size:11px;color:#8d9bc0;letter-spacing:.04em;text-transform:uppercase}
+.nav-t{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:#7f8db3;padding:14px 10px 6px}
+.nav{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;color:#c9d3ea;padding:8px 10px;border-radius:8px;cursor:pointer;text-align:left}
+.nav:hover{background:rgb(255 255 255/.06)}.nav[aria-current="page"]{background:rgb(255 255 255/.12);color:#fff;font-weight:600}
+.nav .b{margin-left:auto;background:#e0533a;color:#fff;font-size:11px;font-weight:700;border-radius:10px;padding:1px 7px}
+.side-pied{margin-top:auto;padding:12px 10px 0;border-top:1px solid rgb(255 255 255/.08);font-size:12px;color:#8d9bc0;display:flex;flex-direction:column;gap:6px}
+.side-pied button{background:none;border:1px solid rgb(255 255 255/.18);color:#dfe6f6;border-radius:8px;padding:6px 10px;cursor:pointer}
+main{padding:24px 32px 60px;min-width:0}
+.tete{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.tete h1{font-size:22px;margin:0;letter-spacing:-.01em}.tete p{margin:2px 0 0;color:var(--soft)}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:600;white-space:nowrap}
+.btn:hover{border-color:var(--blue)}.btn.pri{background:var(--blue);border-color:var(--blue);color:#fff}.btn.dan{color:var(--red)}.btn.dan:hover{border-color:var(--red)}
+.btn:disabled{opacity:.5;cursor:default}.btn.sm{padding:4px 10px;font-size:13px}
+.carte{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:16px}
+.carte h2{font-size:15px;margin:0 0 12px}.carte-tete{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}.carte-tete h2{margin:0}
+.grille{display:grid;gap:16px}.g4{grid-template-columns:repeat(4,minmax(0,1fr))}.g2{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+.kpi span{color:var(--soft);font-size:13px}.kpi b{display:block;font-size:26px;margin-top:4px;letter-spacing:-.01em}.kpi small{color:var(--soft);font-size:12px}
+.kpi.alerte{border-color:var(--red)}.kpi.alerte b{color:var(--red)}
+.muted{color:var(--soft)}.hint{color:var(--soft);font-size:13px;margin:6px 0 0}
+/* Tableaux */
+.tab-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}th{text-align:left;font-weight:600;color:var(--soft);font-size:12px;text-transform:uppercase;letter-spacing:.04em;background:var(--bg);position:sticky;top:0}
+th,td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}tr:last-child td{border-bottom:0}
+tbody tr.cl{cursor:pointer}tbody tr.cl:hover td{background:var(--bluebg)}
+td.r,th.r{text-align:right}.trunc{max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pill{display:inline-block;font-size:12px;font-weight:600;border-radius:20px;padding:2px 9px;white-space:nowrap}
+.p-r{background:var(--redbg);color:var(--red)}.p-y{background:var(--amberbg);color:var(--amber)}.p-g{background:var(--okbg);color:var(--ok)}.p-n{background:var(--bluebg);color:var(--blue)}.p-x{background:var(--bg);color:var(--soft);border:1px solid var(--line)}
+.filtres{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.filtres input,.filtres select,.champ input,.champ select,.champ textarea{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-height:38px}
+.filtres input[type=search]{min-width:260px;flex:1}
+.pager{display:flex;justify-content:space-between;align-items:center;margin-top:10px;color:var(--soft);font-size:13px}
+.vide{text-align:center;color:var(--soft);padding:30px}
+/* Formulaires de réglages */
+.champ{display:grid;grid-template-columns:1fr 200px auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}.champ:last-child{border-bottom:0}
+.champ label b{display:block;font-weight:600}.champ label small{color:var(--soft)}
+.champ.large{grid-template-columns:1fr}.champ.large textarea{width:100%;min-height:70px}
+.inter{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid var(--line)}.inter:last-child{border-bottom:0}
+.inter b{display:block}.inter small{color:var(--soft)}
+.sw{appearance:none;width:44px;height:26px;border-radius:13px;background:var(--line);position:relative;cursor:pointer;flex-shrink:0;transition:background .15s;margin:0}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgb(0 0 0/.3);transition:transform .15s}
+.sw:checked{background:var(--ok)}.sw:checked::after{transform:translateX(18px)}
+.onglets{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:16px;flex-wrap:wrap}
+.onglets button{border:0;background:none;padding:9px 14px;cursor:pointer;color:var(--soft);font-weight:600;border-bottom:2px solid transparent;margin-bottom:-1px}
+.onglets button[aria-selected="true"]{color:var(--blue);border-color:var(--blue)}
+/* Graphique */
+.graph{position:relative}.graph svg{width:100%;height:180px;display:block}.graph .tt{position:absolute;pointer-events:none;background:var(--ink);color:var(--card);font-size:12px;padding:5px 8px;border-radius:6px;white-space:nowrap;transform:translate(-50%,-110%);display:none}
+.repart{display:flex;flex-direction:column;gap:10px}.repart div{display:grid;grid-template-columns:130px 1fr 96px;gap:10px;align-items:center;font-size:13px}
+.jauge{height:10px;background:var(--bg);border-radius:5px;overflow:hidden}.jauge i{display:block;height:100%;border-radius:5px}
+/* Panneau latéral */
+.voile{position:fixed;inset:0;background:rgb(5 10 25/.45);z-index:20;display:none}.voile.ouvert{display:block}
+.panneau{position:fixed;top:0;right:0;bottom:0;width:min(560px,100%);background:var(--card);z-index:21;transform:translateX(100%);transition:transform .2s,visibility .2s;overflow:auto;visibility:hidden}
+.panneau.ouvert{transform:none;visibility:visible;box-shadow:-10px 0 40px rgb(0 0 0/.2)}.panneau .p-tete{position:sticky;top:0;background:var(--card);border-bottom:1px solid var(--line);padding:16px 20px;display:flex;justify-content:space-between;align-items:center;gap:10px;z-index:1}
+.panneau .p-tete h2{margin:0;font-size:17px;overflow-wrap:anywhere}.panneau .p-corps{padding:20px}
+.dl{display:grid;grid-template-columns:150px 1fr;gap:8px 12px;margin:0 0 16px;font-size:13.5px}.dl dt{color:var(--soft)}.dl dd{margin:0;overflow-wrap:anywhere}
+.sec{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--soft);margin:22px 0 8px;font-weight:700}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--card);padding:10px 16px;border-radius:8px;z-index:40;font-weight:600;display:none;max-width:90vw}
+.toast.err{background:var(--red);color:#fff}
+.banniere{background:var(--amberbg);color:var(--amber);border:1px solid color-mix(in srgb,var(--amber) 30%,transparent);padding:10px 14px;border-radius:10px;margin-bottom:16px;font-weight:600}
+/* Connexion */
+.connexion{min-height:100vh;display:grid;place-items:center;padding:20px}
+.connexion .carte{width:min(400px,100%);padding:28px}.connexion h1{font-size:20px;margin:12px 0 4px}.connexion label{display:block;font-weight:600;margin:16px 0 6px}
+.connexion input{width:100%;border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--bg)}.connexion .btn{width:100%;margin-top:16px;padding:11px}
+.err{color:var(--red);min-height:20px;margin:10px 0 0;font-size:13px}
+.burger{display:none}
+@media (max-width:900px){.shell{grid-template-columns:1fr}aside{position:fixed;inset:0 auto 0 0;width:260px;z-index:30;transform:translateX(-100%);transition:transform .2s}aside.ouvert{transform:none}
+ main{padding:16px}table{min-width:680px}.burger{display:inline-flex}.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.g2,.g3{grid-template-columns:1fr}.champ{grid-template-columns:1fr}.dl{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="racine"></div>
+<div class="voile" id="voile"></div><div class="panneau" id="panneau" role="dialog" aria-modal="true" aria-labelledby="p-titre"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+<script>
+"use strict";
+const DEMO=false;
+const SUPABASE_URL="https://oyiiaqyepihkawzkkjpi.supabase.co",SUPABASE_KEY="sb_publishable_LhDVlSvpyM-bkW-QSp0lsw_wgNIsELX";
+const sb=!DEMO&&window.supabase?supabase.createClient(SUPABASE_URL,SUPABASE_KEY):null;
+const $=s=>document.querySelector(s),R=$("#racine");
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const nb=n=>Number(n||0).toLocaleString("fr-CA");
+const argent=n=>Number(n||0).toLocaleString("fr-CA",{style:"currency",currency:"CAD"});
+const dt=d=>d?new Date(d).toLocaleString("fr-CA",{dateStyle:"medium",timeStyle:"short"}):"—";
+const dj=d=>d?new Date(d).toLocaleDateString("fr-CA",{dateStyle:"medium"}):"—";
+const ilya=d=>{if(!d)return "—";const m=(Date.now()-new Date(d))/6e4;if(m<1)return "à l'instant";if(m<60)return `il y a ${Math.round(m)} min`;if(m<1440)return `il y a ${Math.round(m/60)} h`;return `il y a ${Math.round(m/1440)} j`};
+function toast(t,err){const e=$("#toast");e.textContent=t;e.className="toast"+(err?" err":"");e.style.display="block";clearTimeout(e._t);e._t=setTimeout(()=>e.style.display="none",3500)}
+const msgErr=e=>{const m=(e&&(e.message||e.error_description))||String(e);return /reserve aux admins/.test(m)?"Accès réservé aux administrateurs.":m};
+
+/* ===== Accès aux données ===== */
+const API={
+ async rpc(n,a){if(DEMO)return DEMO_API.rpc(n,a);const {data,error}=await sb.rpc(n,a||{});if(error)throw error;return data},
+ async table(t,cols,ordre){if(DEMO)return DEMO_API.table(t);let q=sb.from(t).select(cols);if(ordre)q=q.order(ordre[0],{ascending:ordre[1]!==false});const {data,error}=await q;if(error)throw error;return data||[]},
+ async pieces(uid){if(DEMO)return [];const {data}=await sb.storage.from("pieces-identite").list(uid,{limit:20});const out=[];for(const f of data||[]){const {data:u}=await sb.storage.from("pieces-identite").createSignedUrl(`${uid}/${f.name}`,300);if(u)out.push({nom:f.name,url:u.signedUrl})}return out},
+ async supprimerCompte(uid){if(DEMO)return DEMO_API.supprimer(uid);const {data,error}=await sb.functions.invoke("admin-supprimer-compte",{body:{user_id:uid}});if(error)throw error;if(data&&data.error)throw new Error(data.error);return data}
+};
+
+/* ===== État ===== */
+const S={vue:"tableau",moi:null,badges:{},u:{q:"",f:"tous",p:0},v:{q:"",c:"",m:"",p:0},d:{statut:""},reglages:"tarifs"};
+const VUES=[
+ ["Activité",[["tableau","Tableau de bord"],["demandes","Vérifications payées","demandes"],["verifications","Vérifications"],["utilisateurs","Utilisateurs"]]],
+ ["Modération",[["identites","Identités","identites"],["signalements","Signalements"],["connexions","Connexions"]]],
+ ["Configuration",[["reglages","Réglages"],["loyers","Loyers de référence"],["admins","Administrateurs"]]],
+ ["Suivi",[["journal","Journal d'administration"],["erreurs","Erreurs techniques","erreurs"]]]];
+
+/* ===== Connexion ===== */
+async function demarrer(){
+ if(DEMO){S.moi={contact:"admin@habitascan.demo",id:"demo-moi"};await majBadges();return coquille()}
+ const {data}=await sb.auth.getSession();if(!data.session)return ecranConnexion();
+ let ok=false;try{ok=await API.rpc("est_admin")}catch(e){}
+ if(!ok)return ecranRefus(data.session.user.email);
+ S.moi={contact:data.session.user.email,id:data.session.user.id};await majBadges();coquille()}
+function ecranConnexion(etape,courriel){
+ R.innerHTML=`<div class="connexion"><form class="carte" id="f-cx" novalidate><img src="icon.svg" width="44" height="44" alt=""><h1>Administration HabitaScan</h1><p class="muted">Accès réservé aux administrateurs.</p>
+ ${etape==="code"?`<label for="code">Code reçu par courriel (${esc(courriel)})</label><input id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" required>`:`<label for="courriel">Courriel</label><input id="courriel" type="email" autocomplete="email" required>`}
+ <button class="btn pri" type="submit">${etape==="code"?"Se connecter":"Recevoir un code"}</button><p class="err" id="err" role="alert"></p>
+ <p class="hint"><a href="/">Retour à l'app</a></p></form></div>`;
+ $("#f-cx").onsubmit=async ev=>{ev.preventDefault();const b=ev.submitter;b.disabled=true;$("#err").textContent="";
+  try{if(etape==="code"){const {error}=await sb.auth.verifyOtp({email:courriel,token:$("#code").value.trim(),type:"email"});if(error)throw error;demarrer()}
+   else{const c=$("#courriel").value.trim();const {error}=await sb.auth.signInWithOtp({email:c,options:{shouldCreateUser:false}});if(error)throw error;ecranConnexion("code",c)}}
+  catch(e){b.disabled=false;$("#err").textContent=etape==="code"?"Code invalide ou expiré.":"Envoi impossible. Vérifie le courriel."}}}
+function ecranRefus(c){R.innerHTML=`<div class="connexion"><div class="carte"><img src="icon.svg" width="44" height="44" alt=""><h1>Accès refusé</h1><p class="muted">Le compte ${esc(c||"")} n'est pas administrateur.</p><button class="btn" id="deco">Se déconnecter</button></div></div>`;$("#deco").onclick=async()=>{await sb.auth.signOut();ecranConnexion()}}
+
+/* ===== Coquille ===== */
+function coquille(){
+ R.innerHTML=`<div class="shell"><aside id="side" aria-label="Navigation"><div class="logo"><img src="icon.svg" alt=""><div>HabitaScan<small>Administration${DEMO?" · démo":""}</small></div></div>
+ ${VUES.map(([t,l])=>`<div class="nav-t">${t}</div>`+l.map(([k,n,b])=>`<button class="nav" data-vue="${k}" ${S.vue===k?'aria-current="page"':""}>${n}${b&&S.badges[b]?`<span class="b">${S.badges[b]}</span>`:""}</button>`).join("")).join("")}
+ <div class="side-pied"><span>${esc(S.moi.contact)}</span><a href="/" style="color:#c9d3ea">Ouvrir l'app ↗</a><button id="deco">Se déconnecter</button></div></aside>
+ <main id="main"></main></div>`;
+ document.querySelectorAll("[data-vue]").forEach(b=>b.onclick=()=>{S.vue=b.dataset.vue;$("#side").classList.remove("ouvert");coquille()});
+ $("#deco").onclick=async()=>{if(DEMO)return toast("Démo : déconnexion désactivée.");await sb.auth.signOut();ecranConnexion()};
+ afficher()}
+function tete(titre,sous,actions=""){return `<div class="tete"><div style="display:flex;gap:10px;align-items:center"><button class="btn burger" id="burger" aria-label="Menu">☰</button><div><h1>${titre}</h1>${sous?`<p>${sous}</p>`:""}</div></div><div class="actions">${actions}<button class="btn" id="actu">Actualiser</button></div></div>`}
+async function afficher(){const m=$("#main");m.innerHTML=`<p class="muted">Chargement…</p>`;
+ try{await (V[S.vue]||V.tableau)(m)}catch(e){m.innerHTML=tete("Erreur")+`<div class="carte"><p class="err">${esc(msgErr(e))}</p></div>`}
+ const bu=$("#burger");if(bu)bu.onclick=()=>$("#side").classList.toggle("ouvert");const a=$("#actu");if(a)a.onclick=()=>afficher()}
+async function majBadges(){try{const t=await API.rpc("admin_tableau");S.badges={demandes:t.demandes&&t.demandes.payee||0,identites:t.identites_attente||0,erreurs:t.erreurs_24h||0};return t}catch(e){return null}}
+
+/* ===== Panneau latéral ===== */
+function panneau(titre,corps,apres){const p=$("#panneau");p.innerHTML=`<div class="p-tete"><h2 id="p-titre">${titre}</h2><button class="btn sm" id="p-fermer" aria-label="Fermer">Fermer</button></div><div class="p-corps">${corps}</div>`;
+ p.classList.add("ouvert");$("#voile").classList.add("ouvert");$("#p-fermer").onclick=fermer;$("#voile").onclick=fermer;$("#p-fermer").focus();if(apres)apres(p)}
+function fermer(){$("#panneau").classList.remove("ouvert");$("#voile").classList.remove("ouvert")}
+document.addEventListener("keydown",e=>{if(e.key==="Escape")fermer()});
+
+/* ===== Petits composants ===== */
+const COUL={r:["p-r","Ne paie pas"],y:["p-y","Prudence"],g:["p-g","Aucun signal"]};
+const pillC=c=>COUL[c]?`<span class="pill ${COUL[c][0]}">${COUL[c][1]}</span>`:`<span class="pill p-x">—</span>`;
+const STAT_D={a_payer:["p-x","Non payée"],payee:["p-y","À traiter"],terminee:["p-g","Terminée"],remboursee:["p-n","Remboursée"]};
+const pillD=s=>`<span class="pill ${(STAT_D[s]||["p-x"])[0]}">${(STAT_D[s]||[0,s])[1]}</span>`;
+const VERDICTS={correspond:"Propriétaire trouvé ; correspond à l'annonceur",ne_correspond_pas:"Propriétaire trouvé ; ne correspond pas à l'annonceur",compagnie:"Le propriétaire est une entreprise",introuvable:"Propriétaire introuvable",trouve:"Propriétaire trouvé (aucun nom d'annonceur fourni)"};
+const GLOBAL={continuer:["p-g","Tu peux continuer"],precautions:["p-y","Continue avec précaution"],arreter:["p-r","Arrête"]};
+const ENT={lie:"Entreprise active",non_lie:"Active, mais l'annonceur n'est pas parmi les dirigeants",inactive:"Entreprise non active",non_verifie:"Non vérifié"};
+const PHOTOS={aucune:"Photos non trouvées ailleurs",reutilisees:"Photos trouvées ailleurs",non_verifie:"Non vérifié (pas de photo)"};
+const DOUBLONS={aucun:"Aucune autre annonce",trouves:"Annoncé ailleurs (autre nom ou prix)",non_verifie:"Non vérifié"};
+const ID_ST={aucune:["p-x","Non vérifiée"],en_attente:["p-y","En attente"],confirmee:["p-g","Confirmée"],refusee:["p-r","Refusée"]};
+const pillI=s=>`<span class="pill ${(ID_ST[s]||ID_ST.aucune)[0]}">${(ID_ST[s]||ID_ST.aucune)[1]}</span>`;
+const ROLES={proprietaire:"dit être propriétaire",gestionnaire:"dit être gestionnaire",locataire:"propriétaire nommé par le locataire"};
+const lienExt=(u,t)=>/^https?:\/\//i.test(u||"")?`<a href="${esc(u)}" target="_blank" rel="noopener noreferrer">${esc(t||u)}</a>`:esc(u||"—");
+function graphBarres(serie,etiq){const W=600,H=180,pb=22,pt=8,n=serie.length||1,max=Math.max(1,...serie.map(x=>x.n)),bw=W/n;
+ const ticks=[0,Math.ceil(max/2),max];
+ return `<div class="graph"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="${esc(etiq)} par jour, 30 derniers jours">
+ ${ticks.map(t=>{const y=pt+(H-pb-pt)*(1-t/max);return `<line x1="0" x2="${W}" y1="${y}" y2="${y}" stroke="var(--line)" stroke-width="1" vector-effect="non-scaling-stroke"/>`}).join("")}
+ ${serie.map((x,i)=>{const h=(H-pb-pt)*x.n/max,y=H-pb-h;return `<g data-i="${i}"><rect x="${i*bw}" y="0" width="${bw}" height="${H}" fill="transparent"/>${x.n?`<path d="M${i*bw+2},${H-pb} V${y+Math.min(4,h)} q0,-${Math.min(4,h)} ${Math.min(4,h)},-${Math.min(4,h)} H${(i+1)*bw-2-Math.min(4,h)} q${Math.min(4,h)},0 ${Math.min(4,h)},${Math.min(4,h)} V${H-pb} Z" fill="var(--bar)"/>`:""}</g>`}).join("")}
+ <line x1="0" x2="${W}" y1="${H-pb}" y2="${H-pb}" stroke="var(--soft)" stroke-width="1" vector-effect="non-scaling-stroke"/></svg>
+ <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--soft)"><span>${dj(serie[0]&&serie[0].jour)}</span><span>max. ${nb(max)} / jour</span><span>${dj(serie[n-1]&&serie[n-1].jour)}</span></div><div class="tt"></div></div>`}
+function lierGraph(el,serie,etiq){el.querySelectorAll(".graph").forEach((g,gi)=>{const s=serie[gi],tt=g.querySelector(".tt"),svg=g.querySelector("svg");
+ svg.addEventListener("mousemove",e=>{const r=svg.getBoundingClientRect(),i=Math.min(s.length-1,Math.max(0,Math.floor((e.clientX-r.left)/r.width*s.length)));const x=s[i];
+  tt.textContent=`${dj(x.jour)} : ${nb(x.n)} ${etiq[gi]}`;tt.style.left=(e.clientX-r.left)+"px";tt.style.top=(e.clientY-r.top)+"px";tt.style.display="block"});
+ svg.addEventListener("mouseleave",()=>tt.style.display="none")})}
+function csv(nom,lignes){if(!lignes.length)return toast("Rien à exporter.");if(DEMO)return toast("Démo : l'export CSV fonctionne dans la vraie console.");const cols=Object.keys(lignes[0]);
+ const c=v=>{const s=v==null?"":typeof v==="object"?JSON.stringify(v):String(v);return /[",\n;]/.test(s)?`"${s.replace(/"/g,'""')}"`:s};
+ const blob=new Blob(["﻿"+[cols.join(","),...lignes.map(l=>cols.map(k=>c(l[k])).join(","))].join("\n")],{type:"text/csv;charset=utf-8"});
+ const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`habitascan-${nom}-${new Date().toISOString().slice(0,10)}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+async function agir(bouton,fn,ok){bouton.disabled=true;try{await fn();if(ok)toast(ok);return true}catch(e){toast(msgErr(e),true);return false}finally{bouton.disabled=false}}
+
+/* ===== Vues ===== */
+const V={};
+V.tableau=async m=>{const t=await majBadges();if(!t)throw new Error("reserve aux admins");
+ const c=t.couleurs_30j||{},tc=(c.r||0)+(c.y||0)+(c.g||0)||1,d=t.demandes||{};
+ m.innerHTML=tete("Tableau de bord","Vue d'ensemble de l'activité de HabitaScan.")+
+ `${t.en_retard?`<div class="banniere">${nb(t.en_retard)} vérification${t.en_retard>1?"s":""} payée${t.en_retard>1?"s":""} en retard sur le délai promis. <button class="btn sm" data-go="demandes">Traiter</button></div>`:""}
+ <div class="grille g4" style="margin-bottom:16px">
+ <div class="kpi"><span>Utilisateurs</span><b class="num">${nb(t.utilisateurs)}</b><small>+${nb(t.nouveaux_7j)} cette semaine · +${nb(t.nouveaux_30j)} en 30 j</small></div>
+ <div class="kpi"><span>Vérifications (30 j)</span><b class="num">${nb(t.verifications_30j)}</b><small>${nb(t.verifications)} au total · ${nb(t.actifs_30j)} utilisateurs actifs</small></div>
+ <div class="kpi"><span>Revenus (30 j)</span><b class="num">${argent(t.revenus_30j)}</b><small>${argent(t.revenus_total)} au total</small></div>
+ <div class="kpi ${d.payee?"alerte":""}"><span>Vérifications payées à traiter</span><b class="num">${nb(d.payee)}</b><small>${nb(d.terminee)} terminées · ${nb(d.remboursee)} remboursées</small></div></div>
+ <div class="grille g2"><div class="carte"><h2>Vérifications par jour</h2>${graphBarres(t.serie_verifs||[],"Vérifications")}</div>
+ <div class="carte"><h2>Inscriptions par jour</h2>${graphBarres(t.serie_inscriptions||[],"Inscriptions")}</div></div>
+ <div class="grille g2"><div class="carte"><h2>Résultats des vérifications (30 j)</h2><div class="repart">
+ ${[["r","Ne paie pas","var(--red)"],["y","Prudence","var(--amber)"],["g","Aucun signal","var(--ok)"]].map(([k,l,col])=>`<div><span>${pillC(k)}</span><span class="jauge"><i style="width:${Math.round(100*(c[k]||0)/tc)}%;background:${col}"></i></span><span class="num" style="text-align:right;white-space:nowrap">${nb(c[k])} · ${Math.round(100*(c[k]||0)/tc)} %</span></div>`).join("")}</div></div>
+ <div class="carte"><h2>À surveiller</h2><div class="repart">
+ <div><span>Identités en attente</span><span></span><button class="btn sm" data-go="identites">${nb(t.identites_attente)}</button></div>
+ <div><span>Signalements (30 j)</span><span></span><button class="btn sm" data-go="signalements">${nb(t.signalements_30j)}</button></div>
+ <div><span>Erreurs (24 h)</span><span></span><button class="btn sm" data-go="erreurs">${nb(t.erreurs_24h)}</button></div>
+ <div><span>Comptes suspendus</span><span></span><button class="btn sm" data-go="utilisateurs" data-f="suspendus">${nb(t.suspendus)}</button></div></div></div></div>`;
+ lierGraph(m,[t.serie_verifs||[],t.serie_inscriptions||[]],["vérifications","inscriptions"]);
+ m.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{S.vue=b.dataset.go;if(b.dataset.f)S.u.f=b.dataset.f;coquille()})};
+
+V.demandes=async m=>{const L=await API.rpc("admin_demandes_liste",{p_statut:S.d.statut});
+ const o=(k,l)=>`<option value="${k}" ${S.d.statut===k?"selected":""}>${l}</option>`;
+ m.innerHTML=tete("Vérifications payées","Demandes de vérification complète : remplis le rapport point par point, puis envoie-le au client.",`<button class="btn" id="exp">Exporter (CSV)</button>`)+
+ `<div class="filtres"><select id="fst" aria-label="Statut">${o("","Tous les statuts")}${o("payee","À traiter")}${o("terminee","Terminées")}${o("remboursee","Remboursées")}${o("a_payer","Non payées")}</select></div>
+ <div class="carte" style="padding:0"><div class="tab-wrap" style="border:0">${L.length?`<table><thead><tr><th>Reçue</th><th>Client</th><th>Adresse</th><th>Annonceur</th><th>Statut</th><th class="r">Montant</th></tr></thead><tbody>
+ ${L.map((d,i)=>{const retard=d.statut==="payee"&&d.paye_le&&(Date.now()-new Date(d.paye_le))>24*36e5;return `<tr class="cl" data-i="${i}"><td>${dt(d.created_at)}${retard?`<br><span class="pill p-r">En retard</span>`:""}</td><td class="trunc">${esc(d.contact||"—")}</td><td class="trunc">${esc(d.adresse)}</td><td>${esc(d.nom_interlocuteur||"—")}<br><small class="muted">${d.role==="locataire"?"Cession / sous-location":""}</small></td><td>${pillD(d.statut)}${d.verdict_global?`<br><span class="pill ${GLOBAL[d.verdict_global][0]}" style="margin-top:4px">${GLOBAL[d.verdict_global][1]}</span>`:""}</td><td class="r num">${d.montant?argent(d.montant):"—"}</td></tr>`}).join("")}</tbody></table>`:`<p class="vide">Aucune demande.</p>`}</div></div>`;
+ $("#fst").onchange=e=>{S.d.statut=e.target.value;afficher()};$("#exp").onclick=()=>csv("demandes",L);
+ m.querySelectorAll("tr[data-i]").forEach(tr=>tr.onclick=()=>detailDemande(L[+tr.dataset.i]))};
+function detailDemande(d){const r=d.rapport||{},reg=r.registre||{},en=r.entreprise||{},ph=r.photos||{},db=r.doublons||{};
+ const sel=(id,opts,cur,vide)=>`<select id="${id}">${vide?`<option value="">${vide}</option>`:""}${Object.entries(opts).map(([k,l])=>`<option value="${k}" ${cur===k?"selected":""}>${l}</option>`).join("")}</select>`;
+ const det=(id,v,ph_)=>`<textarea id="${id}" maxlength="400" rows="2" placeholder="${ph_}">${esc(v||"")}</textarea>`;
+ const editable=d.statut==="payee"||d.statut==="terminee";
+ panneau(`Demande · ${esc(d.adresse)}`,`<p>${pillD(d.statut)} ${d.verdict_global?`<span class="pill ${GLOBAL[d.verdict_global][0]}">${GLOBAL[d.verdict_global][1]}</span>`:""}</p>
+ <dl class="dl"><dt>Client</dt><dd>${esc(d.contact||"—")}</dd><dt>Adresse</dt><dd>${esc(d.adresse)}</dd><dt>Numéro de lot</dt><dd class="num">${esc(d.lot||"—")}</dd>
+ <dt>Nom de l'annonceur</dt><dd>${!d.nom_interlocuteur?`<span class="muted">Non fourni : trouve le propriétaire à partir de l'adresse.</span>`:/^\(refuse/.test(d.nom_interlocuteur)?`<span class="pill p-r">L'annonceur refuse de donner le nom</span><br><small class="muted">Trouve le propriétaire à partir de l'adresse et indique s'il s'agit d'une personne ou d'une entreprise.</small>`:`<b>${esc(d.nom_interlocuteur)}</b>${d.role?` (${ROLES[d.role]||esc(d.role)})`:""}`}</dd><dt>Annonce</dt><dd>${lienExt(d.lien)}</dd>
+ <dt>Reçue</dt><dd>${dt(d.created_at)}</dd><dt>Payée</dt><dd>${dt(d.paye_le)}${d.montant?` · ${argent(d.montant)}`:""}</dd><dt>Rapport envoyé</dt><dd>${dt(d.termine_le)}</dd><dt>Référence Stripe</dt><dd class="num">${esc(d.stripe_ref||"—")}</dd></dl>
+ ${editable?`<div class="sec">1. Propriétaire au Registre foncier</div><p class="hint" style="margin-top:0"><a href="https://www.registrefoncier.gouv.qc.ca/" target="_blank" rel="noopener">Registre foncier</a> : index des immeubles du lot, puis dernier acte de vente (1 $ par document).</p>
+ <div class="champ large">${sel("r-reg",VERDICTS,reg.resultat||d.verdict,"— Résultat —")}<input id="r-reg-nom" maxlength="120" placeholder="Nom du propriétaire inscrit : le client le cherchera sur le bail" value="${esc(reg.nom||"")}" style="border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--card)">${det("r-reg-d",reg.details,"Visible par le client. Ex. : propriétaire inscrit depuis 2019.")}</div>
+ <div class="sec">2. Entreprise propriétaire</div><label class="inter" style="padding-top:0"><span><b>Le propriétaire est une entreprise</b><small>Vérifie au <a href="https://www.registreentreprises.gouv.qc.ca/" target="_blank" rel="noopener">registre des entreprises</a> (gratuit) : statut et dirigeants.</small></span><input type="checkbox" class="sw" id="r-ent" ${en.applicable?"checked":""}></label>
+ <div id="r-ent-z" ${en.applicable?"":"hidden"}><div class="grille g2"><input id="r-ent-nom" placeholder="Nom de l'entreprise" value="${esc(en.nom||"")}" style="border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--card)"><input id="r-ent-neq" placeholder="NEQ" inputmode="numeric" value="${esc(en.neq||"")}" style="border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--card)"></div>
+ <div class="champ large">${sel("r-ent-l",ENT,en.lien,"— Résultat —")}${det("r-ent-d",en.details,"Visible par le client. Ex. : entreprise active ; ton interlocuteur est président.")}</div></div>
+ <div class="sec">3. Photos de l'annonce</div><p class="hint" style="margin-top:0">Recherche d'image inversée (Google Lens, TinEye).</p><div class="champ large">${sel("r-ph",PHOTOS,ph.resultat,"— Résultat —")}${det("r-ph-d",ph.details,"Visible par le client. Ex. : photos trouvées sur le site d'une agence à Toronto.")}</div>
+ <div class="sec">4. Autres annonces du même logement</div><p class="hint" style="margin-top:0">Cherche l'adresse et le texte de l'annonce sur Kijiji, Facebook, LesPAC, Kangalou.</p><div class="champ large">${sel("r-db",DOUBLONS,db.resultat,"— Résultat —")}${det("r-db-d",db.details,"Visible par le client.")}</div>
+ <div class="sec">5. Verdict et recommandations</div><div class="champ large">${sel("r-g",Object.fromEntries(Object.entries(GLOBAL).map(([k,v])=>[k,v[1]])),r.global||d.verdict_global,"— Verdict global —")}
+ <textarea id="r-rec" maxlength="600" rows="3" placeholder="Ce que le client doit faire ou demander avant de payer.">${esc(r.recommandations||d.note||"")}</textarea></div>
+ <div class="actions"><button class="btn pri" id="r-env">${d.statut==="terminee"?"Mettre à jour le rapport":"Envoyer le rapport au client"}</button><button class="btn" id="r-bro">Enregistrer le brouillon</button><button class="btn dan" id="d-remb">Marquer remboursée</button></div>
+ <p class="hint">Le remboursement se fait dans Stripe ; ce bouton change seulement le statut dans l'app.</p>`:d.statut==="a_payer"?`<div class="actions"><button class="btn" id="d-payee">Marquer payée (paiement reçu hors Stripe)</button></div>`:""}`,p=>{
+  const ent=p.querySelector("#r-ent");if(ent)ent.onchange=()=>{p.querySelector("#r-ent-z").hidden=!ent.checked};
+  const lire=()=>({registre:{resultat:$("#r-reg").value,nom:$("#r-reg-nom").value.trim(),details:$("#r-reg-d").value.trim()},
+   entreprise:{applicable:$("#r-ent").checked,nom:$("#r-ent-nom").value.trim(),neq:$("#r-ent-neq").value.replace(/\D/g,""),lien:$("#r-ent-l").value,details:$("#r-ent-d").value.trim()},
+   photos:{resultat:$("#r-ph").value,details:$("#r-ph-d").value.trim()},doublons:{resultat:$("#r-db").value,details:$("#r-db-d").value.trim()},
+   global:$("#r-g").value,recommandations:$("#r-rec").value.trim()});
+  const env=p.querySelector("#r-env");if(env)env.onclick=async()=>{const x=lire();if(!x.registre.resultat)return toast("Indique le résultat du Registre foncier.",true);if(!x.global)return toast("Choisis le verdict global.",true);
+   if(await agir(env,()=>API.rpc("admin_maj_rapport",{p_id:d.id,p_rapport:x,p_terminer:true}),"Rapport envoyé au client.")){fermer();afficher()}};
+  const bro=p.querySelector("#r-bro");if(bro)bro.onclick=async()=>{if(await agir(bro,()=>API.rpc("admin_maj_rapport",{p_id:d.id,p_rapport:lire(),p_terminer:false}),"Brouillon enregistré."))afficher()};
+  const br=p.querySelector("#d-remb");if(br)br.onclick=async()=>{if(!confirm("Marquer cette demande comme remboursée ?"))return;if(await agir(br,()=>API.rpc("admin_maj_demande",{p_id:d.id,p_statut:"remboursee",p_verdict:null,p_note:""}),"Demande marquée remboursée.")){fermer();afficher()}};
+  const bp=p.querySelector("#d-payee");if(bp)bp.onclick=async()=>{if(await agir(bp,()=>API.rpc("admin_maj_demande",{p_id:d.id,p_statut:"payee",p_verdict:null,p_note:""}),"Demande marquée payée.")){fermer();afficher()}}})}
+
+V.utilisateurs=async m=>{const T=50,L=await API.rpc("admin_utilisateurs",{p_q:S.u.q,p_filtre:S.u.f,p_limite:T,p_decalage:S.u.p*T});const tot=L[0]?Number(L[0].total):0;
+ const o=(k,l)=>`<option value="${k}" ${S.u.f===k?"selected":""}>${l}</option>`;
+ m.innerHTML=tete("Utilisateurs",`${nb(tot)} compte${tot>1?"s":""}`,`<button class="btn" id="exp">Exporter (CSV)</button>`)+
+ `<div class="filtres"><input type="search" id="uq" placeholder="Rechercher un courriel" value="${esc(S.u.q)}" aria-label="Rechercher"><select id="uf" aria-label="Filtre">${o("tous","Tous")}${o("identite_attente","Identité en attente")}${o("identite_confirmee","Identité confirmée")}${o("suspendus","Suspendus")}${o("admins","Administrateurs")}</select></div>
+ <div class="carte" style="padding:0"><div class="tab-wrap" style="border:0">${L.length?`<table><thead><tr><th>Courriel</th><th>Inscrit</th><th>Identité</th><th class="r">Vérif.</th><th class="r">Payées</th><th>Dernière activité</th><th>Dernier lieu</th></tr></thead><tbody>
+ ${L.map((u,i)=>`<tr class="cl" data-i="${i}"><td class="trunc"><b>${esc(u.contact||"—")}</b> ${u.est_admin?`<span class="pill p-n">Admin</span>`:""} ${u.suspendu?`<span class="pill p-r">Suspendu</span>`:""}</td><td>${dj(u.created_at)}</td><td>${pillI(u.identite_statut)}</td><td class="r num">${nb(u.nb_verifs)}</td><td class="r num">${nb(u.nb_demandes)}</td><td>${ilya(u.derniere_activite)}</td><td>${esc(u.dernier_lieu||"—")}</td></tr>`).join("")}</tbody></table>`:`<p class="vide">Aucun utilisateur.</p>`}</div></div>
+ <div class="pager"><span>${tot?`${S.u.p*T+1}–${Math.min(tot,(S.u.p+1)*T)} sur ${nb(tot)}`:""}</span><span class="actions"><button class="btn sm" id="pp" ${S.u.p?"":"disabled"}>Précédent</button><button class="btn sm" id="ps" ${(S.u.p+1)*T<tot?"":"disabled"}>Suivant</button></span></div>`;
+ const uq=$("#uq");uq.oninput=()=>{clearTimeout(uq._t);uq._t=setTimeout(()=>{S.u.q=uq.value;S.u.p=0;afficher().then(()=>{const x=$("#uq");if(x){x.focus();x.setSelectionRange(x.value.length,x.value.length)}})},300)};
+ $("#uf").onchange=e=>{S.u.f=e.target.value;S.u.p=0;afficher()};$("#pp").onclick=()=>{S.u.p--;afficher()};$("#ps").onclick=()=>{S.u.p++;afficher()};
+ $("#exp").onclick=()=>csv("utilisateurs",L.map(({total,...r})=>r));
+ m.querySelectorAll("tr[data-i]").forEach(tr=>tr.onclick=()=>detailUtilisateur(L[+tr.dataset.i].id))};
+async function detailUtilisateur(id){panneau("Chargement…","");const x=await API.rpc("admin_utilisateur",{p_id:id}).catch(e=>{toast(msgErr(e),true);return null});if(!x||!x.profil)return fermer();
+ const p=x.profil,soi=S.moi&&S.moi.id===id;
+ panneau(esc(p.contact||"Utilisateur"),`<p>${pillI(p.identite_statut)} ${p.est_admin?`<span class="pill p-n">Administrateur</span>`:""} ${p.suspendu?`<span class="pill p-r">Suspendu</span>`:""}</p>
+ ${p.suspendu?`<div class="banniere">Suspendu le ${dt(p.suspendu_le)}${p.suspendu_motif?` : ${esc(p.suspendu_motif)}`:""}</div>`:""}
+ <dl class="dl"><dt>Inscrit le</dt><dd>${dt(p.created_at)}</dd><dt>Dernière connexion</dt><dd>${dt(p.derniere_connexion)}</dd>
+ <dt>Pièce d'identité</dt><dd>${esc(p.identite_doc_type||"—")}${p.identite_soumise_le?` · soumise le ${dj(p.identite_soumise_le)}`:""}</dd>
+ <dt>Partage du lieu</dt><dd>${p.partage_lieu?`Activé le ${dj(p.partage_lieu_le)}`:"Désactivé"}</dd><dt>Signalements faits</dt><dd class="num">${nb(x.signalements)}</dd>
+ <dt>Utilisation aujourd'hui</dt><dd>${Object.keys(x.quotas_jour||{}).length?Object.entries(x.quotas_jour).map(([k,v])=>`${esc(k)} : ${nb(v)}`).join(" · "):"—"}</dd><dt>Identifiant</dt><dd class="num" style="font-size:12px">${esc(p.id)}</dd></dl>
+ <div class="sec">Vérifications (${nb(x.verifications.length)})</div>${x.verifications.length?`<div class="tab-wrap"><table><tbody>${x.verifications.map(v=>`<tr><td>${dj(v.created_at)}</td><td>${v.module==="reno"?"Réno":esc(v.ville||"—")}</td><td class="r num">${v.prix?argent(v.prix):""}</td><td>${pillC(v.couleur)}</td></tr>`).join("")}</tbody></table></div>`:`<p class="muted">Aucune.</p>`}
+ <div class="sec">Vérifications payées (${nb(x.demandes.length)})</div>${x.demandes.length?`<div class="tab-wrap"><table><tbody>${x.demandes.map(d=>`<tr><td>${dj(d.created_at)}</td><td class="trunc">${esc(d.adresse)}</td><td>${pillD(d.statut)}</td></tr>`).join("")}</tbody></table></div>`:`<p class="muted">Aucune.</p>`}
+ <div class="sec">Connexions (${nb(x.connexions.length)})</div>${x.connexions.length?`<div class="tab-wrap"><table><tbody>${x.connexions.map(c=>`<tr><td>${dt(c.created_at)}</td><td>${esc([c.ville,c.region,c.pays].filter(Boolean).join(", "))}</td><td>${esc(c.appareil||"")}</td></tr>`).join("")}</tbody></table></div>`:`<p class="muted">${p.partage_lieu?"Aucune connexion notée.":"La personne n'a pas activé le partage."}</p>`}
+ ${soi?`<p class="hint">C'est ton compte : la suspension et la suppression sont désactivées.</p>`:`<div class="sec">Actions</div>
+ ${p.suspendu?`<div class="actions"><button class="btn" id="u-react">Réactiver le compte</button></div>`:`<div class="champ large"><input id="u-motif" maxlength="300" placeholder="Motif de la suspension (visible seulement par les admins)"></div><div class="actions"><button class="btn dan" id="u-susp">Suspendre le compte</button></div>`}
+ <p class="hint">Un compte suspendu ne peut plus enregistrer de vérification, signaler une annonce, commander une vérification payée ni utiliser les recherches.</p>
+ ${p.est_admin?`<p class="hint">Ce compte est administrateur : retire d'abord son accès dans « Administrateurs » pour pouvoir le supprimer.</p>`:`<div class="actions" style="margin-top:14px"><button class="btn dan" id="u-suppr">Supprimer le compte et ses données</button></div>`}`}`,pn=>{
+  const s=pn.querySelector("#u-susp");if(s)s.onclick=async()=>{if(await agir(s,()=>API.rpc("admin_suspendre",{p_id:id,p_suspendu:true,p_motif:$("#u-motif").value}),"Compte suspendu.")){detailUtilisateur(id);afficher()}};
+  const r=pn.querySelector("#u-react");if(r)r.onclick=async()=>{if(await agir(r,()=>API.rpc("admin_suspendre",{p_id:id,p_suspendu:false,p_motif:null}),"Compte réactivé.")){detailUtilisateur(id);afficher()}};
+  const d=pn.querySelector("#u-suppr");if(d)d.onclick=async()=>{const c=prompt(`Suppression définitive de ${p.contact} et de toutes ses données.\nTape SUPPRIMER pour confirmer.`);if(c!=="SUPPRIMER")return;
+   if(await agir(d,()=>API.supprimerCompte(id),"Compte supprimé.")){fermer();afficher()}}})}
+
+V.verifications=async m=>{const T=50,L=await API.rpc("admin_verifications",{p_q:S.v.q,p_couleur:S.v.c,p_module:S.v.m,p_limite:T,p_decalage:S.v.p*T});const tot=L[0]?Number(L[0].total):0;
+ const o=(k,l,cur)=>`<option value="${k}" ${cur===k?"selected":""}>${l}</option>`;
+ m.innerHTML=tete("Vérifications",`${nb(tot)} résultat${tot>1?"s":""}`,`<button class="btn" id="exp">Exporter (CSV)</button>`)+
+ `<div class="filtres"><input type="search" id="vq" placeholder="Courriel, ville ou lien" value="${esc(S.v.q)}" aria-label="Rechercher">
+ <select id="vc" aria-label="Résultat">${o("","Tous les résultats",S.v.c)}${o("r","Ne paie pas",S.v.c)}${o("y","Prudence",S.v.c)}${o("g","Aucun signal",S.v.c)}</select>
+ <select id="vm" aria-label="Type">${o("","Logement et réno",S.v.m)}${o("logement","Logement",S.v.m)}${o("reno","Réno",S.v.m)}</select></div>
+ <div class="carte" style="padding:0"><div class="tab-wrap" style="border:0">${L.length?`<table><thead><tr><th>Date</th><th>Utilisateur</th><th>Type</th><th>Ville</th><th class="r">Loyer</th><th>Résultat</th><th>Annonce</th></tr></thead><tbody>
+ ${L.map((v,i)=>`<tr class="cl" data-i="${i}"><td>${dt(v.created_at)}</td><td class="trunc">${esc(v.contact||"—")}</td><td>${v.module==="reno"?"Réno":"Logement"}</td><td>${esc(v.ville||"—")}${v.chambres!=null&&v.module!=="reno"?` · ${v.chambres==3?"3+":v.chambres} ch.`:""}</td><td class="r num">${v.prix?argent(v.prix):"—"}</td><td>${pillC(v.couleur)}</td><td class="trunc">${v.lien?esc(v.lien.replace(/^https?:\/\/(www\.)?/,"")):"—"}</td></tr>`).join("")}</tbody></table>`:`<p class="vide">Aucune vérification.</p>`}</div></div>
+ <div class="pager"><span>${tot?`${S.v.p*T+1}–${Math.min(tot,(S.v.p+1)*T)} sur ${nb(tot)}`:""}</span><span class="actions"><button class="btn sm" id="pp" ${S.v.p?"":"disabled"}>Précédent</button><button class="btn sm" id="ps" ${(S.v.p+1)*T<tot?"":"disabled"}>Suivant</button></span></div>`;
+ const vq=$("#vq");vq.oninput=()=>{clearTimeout(vq._t);vq._t=setTimeout(()=>{S.v.q=vq.value;S.v.p=0;afficher().then(()=>{const x=$("#vq");if(x){x.focus();x.setSelectionRange(x.value.length,x.value.length)}})},300)};
+ $("#vc").onchange=e=>{S.v.c=e.target.value;S.v.p=0;afficher()};$("#vm").onchange=e=>{S.v.m=e.target.value;S.v.p=0;afficher()};
+ $("#pp").onclick=()=>{S.v.p--;afficher()};$("#ps").onclick=()=>{S.v.p++;afficher()};$("#exp").onclick=()=>csv("verifications",L.map(({total,raisons,...r})=>r));
+ m.querySelectorAll("tr[data-i]").forEach(tr=>tr.onclick=()=>{const v=L[+tr.dataset.i];const R=Array.isArray(v.raisons)?v.raisons:[];
+  panneau(`Vérification · ${dj(v.created_at)}`,`<p>${pillC(v.couleur)}</p><dl class="dl"><dt>Utilisateur</dt><dd>${esc(v.contact||"—")}</dd><dt>Date</dt><dd>${dt(v.created_at)}</dd><dt>Type</dt><dd>${v.module==="reno"?"Réno":"Logement"}</dd>
+  ${v.module==="reno"?`<dt>Travaux</dt><dd>${esc(v.travaux||"—")}</dd><dt>Licence RBQ</dt><dd class="num">${esc(v.licence||"—")}</dd>`:`<dt>Ville</dt><dd>${esc(v.ville||"—")}</dd><dt>Chambres</dt><dd>${v.chambres??"—"}</dd><dt>Loyer</dt><dd>${v.prix?argent(v.prix):"—"}</dd><dt>Annonce</dt><dd>${lienExt(v.lien)}</dd>`}</dl>
+  <div class="sec">Raisons</div>${R.length?`<ul style="padding-left:18px">${R.map(r=>`<li style="margin-bottom:6px">${pillC(r.c)} ${esc(String(r.t||"").replace(/<[^>]+>/g,""))}</li>`).join("")}</ul>`:`<p class="muted">Non conservées.</p>`}`)})};
+
+V.identites=async m=>{const L=await API.rpc("admin_identites");
+ m.innerHTML=tete("Identités","Pièces d'identité soumises, à confirmer ou refuser. Les photos sont supprimées après la décision.")+
+ `<div class="carte" style="padding:0"><div class="tab-wrap" style="border:0">${L.length?`<table><thead><tr><th>Courriel</th><th>Pièce</th><th>Soumise</th><th></th></tr></thead><tbody>${L.map((x,i)=>`<tr><td>${esc(x.contact||"—")}</td><td>${esc(x.doc_type||"—")}</td><td>${dt(x.soumise_le)}</td><td class="r"><button class="btn sm" data-i="${i}">Examiner</button></td></tr>`).join("")}</tbody></table>`:`<p class="vide">Aucune pièce en attente.</p>`}</div></div>`;
+ m.querySelectorAll("button[data-i]").forEach(b=>b.onclick=async()=>{const x=L[+b.dataset.i];const ph=await API.pieces(x.id).catch(()=>[]);
+  panneau(`Identité · ${esc(x.contact||"")}`,`<dl class="dl"><dt>Pièce</dt><dd>${esc(x.doc_type||"—")}</dd><dt>Soumise</dt><dd>${dt(x.soumise_le)}</dd></dl>
+  ${ph.length?ph.map(f=>`<img src="${esc(f.url)}" alt="Pièce d'identité" style="width:100%;border-radius:8px;border:1px solid var(--line);margin-bottom:10px">`).join(""):`<p class="muted">${DEMO?"Démo : aucune photo.":"Aucune photo trouvée."}</p>`}
+  <p class="hint">Vérifie que le nom et la photo sont lisibles et que la pièce n'est pas expirée.</p><div class="actions"><button class="btn pri" id="i-ok">Confirmer l'identité</button><button class="btn dan" id="i-no">Refuser</button></div>`,p=>{
+   const go=async(bt,st)=>{if(await agir(bt,async()=>{await API.rpc("admin_decider_identite",{p_id:x.id,p_statut:st});if(!DEMO){const {data}=await sb.storage.from("pieces-identite").list(x.id,{limit:50});if(data&&data.length)await sb.storage.from("pieces-identite").remove(data.map(f=>`${x.id}/${f.name}`))}},st==="confirmee"?"Identité confirmée.":"Identité refusée.")){fermer();majBadges().then(coquille)}};
+   p.querySelector("#i-ok").onclick=e=>go(e.target,"confirmee");p.querySelector("#i-no").onclick=e=>go(e.target,"refusee")})})};
+
+V.signalements=async m=>{const L=await API.rpc("admin_signalements");
+ m.innerHTML=tete("Signalements","Annonces signalées comme frauduleuses par des utilisateurs à l'identité confirmée.",`<button class="btn" id="exp">Exporter (CSV)</button>`)+
+ `<div class="carte" style="padding:0"><div class="tab-wrap" style="border:0">${L.length?`<table><thead><tr><th>Annonce</th><th class="r">Signalements</th><th>Motifs</th><th>Dernier</th><th></th></tr></thead><tbody>${L.map((s,i)=>`<tr><td class="trunc">${lienExt(s.lien,s.lien.replace(/^https?:\/\/(www\.)?/,""))}</td><td class="r num"><b>${nb(s.nb)}</b></td><td>${(s.motifs||[]).filter(Boolean).map(esc).join(" · ")||"—"}</td><td>${dt(s.dernier)}</td><td class="r"><button class="btn sm dan" data-i="${i}">Retirer</button></td></tr>`).join("")}</tbody></table>`:`<p class="vide">Aucun signalement.</p>`}</div></div>
+ <p class="hint">Retirer efface tous les signalements de cette annonce (par exemple, une annonce signalée à tort).</p>`;
+ $("#exp").onclick=()=>csv("signalements",L);
+ m.querySelectorAll("button[data-i]").forEach(b=>b.onclick=async()=>{if(!confirm("Retirer tous les signalements de cette annonce ?"))return;if(await agir(b,()=>API.rpc("admin_retirer_signalements",{p_lien:L[+b.dataset.i].lien}),"Signalements retirés."))afficher()})};
+
+V.connexions=async m=>{const [s,res,L]=await Promise.all([API.rpc("admin_partage_stats"),API.rpc("admin_lieux_resume"),API.rpc("admin_connexions")]);const st=(s&&s[0])||s||{};
+ m.innerHTML=tete("Connexions","Ville approximative de connexion, seulement pour les personnes qui ont activé le partage (Loi 25).",`<button class="btn" id="exp">Exporter (CSV)</button>`)+
+ `<div class="grille g3" style="margin-bottom:16px"><div class="kpi"><span>Partagent leur ville</span><b class="num">${nb(st.partagent)}</b><small>sur ${nb(st.total)} comptes</small></div><div class="kpi"><span>Villes (30 j)</span><b class="num">${nb(res.length)}</b></div><div class="kpi"><span>Personnes suivies</span><b class="num">${nb(L.length)}</b></div></div>
+ <div class="grille g2"><div class="carte"><h2>Par ville, 30 derniers jours</h2>${res.length?`<div class="repart">${(()=>{const mx=Math.max(...res.map(r=>r.personnes));return res.map(r=>`<div><span>${esc(r.ville)}${r.region?`, ${esc(r.region)}`:""}</span><span class="jauge"><i style="width:${Math.round(100*r.personnes/mx)}%;background:var(--bar)"></i></span><span class="num" style="text-align:right">${nb(r.personnes)}</span></div>`).join("")})()}</div>`:`<p class="muted">Aucune donnée.</p>`}</div>
+ <div class="carte" style="padding:0"><div class="tab-wrap" style="border:0">${L.length?`<table><thead><tr><th>Courriel</th><th>Lieu</th><th>Appareil</th><th>Dernière</th></tr></thead><tbody>${L.sort((a,b)=>new Date(b.derniere)-new Date(a.derniere)).map(c=>`<tr><td class="trunc">${esc(c.contact||"—")}</td><td>${esc([c.ville,c.region,c.pays].filter(Boolean).join(", "))}</td><td>${esc(c.appareil||"—")}</td><td>${ilya(c.derniere)}</td></tr>`).join("")}</tbody></table>`:`<p class="vide">Aucune connexion notée.</p>`}</div></div></div>
+ <p class="hint">Ville déduite de l'adresse IP par l'hébergeur : approximative (un réseau mobile ou un VPN peut indiquer une autre ville). Conservée 90 jours au plus.</p>`;
+ $("#exp").onclick=()=>csv("connexions",L.map(({user_id,...r})=>r))};
+
+/* Réglages */
+const REGLAGES={
+ tarifs:{t:"Tarifs et délais",num:[["prix_verif","Prix de la vérification complète","En dollars. Doit correspondre au montant du lien de paiement Stripe.","$"],["delai_verif_heures","Délai promis pour le verdict","En heures. Affiché aux clients ; au-delà, la demande est marquée en retard.","h"],["demandes_max_jour","Demandes payées par personne et par jour","Limite anti-abus.",""]],
+  txt:[["lien_paiement","Lien de paiement Stripe","Commence par https://buy.stripe.com/. Vide = paiement indisponible."]]},
+ fonctions:{t:"Fonctions",sw:[["ia_active","Analyse intelligente (IA)","Lecture des captures et détection des scénarios d'arnaque par l'IA."],["recherche_active","Recherche d'annonces","« Trouver un logement » : recherche automatique sur le Web."],["approfondie_active","Vérification complète payante","Si désactivée, l'app n'accepte plus de nouvelles demandes."]]},
+ quotas:{t:"Quotas",num:[["quota_analyser_annonce","Analyses IA par personne et par jour","Coût par appel facturé par Anthropic.",""],["quota_chercher_annonces","Recherches d'annonces par personne et par jour","Coût par requête facturé par Brave.",""],["quota_recherche_image","Recherches d'image par personne et par jour","Coût par requête facturé par Google Vision.",""],["quota_info_adresse","Recherches d'adresse par personne et par jour","Services publics du Québec, gratuits.",""]]},
+ textes:{t:"Messages",txt:[["message_accueil","Message en haut de l'accueil","Annonce à tous les utilisateurs (maintenance, nouveauté). Vide = aucun message."],["courriel_support","Courriel de soutien","Affiché aux utilisateurs pour te joindre."]]},
+ budget:{t:"Simulateur de budget",num:[["transit_montreal","Laissez-passer mensuel, Montréal","STM, tarif ordinaire.","$"],["transit_quebec","Laissez-passer mensuel, Québec","RTC, tarif ordinaire.","$"],["transit_gatineau","Laissez-passer mensuel, Gatineau","STO, tarif ordinaire.","$"],["assurance","Assurance locataire (par mois)","Estimation.","$"],["epicerie","Épicerie par personne (par mois)","Estimation.","$"],["garde_jour","Garderie subventionnée (par jour)","Tarif fixé par le gouvernement du Québec.","$"]]}};
+V.reglages=async m=>{const [P,T]=await Promise.all([API.table("parametres","cle,valeur,maj_le"),API.table("parametres_texte","cle,valeur,maj_le")]);
+ const pv=Object.fromEntries(P.map(r=>[r.cle,r])),tv=Object.fromEntries(T.map(r=>[r.cle,r])),g=REGLAGES[S.reglages];
+ const maj=r=>r&&r.maj_le?`<small class="muted">Modifié ${ilya(r.maj_le)}</small>`:"";
+ m.innerHTML=tete("Réglages","Les changements s'appliquent immédiatement dans l'app et sont inscrits au journal.")+
+ `<div class="onglets" role="tablist">${Object.entries(REGLAGES).map(([k,v])=>`<button role="tab" aria-selected="${S.reglages===k}" data-o="${k}">${v.t}</button>`).join("")}</div>
+ <div class="carte">${(g.sw||[]).map(([k,l,a])=>`<div class="inter"><div><b>${l}</b><small>${a}</small><br>${maj(pv[k])}</div><input type="checkbox" class="sw" role="switch" data-sw="${k}" aria-label="${esc(l)}" ${!pv[k]||Number(pv[k].valeur)!==0?"checked":""}></div>`).join("")}
+ ${(g.num||[]).map(([k,l,a,u])=>`<div class="champ"><label for="n-${k}"><b>${l}</b><small>${a}</small><br>${maj(pv[k])}</label><span style="display:flex;align-items:center;gap:6px"><input id="n-${k}" type="number" min="0" step="any" value="${pv[k]?esc(pv[k].valeur):""}" style="width:100%">${u?`<span class="muted">${u}</span>`:""}</span><button class="btn" data-num="${k}">Enregistrer</button></div>`).join("")}
+ ${(g.txt||[]).map(([k,l,a])=>`<div class="champ large"><label for="t-${k}"><b>${l}</b><small>${a}</small><br>${maj(tv[k])}</label><textarea id="t-${k}" maxlength="500" rows="2">${esc(tv[k]?tv[k].valeur:"")}</textarea><div><button class="btn" data-txt="${k}">Enregistrer</button></div></div>`).join("")}</div>`;
+ m.querySelectorAll("[data-o]").forEach(b=>b.onclick=()=>{S.reglages=b.dataset.o;afficher()});
+ m.querySelectorAll("[data-sw]").forEach(c=>c.onchange=async()=>{const k=c.dataset.sw;c.disabled=true;try{await API.rpc("admin_maj_parametre",{p_cle:k,p_valeur:c.checked?1:0});toast(c.checked?"Activé.":"Désactivé.")}catch(e){c.checked=!c.checked;toast(msgErr(e),true)}c.disabled=false});
+ m.querySelectorAll("[data-num]").forEach(b=>b.onclick=async()=>{const k=b.dataset.num,v=parseFloat($("#n-"+k).value);if(!isFinite(v)||v<0)return toast("Valeur invalide.",true);if(await agir(b,()=>API.rpc("admin_maj_parametre",{p_cle:k,p_valeur:v}),"Enregistré."))afficher()});
+ m.querySelectorAll("[data-txt]").forEach(b=>b.onclick=async()=>{const k=b.dataset.txt;if(await agir(b,()=>API.rpc("admin_maj_texte",{p_cle:k,p_valeur:$("#t-"+k).value.trim()}),"Enregistré."))afficher()})};
+
+V.loyers=async m=>{const L=await API.table("loyers_reference","ville,chambres,loyer,periode,source",["ville"]);L.sort((a,b)=>a.ville.localeCompare(b.ville,"fr")||a.chambres-b.chambres);
+ const villes=[...new Set(L.map(r=>r.ville))],cell=(v,c)=>L.find(r=>r.ville===v&&r.chambres===c);
+ m.innerHTML=tete("Loyers de référence","Loyers moyens utilisés pour repérer un prix anormalement bas. Mets-les à jour à chaque publication de la SCHL.")+
+ `<div class="carte" style="padding:0"><div class="tab-wrap" style="border:0"><table><thead><tr><th>Ville</th><th class="r">1 ch.</th><th class="r">2 ch.</th><th class="r">3 ch. +</th><th>Période</th></tr></thead><tbody>
+ ${villes.map(v=>`<tr><td><b>${esc(v)}</b></td>${[1,2,3].map(c=>{const r=cell(v,c);return `<td class="r"><input type="number" min="100" max="20000" data-v="${esc(v)}" data-c="${c}" value="${r?r.loyer:""}" aria-label="${esc(v)}, ${c} chambre(s)" style="width:90px;text-align:right;border:1px solid var(--line);border-radius:6px;padding:5px 7px;background:var(--card)"></td>`}).join("")}<td class="muted">${esc((cell(v,2)||cell(v,1)||{}).periode||"—")}</td></tr>`).join("")}
+ <tr><td><input id="nv-ville" placeholder="Nouvelle ville" style="border:1px solid var(--line);border-radius:6px;padding:5px 7px;background:var(--card);width:150px"></td>${[1,2,3].map(c=>`<td class="r"><input type="number" id="nv-${c}" min="100" style="width:90px;text-align:right;border:1px solid var(--line);border-radius:6px;padding:5px 7px;background:var(--card)" aria-label="Nouvelle ville, ${c} chambre(s)"></td>`).join("")}<td></td></tr></tbody></table></div></div>
+ <div class="carte"><div class="grille g2"><label>Période des données<br><input id="lper" value="${esc((L[0]||{}).periode||"")}" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--card)"></label><label>Source<br><input id="lsrc" value="${esc((L[0]||{}).source||"")}" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--card)"></label></div>
+ <div class="actions" style="margin-top:12px"><button class="btn pri" id="lsave">Enregistrer les changements</button><a class="btn" href="https://www.cmhc-schl.gc.ca/professionnels/marche-du-logement-donnees-et-recherche/donnees-sur-le-logement/tableaux-de-donnees/donnees-sur-le-marche-locatif" target="_blank" rel="noopener">Données de la SCHL ↗</a></div></div>`;
+ $("#lsave").onclick=async e=>{const per=$("#lper").value.trim(),src=$("#lsrc").value.trim();const ch=[];
+  m.querySelectorAll("input[data-v]").forEach(i=>{const r=cell(i.dataset.v,+i.dataset.c),v=parseInt(i.value,10);if(v&&(!r||r.loyer!==v||r.periode!==per||r.source!==src))ch.push([i.dataset.v,+i.dataset.c,v])});
+  const nv=$("#nv-ville").value.trim();if(nv)[1,2,3].forEach(c=>{const v=parseInt($("#nv-"+c).value,10);if(v)ch.push([nv,c,v])});
+  if(!ch.length)return toast("Aucun changement.");
+  if(await agir(e.target,async()=>{for(const [v,c,l] of ch)await API.rpc("admin_maj_loyer",{p_ville:v,p_chambres:c,p_loyer:l,p_periode:per,p_source:src})},`${ch.length} loyer${ch.length>1?"s":""} enregistré${ch.length>1?"s":""}.`))afficher()}};
+
+V.admins=async m=>{const L=await API.rpc("admin_admins");
+ m.innerHTML=tete("Administrateurs","Personnes qui ont accès à cette console.")+
+ `<div class="carte" style="padding:0"><div class="tab-wrap" style="border:0"><table><thead><tr><th>Courriel</th><th>Ajouté le</th><th></th></tr></thead><tbody>${L.map((a,i)=>`<tr><td><b>${esc(a.contact||"—")}</b> ${a.moi?`<span class="pill p-n">Toi</span>`:""}</td><td>${dt(a.ajoute_le)}</td><td class="r">${a.moi?"":`<button class="btn sm dan" data-i="${i}">Retirer l'accès</button>`}</td></tr>`).join("")}</tbody></table></div></div>
+ <div class="carte"><h2>Ajouter un administrateur</h2><p class="hint" style="margin-top:0">La personne doit d'abord avoir créé son compte dans l'app avec ce courriel.</p><div class="filtres" style="margin:10px 0 0"><input type="email" id="na" placeholder="courriel@exemple.com" aria-label="Courriel du nouvel administrateur" style="flex:1"><button class="btn pri" id="na-ok">Ajouter</button></div></div>`;
+ $("#na-ok").onclick=async e=>{const c=$("#na").value.trim();if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(c))return toast("Courriel invalide.",true);if(await agir(e.target,()=>API.rpc("admin_ajouter_admin",{p_courriel:c}),"Administrateur ajouté."))afficher()};
+ m.querySelectorAll("button[data-i]").forEach(b=>b.onclick=async()=>{const a=L[+b.dataset.i];if(!confirm(`Retirer l'accès administrateur de ${a.contact} ?`))return;if(await agir(b,()=>API.rpc("admin_retirer_admin",{p_id:a.user_id}),"Accès retiré."))afficher()})};
+
+const ACTIONS={parametre:"Réglage modifié",texte:"Message modifié",loyer:"Loyer modifié",suspendre:"Compte suspendu",reactiver:"Compte réactivé",supprimer_compte:"Compte supprimé",ajouter_admin:"Admin ajouté",retirer_admin:"Admin retiré",identite_confirmee:"Identité confirmée",identite_refusee:"Identité refusée",demande_terminee:"Verdict envoyé",rapport_envoye:"Rapport envoyé",rapport_brouillon:"Brouillon de rapport",demande_remboursee:"Demande remboursée",demande_payee:"Demande marquée payée",retirer_signalements:"Signalements retirés",vider_erreurs:"Erreurs effacées"};
+V.journal=async m=>{const L=await API.rpc("admin_journal_liste",{p_limite:300});
+ m.innerHTML=tete("Journal d'administration","Toutes les actions faites dans la console : qui, quoi, quand.",`<button class="btn" id="exp">Exporter (CSV)</button>`)+
+ `<div class="carte" style="padding:0"><div class="tab-wrap" style="border:0">${L.length?`<table><thead><tr><th>Date</th><th>Admin</th><th>Action</th><th>Cible</th><th>Détails</th></tr></thead><tbody>${L.map(j=>`<tr><td>${dt(j.cree_le)}</td><td class="trunc">${esc(j.admin_contact||"—")}</td><td>${esc(ACTIONS[j.action]||j.action)}</td><td class="trunc">${esc(j.cible||"—")}</td><td class="trunc muted">${j.details?esc(Object.entries(j.details).filter(([,v])=>v!=null&&v!=="").map(([k,v])=>`${k} : ${v}`).join(" · ")):""}</td></tr>`).join("")}</tbody></table>`:`<p class="vide">Aucune action pour l'instant.</p>`}</div></div>`;
+ $("#exp").onclick=()=>csv("journal",L)};
+
+V.erreurs=async m=>{const L=await API.rpc("admin_erreurs",{p_limite:300});
+ m.innerHTML=tete("Erreurs techniques","Erreurs JavaScript survenues chez les utilisateurs (5 au plus par session, sans renseignement personnel).",`${L.length?`<button class="btn dan" id="vider">Tout effacer</button>`:""}`)+
+ `<div class="carte" style="padding:0"><div class="tab-wrap" style="border:0">${L.length?`<table><thead><tr><th>Date</th><th>Écran</th><th>Message</th><th>Navigateur</th></tr></thead><tbody>${L.map(e=>`<tr><td>${dt(e.cree_le)}</td><td>${esc(e.vue||"—")}</td><td style="font-family:ui-monospace,monospace;font-size:12.5px">${esc(e.message)}</td><td class="trunc muted">${esc(e.agent||"")}</td></tr>`).join("")}</tbody></table>`:`<p class="vide">Aucune erreur.</p>`}</div></div>`;
+ const v=$("#vider");if(v)v.onclick=async()=>{if(!confirm("Effacer toutes les erreurs ?"))return;if(await agir(v,()=>API.rpc("admin_vider_erreurs"),"Erreurs effacées.")){await majBadges();coquille()}}};
+
+/* ===== Démarrage ===== */
+(async()=>{if(!DEMO&&!sb){R.innerHTML=`<div class="connexion"><div class="carte"><p class="err">Chargement impossible. Vérifie ta connexion.</p></div></div>`;return}
+ if(!DEMO)sb.auth.onAuthStateChange(ev=>{if(ev==="SIGNED_OUT")ecranConnexion()});
+ demarrer()})();
+</script>
+</body>
+</html>

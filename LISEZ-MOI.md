@@ -129,12 +129,27 @@ Change `appId` (`ca.verifqc.app`) et `appName` dans `capacitor.config.json` quan
 
 Le client paie par carte sur une page Stripe ; HabitaScan ne voit jamais le numéro de carte.
 1. Crée un compte sur https://stripe.com (Canada), puis active les paiements (renseignements d'entreprise et compte bancaire).
-2. Produits > Ajouter un produit : « Vérification approfondie HabitaScan », prix unique (ex. 10 $ CAD).
+2. Produits > Ajouter un produit : « Vérification approfondie HabitaScan », prix unique de 15 $ CAD (le même montant que « Prix de la vérification approfondie » dans Admin → Montants).
 3. Liens de paiement > Créer : choisis ce produit. Dans « Après le paiement », choisis « Rediriger vers votre site » : `https://habitascan.vercel.app/?paye=1`.
 4. Copie le lien (https://buy.stripe.com/…) et colle-le dans l'app : Espace admin > Montants > Paiement Stripe. Mets le même prix dans « Prix de la vérification approfondie ».
 5. Développeurs > Webhooks > Ajouter un point de terminaison : `https://oyiiaqyepihkawzkkjpi.supabase.co/functions/v1/stripe-webhook`, événement `checkout.session.completed`. Copie le « secret de signature » (whsec_…) et ajoute-le dans Supabase > Edge Functions > Secrets sous le nom `STRIPE_WEBHOOK_SECRET`.
 6. Les demandes payées apparaissent dans Espace admin > Demandes. Consulte le Registre foncier, puis choisis le verdict. Sans webhook, utilise « Marquer payée » après avoir vu le paiement dans Stripe.
 7. Remboursement : fais-le dans Stripe (Paiements > Rembourser), puis « Marquer remboursée » dans l'app.
+
+## 7d. Conditions, mesure d'usage, limites anti-abus, courriel
+
+- **Conditions d'utilisation** : écran « Conditions » dans l'app, accepté à l'inscription et avant chaque paiement. Remplis le bloc `RESPONSABLE` (début de la section « Politique de confidentialité » dans `app.js`) : il sert aussi aux conditions.
+- **Mesure d'usage anonyme** : Espace admin > Chiffres > « Utilisation (anonyme) ». Compte les écrans ouverts par jour, sans lien avec les comptes, et les erreurs techniques (15 dernières).
+- **Limites par personne et par jour** : 20 recherches de logements, 40 recherches de numéro de lot, 20 recherches de photos, 5 demandes de vérification approfondie. Elles protègent tes crédits Brave et Google. Pour les changer : fonction `consommer_quota` dans Supabase.
+- **Courriel** : le service intégré de Supabase n'envoie que 2 courriels par heure. Branche Resend (ou un autre fournisseur SMTP) en suivant le document « HabitaScan : préparation du lancement », puis colle `courriel-code.html` dans Authentication > Emails > Magic Link.
+
+## 7e. Analyse intelligente (IA)
+
+Option que chaque utilisateur active lui-même (case « Analyse intelligente » sur l'écran Vérifier). L'IA (Claude Haiku 5.5, API Anthropic) lit les captures et le texte, remplit les champs et repère les signaux d'arnaque, chacun avec une citation exacte. Le verdict reste calculé par les règles : les signaux de l'IA donnent au plus un avertissement jaune. Si l'IA échoue, l'app revient à la lecture simple.
+1. Crée un compte sur https://platform.claude.com, ajoute un moyen de paiement et une limite de dépenses, puis crée une clé d'API.
+2. Envoie-moi la clé, ou ajoute-la dans Supabase > Edge Functions > Secrets sous le nom `ANTHROPIC_API_KEY`.
+3. Limite : 20 analyses par personne et par jour (fonction `consommer_quota`).
+4. Avant le lancement : ajoute Anthropic à ton évaluation des facteurs relatifs à la vie privée (transfert hors Québec).
 
 ## 8. Ce qui est stocké
 
@@ -152,6 +167,9 @@ Le client paie par carte sur une page Stripe ; HabitaScan ne voit jamais le num�
 | Montants du budget | `parametres` | Tout le monde (lecture), toi (modification) |
 | Demandes de vérification approfondie : adresse, lot, nom de l'interlocuteur, lien, verdict | `demandes_verif` | Le client (sa demande), toi |
 | Paiement (carte, nom, courriel) | Stripe | Stripe seulement |
+| Compteurs d'utilisation par jour, erreurs techniques | `evenements`, `erreurs_app` | Toi seulement |
+| Quotas d'usage par jour | `quotas` | Personne (usage interne) |
+| Captures et texte envoyés à l'analyse intelligente (si activée) | Nulle part : envoyés à Anthropic pour l'analyse, jamais enregistrés par HabitaScan | Anthropic (traitement) |
 | Loyers SCHL, licences RBQ | `loyers_reference`, `licences_rbq` | Tout le monde (lecture) |
 
 Avant le lancement, la politique de confidentialité doit mentionner Google Vision et Brave Search (transfert hors Québec : Loi 25, évaluation des facteurs relatifs à la vie privée).
@@ -167,12 +185,67 @@ Avant le lancement, la politique de confidentialité doit mentionner Google Visi
 ## Fichiers
 
 - `index.html`, `app.js` : l'app web
-- `migration-reno.sql`, `migration-v3-compte-facultatif-signalements.sql`, `migration-v4-admin-confidentialite.sql`, `migration-v5-verification-approfondie.sql` : mises à jour de la base
+- `migration-reno.sql`, `migration-v3-compte-facultatif-signalements.sql`, `migration-v4-admin-confidentialite.sql`, `migration-v5-verification-approfondie.sql`, `migration-v6-mesure-quotas.sql` : mises à jour de la base
 - `supabase/functions/recherche-image/index.ts` : recherche des photos (Google Vision)
 - `supabase/functions/chercher-annonces/index.ts` : recherche d'annonces (Brave Search)
 - `supabase/functions/supprimer-compte/index.ts` : suppression du compte par l'utilisateur
+- `courriel-code.html` : modèle du courriel de connexion
+- `icon.svg`, `icon-180.png`, `icon-192.png`, `icon-512.png` : logo et icônes
+- `supabase/functions/analyser-annonce/index.ts` : analyse intelligente (IA)
 - `supabase/functions/stripe-webhook/index.ts` : confirme les paiements Stripe
 - `supabase/functions/info-adresse/index.ts` : adresse → numéro de lot (services publics du Québec)
 - `preparer-licences.mjs` : prépare la liste des licences RBQ
 - `app-native/` : app iPhone et Android (Capacitor)
 - `sw.js`, `manifest.webmanifest`, `icon.svg` : installation sur le téléphone
+
+## 7f. Historique détaillé, Mon compte, lieu de connexion (v7)
+
+- **Mes vérifications** : l'accueil montre les 3 dernières ; « Tout voir » ouvre la liste complète (100 dernières, filtre Logement / Réno). Chaque vérification est cliquable : verdict, date, ville, chambres, loyer, lien de l'annonce, toutes les raisons avec les articles de loi, et « Retirer de mon historique ».
+- **Mon compte** (bouton en haut de l'accueil) : courriel et statut, historique, partage du lieu, conditions, confidentialité, déconnexion, suppression du compte. Le bouton **Espace admin** n'apparaît que pour un compte inscrit dans la table `admins`, et l'app renvoie à l'accueil toute personne non admin qui tente d'ouvrir l'écran admin. Les fonctions `admin_*` refusent aussi toute personne non admin côté serveur.
+- **Lieu de connexion** : la fonction Vercel `api/lieu.js` lit les en-têtes de géolocalisation que Vercel ajoute à chaque requête (`x-vercel-ip-country`, `x-vercel-ip-country-region`, `x-vercel-ip-city`). Elle ne garde pas l'adresse IP et ne la renvoie pas. L'app ne l'appelle que si la personne a activé « Partager ma ville approximative » : la fonction est désactivée par défaut (Loi 25, art. 8.1 et 9.1). Une entrée au plus par 30 minutes, conservation 90 jours, 20 entrées au plus par personne, et tout est effacé quand la personne désactive le partage.
+- **Admin → onglet Connexions** : nombre de personnes qui partagent, répartition par ville sur 30 jours, dernière connexion par personne (courriel, ville, appareil, nombre de connexions), avec une recherche.
+- Base de données : déjà à jour.
+- **À faire valider par l'avocat** : la base légale et la formulation du consentement au partage du lieu.
+
+## 7g. Annonce publiée par le locataire actuel, profil sur toutes les plateformes (v8)
+
+- Question du formulaire : « Est-ce le locataire actuel qui annonce (cession de bail ou sous-location) ? ». Elle est cochée automatiquement si le texte parle de cession, de sous-location ou de « sublet ».
+- Si le locataire demande de l'argent en cession : signal rouge. Le locataire qui part ne peut rien exiger du nouveau locataire (avis de cession du TAL, TAL-802).
+- « Vérifier le propriétaire » a un 3e choix, **Locataire actuel** : on demande son bail (son nom et l'adresse), puis on compare le propriétaire écrit sur le bail avec le Registre foncier. On rappelle aussi l'accord écrit du propriétaire (délai de 15 jours, art. 1870 et 1871 C.c.Q.).
+- La vérification approfondie accepte le rôle `locataire` (contrainte de la base mise à jour, migration `demandes_role_locataire`) : l'équipe compare le propriétaire écrit sur le bail avec le propriétaire inscrit.
+- Le profil de l'annonceur fonctionne pour Facebook, Kijiji, LesPAC, Craigslist et les réseaux sociaux. La section s'ouvre dès qu'un lien est reconnu. Nouvelle question : « Veut-il continuer la conversation ailleurs dès le début ? ».
+
+## 8. Console d'administration (habitascan.vercel.app/admin)
+
+Une seule app : la console fait partie du même site, avec la même connexion et la même base de données. Elle est faite pour un ordinateur ; l'espace admin du téléphone donne un lien vers elle.
+
+- **Connexion** : courriel puis code à 6 chiffres. Seuls les comptes de la table `admins` entrent. Chaque fonction refuse aussi les autres comptes côté serveur.
+- **Tableau de bord** : utilisateurs, vérifications, revenus, demandes payées à traiter (avec alerte de retard), graphiques sur 30 jours, résultats, éléments à surveiller.
+- **Vérifications payées** : liste filtrable ; fiche avec la marche à suivre au Registre foncier, verdict et note pour le client, remboursement.
+- **Utilisateurs** : recherche, filtres, fiche complète (vérifications, demandes, connexions, utilisation du jour), suspension avec motif, réactivation, suppression du compte et de ses données (fonction `admin-supprimer-compte`).
+- **Vérifications** : toutes les vérifications, avec filtres et le détail des raisons.
+- **Identités, Signalements, Connexions** : modération.
+- **Réglages** : prix, délai, lien Stripe, limites anti-abus ; activer ou désactiver l'IA, la recherche d'annonces et la vérification payante ; quotas par fonction ; message en haut de l'accueil ; courriel de soutien ; montants du simulateur de budget.
+- **Loyers de référence** : modifier les loyers moyens de la SCHL et ajouter une ville.
+- **Administrateurs** : ajouter ou retirer un admin (impossible de se retirer soi-même ou de retirer le dernier).
+- **Journal** : chaque action d'un admin (qui, quoi, quand, avant et après).
+- **Erreurs techniques**, et **export CSV** des listes.
+
+Base de données : les changements sont appliqués directement dans Supabase, qui garde l'historique (Supabase → Database → Migrations). Le dépôt GitHub ne contient que l'app.
+
+## 9. Vérification complète (service payant)
+
+- Gratuit pour tous : l'analyse automatique de l'annonce.
+- Payant : la **vérification complète** par ton équipe, avec un rapport écrit envoyé dans l'app, dans le délai promis ou remboursé.
+- Le rapport couvre 4 points : le propriétaire au Registre foncier ; l'entreprise propriétaire (statut et dirigeants au registre des entreprises) ; les photos réutilisées ; les autres annonces du même logement. Il se termine par un verdict global (« Tu peux continuer », « Continue avec précaution », « Arrête ») et des recommandations.
+- Dans la console : **Vérifications payées** → ouvrir une demande → remplir la grille → « Envoyer le rapport au client ». Le brouillon peut être enregistré avant l'envoi.
+- **Prix** : console → Réglages → Tarifs et délais. Le montant du lien de paiement Stripe doit être le même.
+- Le rapport ne contient jamais le nom d'une personne ni de document sur le propriétaire (Loi 25) : seulement les résultats.
+
+## 10. Zéro question, message-filtre, site public
+
+- **Zéro question à l'annonceur** : « Vérifier le propriétaire » part de l'adresse seule (numéro de lot, Registre foncier, registre des entreprises). Au moment de signer, l'app compare le nom écrit sur le bail (ou sur l'accord écrit du propriétaire, pour une cession) avec le propriétaire inscrit. La vérification complète ne demande plus que l'adresse ; le rapport donne le nom du propriétaire inscrit à retrouver sur le bail.
+- **Message-filtre** (sur chaque résultat) : un message poli, en français ou en anglais, qui annonce les règles normales (visite d'abord, premier mois à la signature). L'utilisateur colle la réponse de l'annonceur et l'app y repère les signaux connus (dépôt, virement, « à l'étranger », clés par la poste, refus de visite, papiers demandés, pression). L'analyse se fait sur le téléphone.
+- **Site public** : `/decouvrir` (français), `/en` (anglais), `/guides/verifier-un-proprietaire`, `/guides/arnaques-courantes`, `/a-propos`. Le prix et le délai affichés viennent des réglages de la console. `robots.txt` et `sitemap.xml` sont inclus.
+- **À compléter dans `a-propos.html`** : nom légal de l'entreprise, ville, NEQ, responsable, courriel (les crochets [ ]).
+- **Anglais** : le site public et le message-filtre sont en anglais ; l'app elle-même est encore en français.
