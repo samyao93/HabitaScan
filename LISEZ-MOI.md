@@ -92,22 +92,12 @@ Sans clé, l'écran affiche seulement les liens vers les sites.
 
 ## 6. App iPhone et Android (dossier `app-native`)
 
-Les projets Android et iOS sont déjà générés avec Capacitor 8 ; le partage depuis Facebook ou Kijiji passe par le plugin `@capgo/capacitor-share-target`.
+Projet Capacitor 8, identifiant `ca.habitascan.app`. Il emballe l'app web du dossier parent : `npm run sync` la recopie après chaque changement.
+Tout le pas-à-pas (Google Play, App Store, textes des fiches, captures, questionnaires de confidentialité) est dans **`app-native/STORES.md`**.
 
-Ce qu'il te faut :
-- **Android** : Android Studio (gratuit) et un compte Google Play Console (25 $ US une fois). Les comptes personnels récents doivent faire un test fermé avec au moins 12 testeurs pendant 14 jours avant la publication.
-- **iPhone** : un Mac avec Xcode et l'Apple Developer Program (99 $ US par année).
-
-Étapes :
-```
-cd app-native
-npm install
-npm run android   # ouvre Android Studio : Build > Generate Signed Bundle
-npm run ios       # ouvre Xcode (sur Mac)
-```
-Sur iPhone, une étape se fait à la main dans Xcode : File > New > Target > **Share Extension**, avec le groupe d'apps `group.ca.verifqc.app` (voir la documentation du plugin `@capgo/capacitor-share-target`). Sur Android, la réception du partage est déjà configurée.
-
-Change `appId` (`ca.verifqc.app`) et `appName` dans `capacitor.config.json` quand le nom final est choisi.
+- **Android** : se construit sur ce PC (Android Studio). Clé de signature hors du dépôt, dans `Téléchargementshabitascan-cles`.
+- **iPhone** : demande un Mac avec Xcode et l'Apple Developer Program (99 $ US par an).
+- Pas encore inclus : la réception d'une annonce partagée depuis Facebook ou Kijiji (bouton « Partager » du téléphone). L'app web la gère déjà ; l'app native pourra l'ajouter plus tard.
 
 ## 7. Espace admin et confidentialité
 

@@ -1,0 +1,13 @@
+{
+  "appId": "ca.habitascan.app",
+  "appName": "HabitaScan",
+  "webDir": "www",
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 800,
+      "launchAutoHide": true,
+      "backgroundColor": "#f4f6fa",
+      "showSpinner": false
+    }
+  }
+}

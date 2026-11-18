@@ -4,7 +4,7 @@
    Mise en page : une colonne mobile de 480 px max, présentée comme un écran d'app sur ordinateur. */
 
 /* ---------- Jetons ---------- */
-:root{color-scheme:light dark;
+:root{color-scheme:light;
 --bg:light-dark(#f4f6fa,#0b1120);
 --bg2:light-dark(#eceff5,#070b16);
 --card:light-dark(#ffffff,#121a2e);
@@ -222,10 +222,10 @@ details[open] > summary::after{transform:rotate(180deg)}
 /* Bienvenue */
 .app[data-v=bienvenue]{gap:14px}
 body:has(.app[data-v=bienvenue]) .app{background:radial-gradient(120% 60% at 50% -10%,var(--bluebg) 0%,transparent 70%) var(--bg)}
-.app[data-v=bienvenue] .top{display:none}
+.app[data-v=bienvenue] .top{background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none}.app[data-v=bienvenue] .top > b,.app[data-v=bienvenue] .top > svg{visibility:hidden}
 .app[data-v=bienvenue] h1{font-size:34px;text-align:center;margin-top:4px}
 .app[data-v=bienvenue] > p.soft{text-align:center;font-size:16.5px;margin-bottom:8px}
-.logo-grand{width:88px;height:88px;margin:40px auto 4px;display:block;border-radius:22px;filter:drop-shadow(0 14px 24px rgb(11 61 145/.3))}
+.logo-grand{width:88px;height:88px;margin:8px auto 4px;display:block;border-radius:22px;filter:drop-shadow(0 14px 24px rgb(11 61 145/.3))}
 .atouts{margin:0 0 6px;padding:6px 0;list-style:none;display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--sh-xs)}
 .atouts li{padding:12px 16px 12px 52px;position:relative;font-size:15px;line-height:1.45;color:var(--soft)}
 .atouts li + li{border-top:1px solid var(--line)}
@@ -374,3 +374,16 @@ ul.reasons .dot.i::after,.liste .dot.i::after{inset:7px}
 :root{
 --i-mail:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Crect x=%273%27 y=%275%27 width=%2718%27 height=%2714%27 rx=%272%27/%3E%3Cpath d=%27m3.5 6.5 8.5 6.5 8.5-6.5%27/%3E%3C/svg%3E");
 --i-key:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Crect x=%274%27 y=%2710%27 width=%2716%27 height=%2711%27 rx=%272%27/%3E%3Cpath d=%27M8 10V7a4 4 0 0 1 8 0v3M12 14.5v2.5%27/%3E%3C/svg%3E")}
+
+/* Bouton clair / sombre */
+:root{--i-lune:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z'/%3E%3C/svg%3E");
+--i-soleil:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='4'/%3E%3Cpath d='M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4'/%3E%3C/svg%3E")}
+.theme-btn{width:38px;height:38px;flex-shrink:0;border-radius:999px;border:1px solid var(--line);background:var(--card);display:grid;place-items:center;cursor:pointer;color:var(--soft);padding:0;box-shadow:var(--sh-xs);transition:color .15s,border-color .15s}
+.theme-btn:hover{color:var(--ink);border-color:var(--line2)}
+.theme-btn::before{content:"";width:18px;height:18px;background:currentColor;-webkit-mask:var(--i-lune) center/contain no-repeat;mask:var(--i-lune) center/contain no-repeat}
+:root[data-theme=dark] .theme-btn::before{-webkit-mask-image:var(--i-soleil);mask-image:var(--i-soleil)}
+
+/* App native (iPhone, Android) : zones de l'encoche et des barres système. Valent 0 sur le web. */
+.top{padding-top:calc(8px + env(safe-area-inset-top));min-height:calc(60px + env(safe-area-inset-top))}
+.app{padding-bottom:calc(48px + env(safe-area-inset-bottom));padding-left:calc(16px + env(safe-area-inset-left));padding-right:calc(16px + env(safe-area-inset-right))}
+:root[data-natif] .app{margin:0 auto;border:0;border-radius:0;box-shadow:none}

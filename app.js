@@ -220,7 +220,7 @@ const $=s=>document.querySelector(s);
 const app=$("#app");
 const esc=t=>String(t??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const money=n=>Number(n).toLocaleString("fr-CA")+" $";
-const top=(back,title)=>`<div class="top">${back?`<button class="back" data-go="${back}">‹ Retour</button>`:""}${title?"":`<svg class="logo-mini" aria-hidden="true"><use href="#logo"/></svg>`}<b>${title||"HabitaScan"}</b><span class="sp"></span></div>`;
+const top=(back,title)=>`<div class="top">${back?`<button class="back" data-go="${back}">‹ Retour</button>`:""}${title?"":`<svg class="logo-mini" aria-hidden="true"><use href="#logo"/></svg>`}<b>${title||"HabitaScan"}</b><span class="sp"></span><button type="button" class="theme-btn" data-theme-toggle aria-label="Changer de thème"></button></div>`;
 const STATUT={aucune:"Identité non confirmée",en_attente:"Identité en vérification",confirmee:"Identité confirmée",refusee:"Identité refusée : recommence"};
 
 /* ===== HabitaScan : propriétaire, budget, annonces vérifiées (commun démo + Supabase) =====
@@ -1219,7 +1219,7 @@ victime:()=>`${top(SESSION?"accueil":"bienvenue","Aide")}
 function yn(k,q){return `<div class="q">${q}<div class="yn" role="group" aria-label="${esc(q)}"><button type="button" data-yn="${k}" data-v="oui" aria-pressed="${F[k]==="oui"}">Oui</button><button type="button" data-yn="${k}" data-v="non" aria-pressed="${F[k]==="non"}">Non</button></div></div>`}
 
 const PUBLIQUES=["bienvenue","inscription","code","victime","erreur","confidentialite","conditions"];
-function go(v){if(!SESSION&&!PUBLIQUES.includes(v)){if(F.partage)LS.set("vl_partage",{annonce:F.annonce,lien:F.lien});v="bienvenue"}if(v==="admin"&&!ADM.estAdmin())v="accueil";app.dataset.v=v;app.innerHTML=V[v]();window.scrollTo(0,0);bind(v);bindPlus(v);bindPlus3(v);bindPlus4(v);bindPlus5(v);bindPlus6(v);bindPlus7(v);bindPlus8(v)}
+function go(v){if(!SESSION&&!PUBLIQUES.includes(v)){if(F.partage)LS.set("vl_partage",{annonce:F.annonce,lien:F.lien});v="bienvenue"}if(v==="admin"&&!ADM.estAdmin())v="accueil";app.dataset.v=v;app.innerHTML=V[v]();try{window.hsTheme&&hsTheme.appliquer()}catch(e){}window.scrollTo(0,0);bind(v);bindPlus(v);bindPlus3(v);bindPlus4(v);bindPlus5(v);bindPlus6(v);bindPlus7(v);bindPlus8(v)}
 const err=m=>{const e=$("#e");if(e){e.textContent=m;e.hidden=!m}};
 const busy=(on,label)=>{const b=$("#go");if(b){b.disabled=on;if(label)b.textContent=label}};
 function appliquerLecture(r){["prix","ch","ville","cession"].forEach(k=>{if(r[k])F[k]=r[k]});if(r.lien&&!F.lien)F.lien=r.lien;
@@ -1380,7 +1380,8 @@ window.recevoirPartage=t=>{if(!t)return;F={annonce:String(t).slice(0,5000),parta
  try{if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{})}catch(e){}
  go("analyse");
  try{await Promise.all([chargerLoyers(),chargerRegistre(),chargerParametres(),chargerTextes()]);
-  await ouvrirSession();await chargerProfil();go(SESSION?(F.partage?"verifier":"accueil"):"bienvenue")}
+  await ouvrirSession();await chargerProfil();const vq=new URLSearchParams(location.search).get("v");
+  go(["confidentialite","conditions"].includes(vq)?vq:SESSION?(F.partage?"verifier":"accueil"):"bienvenue")}
  catch(e){app.innerHTML=`${top()}<p class="err">Impossible de joindre le serveur. Vérifie ta connexion et recharge la page.</p>`}
 })();
 }
