@@ -184,7 +184,7 @@ Avant le lancement, la politique de confidentialité doit mentionner Google Visi
 
 ## Fichiers
 
-- `index.html`, `app.js` : l'app web
+- `app.html` (servie à `/app`), `app.js` : l'app web ; `index.html` : la page d'accueil du site (`/`)
 - `migration-reno.sql`, `migration-v3-compte-facultatif-signalements.sql`, `migration-v4-admin-confidentialite.sql`, `migration-v5-verification-approfondie.sql`, `migration-v6-mesure-quotas.sql` : mises à jour de la base
 - `supabase/functions/recherche-image/index.ts` : recherche des photos (Google Vision)
 - `supabase/functions/chercher-annonces/index.ts` : recherche d'annonces (Brave Search)
@@ -246,6 +246,6 @@ Base de données : les changements sont appliqués directement dans Supabase, qu
 
 - **Zéro question à l'annonceur** : « Vérifier le propriétaire » part de l'adresse seule (numéro de lot, Registre foncier, registre des entreprises). Au moment de signer, l'app compare le nom écrit sur le bail (ou sur l'accord écrit du propriétaire, pour une cession) avec le propriétaire inscrit. La vérification complète ne demande plus que l'adresse ; le rapport donne le nom du propriétaire inscrit à retrouver sur le bail.
 - **Message-filtre** (sur chaque résultat) : un message poli, en français ou en anglais, qui annonce les règles normales (visite d'abord, premier mois à la signature). L'utilisateur colle la réponse de l'annonceur et l'app y repère les signaux connus (dépôt, virement, « à l'étranger », clés par la poste, refus de visite, papiers demandés, pression). L'analyse se fait sur le téléphone.
-- **Site public** : `/decouvrir` (français), `/en` (anglais), `/guides/verifier-un-proprietaire`, `/guides/arnaques-courantes`, `/a-propos`. Le prix et le délai affichés viennent des réglages de la console. `robots.txt` et `sitemap.xml` sont inclus.
+- **Site public** : `/` (français), `/en` (anglais), `/guides/verifier-un-proprietaire`, `/guides/arnaques-courantes`, `/a-propos`. Le prix et le délai affichés viennent des réglages de la console. `robots.txt` et `sitemap.xml` sont inclus.
 - **À compléter dans `a-propos.html`** : nom légal de l'entreprise, ville, NEQ, responsable, courriel (les crochets [ ]).
 - **Anglais** : le site public et le message-filtre sont en anglais ; l'app elle-même est encore en français.
