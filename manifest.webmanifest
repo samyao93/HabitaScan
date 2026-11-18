@@ -3,8 +3,8 @@
   "short_name": "HabitaScan",
   "description": "Avant de payer, vérifie : repère les fausses annonces de logement et confirme le vrai propriétaire.",
   "lang": "fr-CA",
-  "start_url": "./index.html",
-  "scope": "./",
+  "start_url": "/app",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#f4f6fb",
   "theme_color": "#0b3d91",
@@ -29,7 +29,7 @@
     }
   ],
   "share_target": {
-    "action": "./index.html",
+    "action": "/app",
     "method": "GET",
     "params": {
       "title": "title",
