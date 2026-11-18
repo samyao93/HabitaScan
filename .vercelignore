@@ -3,3 +3,4 @@ supabase/
 *.sql
 *.mjs
 LISEZ-MOI.md
+courriel-*.html
