@@ -169,12 +169,12 @@ details[open] > summary::after{transform:rotate(180deg)}
 .profil summary{color:var(--ink);justify-content:space-between}
 
 /* ---------- Boutons ---------- */
-.btn{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font:inherit;font-weight:650;font-size:16px;line-height:1.25;
- min-height:52px;border-radius:var(--r);border:1px solid transparent;background:var(--btn);color:var(--blueink);cursor:pointer;width:100%;padding:12px 18px;
+.btn{display:block;font:inherit;font-weight:650;font-size:16px;line-height:1.25;
+ min-height:52px;border-radius:var(--r);border:1px solid transparent;background:var(--btn);color:var(--blueink);cursor:pointer;width:100%;padding:14px 18px;
  box-shadow:var(--sh-sm),inset 0 1px 0 rgb(255 255 255/.12);transition:background .15s,box-shadow .15s,transform .05s;text-align:center;text-decoration:none}
 .btn:hover{background:var(--btn-hover)}
 .btn:active{transform:translateY(1px)}
-.btn small{display:block;font-weight:500;font-size:13px;opacity:.82}
+.btn small{display:block;font-weight:500;font-size:13px;opacity:.82;margin-top:2px}
 .btn.ghost{background:var(--card);color:var(--ink);border-color:var(--line2);box-shadow:var(--sh-xs)}
 .btn.ghost:hover{background:var(--raise);border-color:color-mix(in srgb,var(--blue) 30%,var(--line2))}
 .btn.ghost small{color:var(--soft);opacity:1}
@@ -182,14 +182,15 @@ details[open] > summary::after{transform:rotate(180deg)}
 .btn.petit{font-size:14px;min-height:46px;width:auto;padding:8px 16px}
 .btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
 .lienbouton{display:grid;place-items:center;text-decoration:none;text-align:center;padding:8px 16px}
-.lienbtn{background:none;border:0;padding:0;font:inherit;color:var(--blue);font-weight:600;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px;cursor:pointer;min-height:32px}
+.lienbtn{background:none;border:0;padding:0;font:inherit;color:var(--blue);font-weight:600;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px;cursor:pointer;min-height:0;line-height:inherit}
+.app > .lienbtn,.card > .lienbtn,.lienbtn.centre{min-height:44px}
 .danger-txt{color:var(--red)!important}
 .lienbtn.centre,.centre.lienbtn{display:block;margin:6px auto;text-align:center}
 .duo{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}.duo .btn{margin:0}
 
 /* ---------- Accueil ---------- */
 .choix-accueil{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.choix-accueil .btn{position:relative;align-items:flex-start;justify-content:flex-start;text-align:left;min-height:132px;padding:66px 16px 16px;gap:3px;
+.choix-accueil .btn{display:flex;flex-direction:column;position:relative;align-items:flex-start;justify-content:flex-start;text-align:left;min-height:132px;padding:66px 16px 16px;gap:3px;
  background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--sh-xs);font-size:15.5px;font-weight:700}
 .choix-accueil .btn:hover{border-color:color-mix(in srgb,var(--blue) 40%,var(--line));box-shadow:var(--sh-sm)}
 .choix-accueil .btn small{color:var(--soft);opacity:1;font-size:12.5px;line-height:1.4}
@@ -209,7 +210,7 @@ details[open] > summary::after{transform:rotate(180deg)}
 .choix-accueil .btn-va,.choix-accueil #nouvR{min-height:0;padding:16px 16px 16px 72px}
 .choix-accueil .btn-va::before,.choix-accueil #nouvR::before{top:50%;margin-top:-20px}.choix-accueil .btn-va::after,.choix-accueil #nouvR::after{top:50%;margin-top:-10px}
 /* Lignes d'action secondaires (identité, victime) */
-.app[data-v=accueil] > .btn.ghost,.app[data-v=bienvenue] > .btn.ghost{position:relative;flex-direction:row;justify-content:flex-start;text-align:left;font-weight:600;font-size:15px;padding:14px 44px 14px 54px;min-height:56px}
+.app[data-v=accueil] > .btn.ghost,.app[data-v=bienvenue] > .btn.ghost{position:relative;display:flex;align-items:center;flex-direction:row;justify-content:flex-start;text-align:left;font-weight:600;font-size:15px;padding:14px 44px 14px 54px;min-height:56px}
 .app[data-v=accueil] > .btn.ghost::before,.app[data-v=bienvenue] > .btn.ghost::before{content:"";position:absolute;left:18px;top:50%;margin-top:-10px;width:20px;height:20px;background:var(--soft);
  -webkit-mask:var(--ic,var(--i-id)) center/contain no-repeat;mask:var(--ic,var(--i-id)) center/contain no-repeat}
 .app[data-v=accueil] > .btn.ghost::after,.app[data-v=bienvenue] > .btn.ghost::after{content:"";position:absolute;right:16px;top:50%;margin-top:-8px;width:16px;height:16px;background:var(--faint);
@@ -349,3 +350,27 @@ ul.reasons .dot.i::after,.liste .dot.i::after{inset:7px}
 --i-chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 5 7 7-7 7'/%3E%3C/svg%3E");
 --i-chev-d:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
 --i-upload:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='3'/%3E%3Ccircle cx='9' cy='9' r='1.6'/%3E%3Cpath d='m21 15-4.5-4.5L6 21'/%3E%3C/svg%3E")}
+
+/* ---------- Écrans de connexion ---------- */
+.app[data-v=inscription] > h2,.app[data-v=code] > h2,.app[data-v=identite] > h2{position:relative;font-size:26px;letter-spacing:-.02em;padding-top:72px;margin-top:12px}
+.app[data-v=inscription] > h2::before,.app[data-v=code] > h2::before,.app[data-v=identite] > h2::before{content:"";position:absolute;left:0;top:0;width:56px;height:56px;border-radius:16px;
+ background:linear-gradient(135deg,#0b3d91,#1658d6);box-shadow:0 10px 24px -10px rgb(13 71 181/.6)}
+.app[data-v=inscription] > h2::after,.app[data-v=code] > h2::after,.app[data-v=identite] > h2::after{content:"";position:absolute;left:15px;top:15px;width:26px;height:26px;background:#fff;
+ -webkit-mask:var(--hi,var(--i-mail)) center/contain no-repeat;mask:var(--hi,var(--i-mail)) center/contain no-repeat}
+.app[data-v=code] > h2{--hi:var(--i-key)}.app[data-v=identite] > h2{--hi:var(--i-id)}
+.app[data-v=inscription] > p.soft,.app[data-v=code] > p.soft{font-size:15.5px;margin-top:-6px}
+.otp input{font-size:26px;caret-color:var(--blue)}
+
+/* ---------- Chargement ---------- */
+.app[data-v=analyse]{justify-content:flex-start}
+.app[data-v=analyse] .spin{width:84px;height:84px;margin:96px auto 12px;border:3px solid var(--line);border-top-color:var(--blue);border-right-color:var(--blue);position:relative}
+.app[data-v=analyse] > p.soft{font-size:16px;font-weight:600;color:var(--ink)}
+.app[data-v=analyse] > p.soft::after{content:"À partir de sources publiques officielles";display:block;margin-top:6px;font-size:13.5px;font-weight:500;color:var(--soft)}
+
+/* ---------- Bandeau de confiance ---------- */
+.confiance{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 8px;margin:2px 0 0;padding:0;list-style:none}
+.confiance li{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--soft);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:5px 11px 5px 9px}
+.confiance li::before{content:"";width:14px;height:14px;background:var(--ok);-webkit-mask:var(--i-check) center/contain no-repeat;mask:var(--i-check) center/contain no-repeat}
+:root{
+--i-mail:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Crect x=%273%27 y=%275%27 width=%2718%27 height=%2714%27 rx=%272%27/%3E%3Cpath d=%27m3.5 6.5 8.5 6.5 8.5-6.5%27/%3E%3C/svg%3E");
+--i-key:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Crect x=%274%27 y=%2710%27 width=%2716%27 height=%2711%27 rx=%272%27/%3E%3Cpath d=%27M8 10V7a4 4 0 0 1 8 0v3M12 14.5v2.5%27/%3E%3C/svg%3E")}

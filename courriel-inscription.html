@@ -1,0 +1,19 @@
+<!-- Modèle Supabase n° 2 : Authentication > Emails > Templates > « Confirm signup ».
+     Objet : Ton code HabitaScan
+     Envoyé la toute première fois qu'une adresse demande un code (création du compte).
+     Sans ce modèle, Supabase envoie un lien de confirmation au lieu du code. -->
+<div style="margin:0;padding:32px 12px;background:#f4f6fa;font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#0e1726">
+  <div style="max-width:480px;margin:0 auto">
+    <p style="margin:0 0 16px;font-size:18px;font-weight:800;color:#0b3d91;letter-spacing:-.01em">HabitaScan</p>
+    <div style="background:#ffffff;border:1px solid #e3e7ef;border-radius:16px;padding:32px 28px">
+      <p style="margin:0 0 6px;font-size:20px;font-weight:700">Bienvenue ! Voici ton code</p>
+      <p style="margin:0 0 22px;font-size:15px;color:#5c6678">Entre ce code dans HabitaScan pour créer ton compte. Pas de mot de passe à retenir.</p>
+      <p style="margin:0 0 22px;padding:18px 0;background:#ebf1fd;border-radius:12px;text-align:center;font-size:36px;font-weight:800;letter-spacing:10px;color:#0b3d91;font-family:'SFMono-Regular',Consolas,monospace">{{ .Token }}</p>
+      <p style="margin:0 0 6px;font-size:14px;color:#5c6678">Il expire bientôt. Si tu n'as rien demandé, ignore ce courriel : aucun compte ne sera créé sans ce code.</p>
+    </div>
+    <div style="margin:16px 0 0;padding:14px 16px;background:#ecf7f0;border-radius:12px;font-size:13.5px;line-height:1.5;color:#18703c">
+      <b>Rappel :</b> ne paie rien avant d'avoir visité le logement, confirmé le propriétaire et signé le bail. Au Québec, aucun dépôt ne peut être exigé, seulement le premier mois de loyer.
+    </div>
+    <p style="margin:16px 0 0;font-size:12px;color:#8a93a5;text-align:center">HabitaScan ne te demandera jamais ce code par téléphone ou par message.</p>
+  </div>
+</div>
