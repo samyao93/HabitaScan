@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="fr-CA">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Comment trouver le vrai propriétaire d'un logement au Québec · HabitaScan</title>
+<meta name="description" content="Trouve le propriétaire d'un logement au Québec à partir de l'adresse : numéro de lot, Registre foncier, registre des entreprises et comparaison avec le bail.">
+<link rel="canonical" href="https://habitascan.vercel.app/guides/verifier-un-proprietaire">
+<meta property="og:title" content="Comment trouver le vrai propriétaire d'un logement au Québec · HabitaScan"><meta property="og:description" content="Trouve le propriétaire d'un logement au Québec à partir de l'adresse : numéro de lot, Registre foncier, registre des entreprises et comparaison avec le bail."><meta property="og:type" content="article">
+<link rel="icon" href="/icon.svg" type="image/svg+xml"><link rel="stylesheet" href="/site.css">
+</head>
+<body>
+<header class="nav"><div class="wrap"><a class="marque" href="/decouvrir"><img src="/icon.svg" alt="">HabitaScan</a><nav><a class="cacher" href="/guides/arnaques-courantes">Arnaques courantes</a><a class="cacher" href="/guides/verifier-un-proprietaire">Vérifier un propriétaire</a><a class="cacher" href="/a-propos">Qui sommes-nous</a><a href="/en" lang="en" hreflang="en">English</a><a class="btn sm" href="/">Ouvrir l'app</a></nav></div></header>
+<article><p class="fil"><a href="/decouvrir">Accueil</a> › Guides</p>
+<h1>Comment savoir qui est le vrai propriétaire d'un logement au Québec</h1>
+<p class="lead">L'adresse suffit. Tu n'as aucune question à poser à l'annonceur : le nom du propriétaire est public, et la comparaison se fait au moment de signer le bail.</p>
+<h2>1. Trouve le numéro de lot</h2>
+<p>Chaque immeuble correspond à un numéro de lot. Cherche l'adresse sur la carte gratuite <a href="https://appli.foncier.gouv.qc.ca/infolot/">Infolot</a> du gouvernement du Québec. L'app HabitaScan le trouve aussi automatiquement à partir de l'adresse.</p>
+<h2>2. Consulte le Registre foncier</h2>
+<p>Sur le <a href="https://www.registrefoncier.gouv.qc.ca">Registre foncier du Québec</a>, consulte l'index des immeubles de ce lot, puis le dernier acte de vente : il indique à qui appartient l'immeuble. Il faut créer un compte, et la consultation coûte 1 $ par document (<a href="https://portail-info.foncier.gouv.qc.ca/media/40hfdqo0/grille_tarifaire_janvier_2026.pdf">grille tarifaire du Registre foncier</a>).</p>
+<h2>3. Si le propriétaire est une entreprise</h2>
+<p>Beaucoup d'immeubles à logements appartiennent à une entreprise. Le <a href="https://www.registreentreprises.gouv.qc.ca/">registre des entreprises du Québec</a> se consulte gratuitement : il indique si l'entreprise est active et qui la dirige.</p>
+<h2>4. Au moment de signer, compare</h2>
+<p>Le nom du locateur est écrit en haut du bail, dans la section « Entre le locateur et le locataire » du formulaire obligatoire du Tribunal administratif du logement. Avant de payer quoi que ce soit, compare ce nom avec celui du Registre foncier.</p>
+<ul><li><b>Même nom</b> : tu peux signer, et payer le premier mois à la signature.</li><li><b>Nom différent</b> : si c'est un gestionnaire, exige son mandat écrit signé par le propriétaire inscrit. Sinon, ne paie pas.</li></ul>
+<h2>Et si c'est le locataire actuel qui annonce ?</h2>
+<p>Une cession de bail ou une sous-location est permise, mais le locataire doit aviser le propriétaire par écrit, avec le nom et l'adresse de la personne, et obtenir son consentement. Le propriétaire a 15 jours pour répondre ; s'il ne répond pas, il est réputé avoir accepté (Code civil du Québec, art. 1870 et 1871). En cession, le locataire qui part ne peut rien exiger du nouveau locataire (<a href="https://www.tal.gouv.qc.ca/sites/default/files/notices/TAL_802_E.pdf">avis de cession du TAL</a>).</p>
+<p>Le document à comparer est donc <b>l'accord écrit du propriétaire</b>, avec ton nom, signé par le propriétaire inscrit au Registre foncier.</p>
+<h2>La règle d'or</h2>
+<p>Au Québec, le propriétaire peut exiger seulement le premier mois de loyer à l'avance, et aucun dépôt de garantie (<a href="https://www.quebec.ca/nouvelles/actualites/details/exiger-un-depot-de-garantie-est-illegal">Québec.ca</a>). Ne paie donc jamais rien avant d'avoir visité et signé le bail.</p>
+<div class="encart"><h3>Vérifie une annonce en une minute</h3><p>Gratuit, sans rien demander à l'annonceur.</p><a class="btn" href="/">Vérifier une annonce</a></div>
+<p class="source">Ce guide est informatif et ne remplace pas un avis juridique. Mis à jour en novembre 2026.</p></article>
+<footer><div class="wrap"><span>© 2026 HabitaScan · Fait au Québec</span><span><a href="/decouvrir">Accueil</a> · <a href="/a-propos">Qui sommes-nous</a> · <a href="/guides/arnaques-courantes">Arnaques courantes</a> · <a href="/guides/verifier-un-proprietaire">Vérifier un propriétaire</a> · <a href="/en">English</a></span></div></footer>
+<script>
+fetch("https://oyiiaqyepihkawzkkjpi.supabase.co/rest/v1/parametres?select=cle,valeur&cle=in.(prix_verif,delai_verif_heures)",{headers:{apikey:"sb_publishable_LhDVlSvpyM-bkW-QSp0lsw_wgNIsELX"}})
+.then(r=>r.ok?r.json():[]).then(L=>{const v=Object.fromEntries(L.map(x=>[x.cle,+x.valeur]));
+ if(v.prix_verif)document.querySelectorAll("[data-prix]").forEach(e=>e.textContent=String(v.prix_verif).replace(".",","));
+ if(v.delai_verif_heures)document.querySelectorAll("[data-delai]").forEach(e=>e.textContent=v.delai_verif_heures)}).catch(()=>{});
+</script>
+</body>
+</html>
