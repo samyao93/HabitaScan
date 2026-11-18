@@ -1088,7 +1088,7 @@ bienvenue:()=>`${top()}
 <li><b>Calcule ton budget</b> et trouve un logement à ta mesure.</li></ul>
 <button class="btn" data-go="inscription" id="commencer">Commencer gratuitement</button>
 <button class="btn ghost" data-go="victime">J'ai été victime d'une arnaque</button>
-<p class="hint centre">Fait au Québec · Tes captures restent sur ton téléphone</p>
+<ul class="confiance"><li>Gratuit</li><li>Conforme à la Loi 25</li><li>Sources publiques officielles</li><li>Fait au Québec</li></ul>
 <p class="hint centre"><a href="/">En savoir plus</a> · <a href="/guides/arnaques-courantes">Arnaques courantes</a> · <a href="/en" lang="en" hreflang="en">English</a></p>
 <p class="hint pied">${lienConditions.replace("conditions d'utilisation","Conditions d'utilisation")}${lienConfidentialite.replace("politique de confidentialité","Confidentialité")}</p>`,
 

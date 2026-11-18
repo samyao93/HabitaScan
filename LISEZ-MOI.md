@@ -37,14 +37,12 @@ SQL Editor > New query, colle puis « Run » :
 **a) Connexions anonymes : laisser désactivé**
 Authentication > Sign In / Providers > « Allow anonymous sign-ins » : désactivé. Le compte est obligatoire.
 
-**b) Code à 6 chiffres par courriel (obligatoire)**
-Authentication > Emails > Templates > **« Magic Link »** : remplace le contenu par :
-
-```
-<h2>Ton code HabitaScan</h2>
-<p>Entre ce code dans l'app : <strong>{{ .Token }}</strong></p>
-<p>Il expire dans 1 heure. Si tu n'as rien demandé, ignore ce courriel.</p>
-```
+**b) Code à 6 chiffres par courriel (obligatoire, deux modèles)**
+Supabase utilise deux modèles différents. Si un seul contient le code, l'autre envoie un lien de confirmation au lieu d'un code.
+Authentication > Emails > Templates :
+1. **« Confirm signup »** (nouveau compte) : objet « Ton code HabitaScan », contenu : tout le fichier `courriel-inscription.html`.
+2. **« Magic Link »** (compte existant, y compris la console admin) : objet « Ton code de connexion HabitaScan », contenu : tout le fichier `courriel-code.html`.
+Les deux doivent contenir `{{ .Token }}` et **pas** `{{ .ConfirmationURL }}`. Clique « Save » sur chacun.
 
 **c) Adresse de l'app (obligatoire)** : Authentication > URL Configuration > Site URL : https://habitascan.vercel.app (et dans Redirect URLs : https://habitascan.vercel.app/**).
 
@@ -141,7 +139,7 @@ Le client paie par carte sur une page Stripe ; HabitaScan ne voit jamais le num�
 - **Conditions d'utilisation** : écran « Conditions » dans l'app, accepté à l'inscription et avant chaque paiement. Remplis le bloc `RESPONSABLE` (début de la section « Politique de confidentialité » dans `app.js`) : il sert aussi aux conditions.
 - **Mesure d'usage anonyme** : Espace admin > Chiffres > « Utilisation (anonyme) ». Compte les écrans ouverts par jour, sans lien avec les comptes, et les erreurs techniques (15 dernières).
 - **Limites par personne et par jour** : 20 recherches de logements, 40 recherches de numéro de lot, 20 recherches de photos, 5 demandes de vérification approfondie. Elles protègent tes crédits Brave et Google. Pour les changer : fonction `consommer_quota` dans Supabase.
-- **Courriel** : le service intégré de Supabase n'envoie que 2 courriels par heure. Branche Resend (ou un autre fournisseur SMTP) en suivant le document « HabitaScan : préparation du lancement », puis colle `courriel-code.html` dans Authentication > Emails > Magic Link.
+- **Courriel** : le service intégré de Supabase n'envoie que 2 courriels par heure. Branche Resend (ou un autre fournisseur SMTP) en suivant le document « HabitaScan : préparation du lancement », puis colle les deux modèles décrits en 1 b) (Confirm signup et Magic Link).
 
 ## 7e. Analyse intelligente (IA)
 
@@ -189,7 +187,7 @@ Avant le lancement, la politique de confidentialité doit mentionner Google Visi
 - `supabase/functions/recherche-image/index.ts` : recherche des photos (Google Vision)
 - `supabase/functions/chercher-annonces/index.ts` : recherche d'annonces (Brave Search)
 - `supabase/functions/supprimer-compte/index.ts` : suppression du compte par l'utilisateur
-- `courriel-code.html` : modèle du courriel de connexion
+- `courriel-code.html` et `courriel-inscription.html` : modèles des courriels de code (Magic Link et Confirm signup)
 - `icon.svg`, `icon-180.png`, `icon-192.png`, `icon-512.png` : logo et icônes
 - `supabase/functions/analyser-annonce/index.ts` : analyse intelligente (IA)
 - `supabase/functions/stripe-webhook/index.ts` : confirme les paiements Stripe
