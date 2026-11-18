@@ -549,7 +549,8 @@ function vueConfidentialite(back){const R=RESPONSABLE;
  ["Courriel ou cellulaire","Te connecter avec un code, retrouver ton compte, compter les utilisateurs"],
  ["Résumé de tes vérifications : ville, chambres, loyer, lien, résultat ; travaux et licence RBQ","Ton historique. Pour un même lien, les autres voient seulement un nombre"],
  ["Signalement : lien et motif","Avertir les autres. Ils voient seulement un nombre"],
- ["Photo de pièce d'identité, seulement pour signaler","Éviter les fausses accusations. Supprimée après la vérification"],
+ ["Photo de pièce d'identité, seulement pour signaler","Éviter les fausses accusations. Lue automatiquement pour pré-remplir les informations, puis vérifiée par l'équipe. Supprimée après la vérification"],
+ ["Informations lues sur la pièce : prénom, nom, année de naissance, date d'expiration, province ou pays ; empreinte chiffrée du numéro (jamais le numéro lui-même)","Vérifier l'identité, repérer une pièce expirée, une personne mineure ou une pièce utilisée par deux comptes. Une fois l'identité confirmée, seuls le prénom, l'initiale du nom et la date d'expiration sont gardés ; tout est effacé si elle est refusée"],
  ["Ville, chambres et budget de « Trouver »","Chercher des annonces. Non conservés"],
  ["Vérification complète : adresse, lot, lien de l'annonce et, si tu le donnes, le nom de l'annonceur","Faire la vérification que tu as payée et te remettre le rapport. Le rapport donne le nom du propriétaire inscrit au Registre foncier (information publique), sans aucun document"],
  ["Compteurs d'utilisation (écrans ouverts par jour) et erreurs techniques","Améliorer l'app. Compteurs sans lien avec ton compte ; erreurs sans renseignement personnel"],
@@ -564,7 +565,7 @@ function vueConfidentialite(back){const R=RESPONSABLE;
  ["Brave Search (« Trouver »)","États-Unis : mots de la recherche, sans ton nom"],
  ["Google Cloud Vision, si activé","États-Unis : capture envoyée pour la recherche"],
  ["Stripe (paiement de la vérification complète)","Entreprise américaine : courriel et carte. HabitaScan ne voit jamais le numéro de carte"],
- ["Anthropic (analyse intelligente, si tu l'actives)","Entreprise américaine : captures et texte envoyés pour l'analyse"]],["Fournisseur","Où et quoi"])}
+ ["Anthropic (analyse intelligente, si tu l'actives ; lecture de la pièce d'identité)","Entreprise américaine : captures et texte envoyés pour l'analyse ; photo de la pièce envoyée pour la lecture, sans copie conservée"]],["Fournisseur","Où et quoi"])}
 <p class="hint">Avant de confier des renseignements hors du Québec, nous évaluons s'ils seront protégés adéquatement (art. 17 de la loi). Nous ne communiquons rien d'autre sans ton consentement, sauf dans les cas prévus par la loi.</p></div>
 <div class="card"><h2>Conservation et sécurité</h2>
 <ul class="liste"><li>Compte et historique : jusqu'à la suppression du compte, ou [24] mois sans connexion.</li>
@@ -619,6 +620,8 @@ async function lierAdmin(){const onglet=F.onglet||"chiffres";
 ${tuile("Vérifications au total",s.verifications)}${tuile("Résultats « Ne paie pas »",s.rouges)}${tuile("Signalements",s.signalements)}${tuile("Identités à vérifier",s.identites_attente)}</div>`}
  if(onglet==="identites"){const L=await ADM.identites();if(!el())return;
   el().innerHTML=L.length?L.map(p=>`<div class="card" data-id="${esc(p.id)}"><p><b>${esc(p.contact||"(sans contact)")}</b></p><p class="hint">Envoyée le ${esc(String(p.soumise_le||"").slice(0,10))}${p.doc_type?` · ${esc(p.doc_type)}`:""}</p>
+${p.lue_le?`<p><b>Lu par l'IA :</b> ${esc([p.prenom,p.nom].filter(Boolean).join(" ")||"nom non lu")}${p.naissance_annee?` · né(e) en ${esc(p.naissance_annee)}`:""} · expire ${p.expire_le?esc(p.expire_le):"(non lue)"}${p.emetteur?` · ${esc(p.emetteur)}`:""}</p>
+${(p.alertes||[]).length?`<ul class="reasons">${p.alertes.map(a=>`<li><span class="dot r"></span><div>${esc(ALERTES_ID[a]||a)}</div></li>`).join("")}</ul>`:`<p class="hint">Aucune alerte automatique.</p>`}`:`<p class="hint">Pas de lecture automatique : vérification manuelle.</p>`}
 <div class="vignettes photos"><button type="button" class="btn ghost" data-voir="${esc(p.id)}">Voir les photos</button></div>
 <div class="grid2"><button class="btn" data-decider="${esc(p.id)}" data-statut="confirmee">Confirmer</button><button class="btn ghost" data-decider="${esc(p.id)}" data-statut="refusee">Refuser</button></div>
 <p class="hint">La décision supprime les photos.</p></div>`).join(""):`<div class="card"><p>Aucune pièce d'identité à vérifier.</p></div>`;
@@ -1064,7 +1067,7 @@ document.head.insertAdjacentHTML("beforeend","<style>"+CSS_PLUS8+"</style>");
 /* Adaptateurs historique, compte, lieu (Supabase : table verifications, profil, fonctions *_connexion, fonction Vercel /api/lieu) */
 const HIS={liste:()=>HIST.map(x=>({id:x.id,module:x.module==="reno"?"reno":"logement",date:x.created_at,ville:x.ville,ch:x.chambres,prix:x.prix,c:x.couleur,lien:x.lien,travaux:x.travaux,licence:x.licence,raisons:Array.isArray(x.raisons)?x.raisons:[]})),
  async supprimer(id){const {error}=await sb.from("verifications").delete().eq("id",id);if(error)throw error;HIST=HIST.filter(x=>String(x.id)!==String(id))}};
-const CPT={courriel:()=>(PROFIL&&PROFIL.contact)||"",statut:()=>{const k=(PROFIL&&PROFIL.identite_statut)||"aucune";return {t:STATUT[k]||"Connecté",couleur:k==="confirmee"?"var(--ok)":k==="refusee"?"var(--red)":"var(--amber)"}}};
+const CPT={courriel:()=>(PROFIL&&PROFIL.contact)||"",statut:()=>{const k=(PROFIL&&PROFIL.identite_statut)||"aucune";return {t:k==="confirmee"&&PROFIL.identite_prenom?`Identité confirmée · ${PROFIL.identite_prenom}${PROFIL.identite_nom?" "+PROFIL.identite_nom+".":""}`:STATUT[k]||"Connecté",couleur:k==="confirmee"?"var(--ok)":k==="refusee"?"var(--red)":"var(--amber)"}}};
 const appareilCourt=()=>{const u=navigator.userAgent;const os=/iPhone|iPad/.test(u)?(/iPad/.test(u)?"iPad":"iPhone"):/Android/.test(u)?"Android":/Mac OS X/.test(u)?"Mac":/Windows/.test(u)?"Windows":/Linux/.test(u)?"Linux":"Autre";
  const nav=/Edg\//.test(u)?"Edge":/SamsungBrowser/.test(u)?"Samsung":/Firefox|FxiOS/.test(u)?"Firefox":/Chrome|CriOS/.test(u)?"Chrome":/Safari/.test(u)?"Safari":"Autre";return os+" · "+nav};
 let LIEU_NOTE=false;
@@ -1072,6 +1075,17 @@ const LIEU={dispo:true,demo:false,actif:()=>!!(PROFIL&&PROFIL.partage_lieu),
  async definir(b){await rpc("definir_partage_lieu",{p_actif:b});if(PROFIL)PROFIL.partage_lieu=b;if(b){LIEU_NOTE=false;return noterLieu()}return null},
  };
 /* Une fois par ouverture de l'app, seulement si la personne l'a activé */
+async function envoyerPiece(){const doc=F.doc||"permis";err("");
+ busy(true,"Envoi sécurisé…");const uid=(await sb.auth.getUser()).data.user.id,stamp=Date.now();
+ for(const s of ["recto","verso"]){const f=F[s];if(!f)continue;const ext=(f.type.split("/")[1]||"jpg").replace("jpeg","jpg");
+  const {error}=await sb.storage.from("pieces-identite").upload(`${uid}/${stamp}-${s}.${ext}`,f,{contentType:f.type,upsert:false});
+  if(error){busy(false,"Réessayer");return err("L'envoi de la photo a échoué. Vérifie ta connexion (photo de 8 Mo maximum).")}}
+ const {error}=await sb.rpc("soumettre_identite",{doc_type:doc});if(error){busy(false,"Réessayer");return err("Une erreur est survenue. Réessaie.")}
+ F={};await chargerProfil();go("identiteOk")}
+/* Alertes de la lecture automatique (l'alerte « déjà utilisée » n'est montrée qu'aux admins). */
+const ALERTES_ID={pas_une_piece:"Ce n'est peut-être pas une pièce d'identité",illisible:"Photo difficile à lire",type_different:"Le type de pièce ne correspond pas à celui choisi",
+ expiree:"Pièce expirée",expiration_inconnue:"Date d'expiration non lue",mineur:"Personne mineure",naissance_inconnue:"Date de naissance non lue",deja_utilisee:"Pièce déjà utilisée par un autre compte"};
+const dateId=s=>{if(!s)return "non lue";const d=new Date(s+"T12:00:00");return isNaN(d)?esc(s):d.toLocaleDateString("fr-CA",{day:"numeric",month:"long",year:"numeric"})};
 async function noterLieu(){if(LIEU_NOTE||!SESSION||!LIEU.actif())return null;LIEU_NOTE=true;
  try{const base=document.documentElement.dataset.natif?"https://habitascan.vercel.app":"";const r=await fetch(base+"/api/lieu",{cache:"no-store"});if(!r.ok)return null;const g=await r.json();
   await sb.rpc("noter_connexion",{p_pays:g.pays||"",p_region:g.region||"",p_ville:g.ville||"",p_appareil:appareilCourt()});return g}catch(e){return null}}
@@ -1120,12 +1134,24 @@ identite:()=>`${top("accueil","Identité")}
 <option value="permis">Permis de conduire (régulier, probatoire ou apprenti)</option><option value="passeport">Passeport</option><option value="rp">Carte de résident permanent</option></select></label>
 <label class="drop">${F.rectoUrl?`<img src="${F.rectoUrl}" alt="Recto">Changer la photo`:"Prendre en photo le recto"}<input type="file" accept="image/*" capture="environment" data-side="recto"></label>
 <label class="drop" ${F.doc==="passeport"?"hidden":""}>${F.versoUrl?`<img src="${F.versoUrl}" alt="Verso">Changer la photo`:"Prendre en photo le verso"}<input type="file" accept="image/*" capture="environment" data-side="verso"></label>
-<label style="flex-direction:row;align-items:flex-start;gap:10px;font-weight:500"><input type="checkbox" id="ok" style="width:22px;min-height:22px;margin-top:2px">J'accepte que la photo serve uniquement à confirmer mon identité, puis soit supprimée.</label>
+<label style="flex-direction:row;align-items:flex-start;gap:10px;font-weight:500"><input type="checkbox" id="ok" style="width:22px;min-height:22px;margin-top:2px">J'accepte que la photo soit lue automatiquement puis vérifiée par l'équipe, uniquement pour confirmer mon identité, puis supprimée.</label>
 <p class="hint">Détails dans la ${lienConfidentialite}.</p>
 <p class="err" id="e" hidden></p>
 <button class="btn" id="go">Envoyer pour vérification</button></form>
 <p class="hint">Pourquoi ? Seuls les comptes à l'identité confirmée peuvent signaler une annonce : ça évite les fausses accusations. Vérifier une annonce ne la demande jamais.</p>
-<p class="hint">Les photos sont envoyées dans un espace privé, au Canada. Seule l'équipe de vérification peut les voir ; elles sont supprimées après la vérification.</p>`,
+<p class="hint">Les photos sont envoyées dans un espace privé, au Canada. Pour gagner du temps, elles sont aussi lues par une IA (Anthropic, aux États-Unis), qui n'en garde aucune copie. Seule l'équipe de vérification peut les voir ; elles sont supprimées après la vérification.</p>`,
+
+identiteLecture:()=>{const L=F.lecture||{},al=(L.alertes||[]).filter(a=>a!=="deja_utilisee");return `${top("identite","Identité")}
+<h2>Vérifie ce que nous avons lu</h2><p class="soft">Lu automatiquement sur ta pièce. Notre équipe vérifiera ensuite la photo.</p>
+<div class="card"><dl class="details">
+<div><dt>Prénom</dt><dd>${esc(L.prenom||"non lu")}</dd></div><div><dt>Nom</dt><dd>${esc(L.nom||"non lu")}</dd></div>
+<div><dt>Date de naissance</dt><dd>${dateId(L.date_naissance)}</dd></div><div><dt>Expiration</dt><dd>${dateId(L.date_expiration)}</dd></div>
+<div><dt>Émise par</dt><dd>${esc(L.emetteur||"non lu")}</dd></div></dl>
+${al.length?`<ul class="reasons">${al.map(a=>`<li><span class="dot y"></span><div>${esc(ALERTES_ID[a]||a)}</div></li>`).join("")}</ul>`:""}
+<p class="err" id="e" hidden></p>
+<button class="btn" id="go">C'est exact, envoyer pour vérification</button>
+<button type="button" class="btn ghost" id="reprendre">Reprendre les photos</button></div>
+<p class="hint">Une fois l'identité confirmée, nous gardons seulement ton prénom, l'initiale de ton nom et la date d'expiration. Jamais le numéro de la pièce. Les photos sont supprimées après la vérification.</p>`},
 
 analyse:()=>`${top(null,F.titre||"Vérification")}<div class="spin" role="status" aria-label="En cours"></div><p class="soft" style="text-align:center">${F.msg||"En cours…"}</p>`,
 
@@ -1289,12 +1315,14 @@ function bind(v){
  if(v==="identite"){$("#doc").value=F.doc||"permis";$("#doc").onchange=e=>{F.doc=e.target.value;if(F.doc==="passeport"){F.verso=null;F.versoUrl=null}go("identite")};
   $("#f-id").onsubmit=async e=>{e.preventDefault();err("");const doc=F.doc||"permis";
    if(!F.recto)return err("Ajoute la photo du recto.");if(doc!=="passeport"&&!F.verso)return err("Ajoute la photo du verso.");if(!$("#ok").checked)return err("Coche la case pour continuer.");
-   busy(true,"Envoi sécurisé…");const uid=(await sb.auth.getUser()).data.user.id,stamp=Date.now();
-   for(const s of ["recto","verso"]){const f=F[s];if(!f)continue;const ext=(f.type.split("/")[1]||"jpg").replace("jpeg","jpg");
-    const {error}=await sb.storage.from("pieces-identite").upload(`${uid}/${stamp}-${s}.${ext}`,f,{contentType:f.type,upsert:false});
-    if(error){busy(false,"Réessayer");return err("L'envoi de la photo a échoué. Vérifie ta connexion (photo de 8 Mo maximum).")}}
-   const {error}=await sb.rpc("soumettre_identite",{doc_type:doc});if(error){busy(false,"Réessayer");return err("Une erreur est survenue. Réessaie.")}
-   F={};await chargerProfil();go("identiteOk")}}
+   busy(true,"Lecture de la pièce…");F.doc=doc;
+   try{const images=[await reduireImage(F.recto)];if(F.verso)images.push(await reduireImage(F.verso));
+    const {data,error}=await sb.functions.invoke("lire-identite",{body:{images,doc_type:doc}});
+    if(!error&&data&&!data.error){F.lecture=data;return go("identiteLecture")}}catch(x){}
+   /* Lecture indisponible (IA désactivée, quota, réseau) : vérification entièrement manuelle. */
+   return envoyerPiece()}}
+ if(v==="identiteLecture"){$("#go").onclick=()=>envoyerPiece();
+  $("#reprendre").onclick=()=>{F.recto=F.verso=F.rectoUrl=F.versoUrl=F.lecture=null;go("identite")}}
 
  if(v==="compte"&&$("#deco"))$("#deco").onclick=async()=>{await sb.auth.signOut();PROFIL=null;HIST=[];F={};SESSION=false;LIEU_NOTE=false;go("bienvenue")};
  if(v==="resultat"&&$("#signaler"))$("#signaler").onclick=()=>{const sig={lienN:F.lienN,ville:F.ville};LS.set("vl_sig",sig);
