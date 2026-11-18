@@ -1117,7 +1117,7 @@ identite:()=>`${top("accueil","Identité")}
 <h2>Confirme ton identité</h2><p class="soft">Une photo de ta pièce d'identité suffit. Pas de selfie.</p>
 <form class="card" id="f-id" novalidate>
 <label>Type de pièce<select id="doc">
-<option value="permis">Permis de conduire</option><option value="passeport">Passeport</option><option value="rp">Carte de résident permanent</option></select></label>
+<option value="permis">Permis de conduire (régulier, probatoire ou apprenti)</option><option value="passeport">Passeport</option><option value="rp">Carte de résident permanent</option></select></label>
 <label class="drop">${F.rectoUrl?`<img src="${F.rectoUrl}" alt="Recto">Changer la photo`:"Prendre en photo le recto"}<input type="file" accept="image/*" capture="environment" data-side="recto"></label>
 <label class="drop" ${F.doc==="passeport"?"hidden":""}>${F.versoUrl?`<img src="${F.versoUrl}" alt="Verso">Changer la photo`:"Prendre en photo le verso"}<input type="file" accept="image/*" capture="environment" data-side="verso"></label>
 <label style="flex-direction:row;align-items:flex-start;gap:10px;font-weight:500"><input type="checkbox" id="ok" style="width:22px;min-height:22px;margin-top:2px">J'accepte que la photo serve uniquement à confirmer mon identité, puis soit supprimée.</label>
