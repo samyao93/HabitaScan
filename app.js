@@ -955,6 +955,7 @@ ${m==="logement"?`<button class="btn" data-go="verifier">Vérifier une autre ann
 function vueCompte(){const st=CPT.statut();const nbH=HIS.liste().length;
  return `${top("accueil","Mon compte")}
 <div class="card compte-tete"><span class="avatar" aria-hidden="true">${esc((CPT.courriel()||"?").charAt(0).toUpperCase())}</span><div><b>${esc(CPT.courriel()||"")}</b><small style="color:${st.couleur}">● ${esc(st.t)}</small></div></div>
+${PROFIL&&["aucune","refusee"].includes(PROFIL.identite_statut||"aucune")?`<button class="btn ghost" data-go="identite">Confirmer mon identité<small>Une photo de ta pièce d'identité. Nécessaire seulement pour signaler une annonce.</small></button>`:PROFIL&&PROFIL.identite_statut==="en_attente"?`<p class="hint centre">Ta pièce d'identité est en vérification par notre équipe.</p>`:""}
 <div class="card menu">
 <button type="button" class="mrow" data-go="historique"><span>Mes vérifications</span><span class="soft num">${nbH}</span><span class="chev">›</span></button>
 ${ADM.estAdmin()?`<button type="button" class="mrow" data-go="admin" id="nouvA"><span>Espace admin</span><span class="soft">Réservé</span><span class="chev">›</span></button>`:""}
@@ -1000,7 +1001,7 @@ function bindPlus7(v){
   if(!b.dataset.ok){b.dataset.ok="1";b.textContent="Confirmer : retirer définitivement";return}
   b.disabled=true;try{await HIS.supprimer(F.verifId);go("historique")}catch(e){b.disabled=false;b.textContent="Réessayer";const er=$("#err");if(er)er.textContent="Le retrait n'a pas fonctionné. Réessaie."}}}
  if(v==="compte"&&$("#lieu-ok")){const c=$("#lieu-ok"),m=$("#lieu-msg");c.onchange=async()=>{c.disabled=true;
-  try{await LIEU.definir(c.checked);try{localStorage.setItem(CLE_LIEU_REP,"1")}catch(e){}m.textContent=c.checked?"Activé. Ta ville approximative sera notée à ta prochaine connexion.":"Désactivé. Ton historique de lieux a été effacé."}
+  try{const g=await LIEU.definir(c.checked);try{localStorage.setItem(CLE_LIEU_REP,"1")}catch(e){}m.textContent=!c.checked?"Désactivé. Ton historique de lieux a été effacé.":g&&g.ville?`Activé. Ville notée pour cette connexion : ${g.ville}${g.region?" ("+g.region+")":""}. Seuls les administrateurs la voient.`:"Activé. Ta ville approximative sera notée à chaque connexion. Seuls les administrateurs la voient."}
   catch(e){c.checked=!c.checked;m.textContent="Le changement n'a pas fonctionné. Réessaie."}c.disabled=false}}
  if(v==="accueil"&&$("#inv-lieu")){const fin=async oui=>{try{localStorage.setItem(CLE_LIEU_REP,"1")}catch(e){}
    if(oui){try{await LIEU.definir(true)}catch(e){}}const el=$("#inv-lieu");if(el)el.outerHTML=oui?`<p class="hint centre">Merci. Tu peux changer ce choix dans Mon compte.</p>`:""};
@@ -1068,12 +1069,12 @@ const appareilCourt=()=>{const u=navigator.userAgent;const os=/iPhone|iPad/.test
  const nav=/Edg\//.test(u)?"Edge":/SamsungBrowser/.test(u)?"Samsung":/Firefox|FxiOS/.test(u)?"Firefox":/Chrome|CriOS/.test(u)?"Chrome":/Safari/.test(u)?"Safari":"Autre";return os+" · "+nav};
 let LIEU_NOTE=false;
 const LIEU={dispo:true,demo:false,actif:()=>!!(PROFIL&&PROFIL.partage_lieu),
- async definir(b){await rpc("definir_partage_lieu",{p_actif:b});if(PROFIL)PROFIL.partage_lieu=b;if(b){LIEU_NOTE=false;noterLieu()}},
+ async definir(b){await rpc("definir_partage_lieu",{p_actif:b});if(PROFIL)PROFIL.partage_lieu=b;if(b){LIEU_NOTE=false;return noterLieu()}return null},
  };
 /* Une fois par ouverture de l'app, seulement si la personne l'a activé */
-async function noterLieu(){if(LIEU_NOTE||!SESSION||!LIEU.actif())return;LIEU_NOTE=true;
- try{const r=await fetch("/api/lieu",{cache:"no-store"});if(!r.ok)return;const g=await r.json();
-  await sb.rpc("noter_connexion",{p_pays:g.pays||"",p_region:g.region||"",p_ville:g.ville||"",p_appareil:appareilCourt()})}catch(e){}}
+async function noterLieu(){if(LIEU_NOTE||!SESSION||!LIEU.actif())return null;LIEU_NOTE=true;
+ try{const base=document.documentElement.dataset.natif?"https://habitascan.vercel.app":"";const r=await fetch(base+"/api/lieu",{cache:"no-store"});if(!r.ok)return null;const g=await r.json();
+  await sb.rpc("noter_connexion",{p_pays:g.pays||"",p_region:g.region||"",p_ville:g.ville||"",p_appareil:appareilCourt()});return g}catch(e){return null}}
 Object.assign(ADM,{console:"/admin",connexions:()=>rpc("admin_connexions").then(d=>d||[]),lieuxResume:()=>rpc("admin_lieux_resume").then(d=>d||[]),
  partageStats:()=>rpc("admin_partage_stats").then(d=>(d&&d[0])||{partagent:0,total:0})});
 document.head.insertAdjacentHTML("beforeend","<style>"+CSS_PLUS7+"</style>");
