@@ -1253,13 +1253,14 @@ bienvenue:()=>`${top()}
 <li><b>Confirme le vrai propriétaire</b> grâce aux registres publics du Québec.</li>
 <li><b>Calcule ton budget</b> et trouve un logement à ta mesure.</li></ul>
 <button class="btn" data-go="inscription" id="commencer">Commencer gratuitement</button>
+<p class="centre" style="margin:-4px 0 2px"><button type="button" class="lienbtn" data-go="inscription">Déjà inscrit ? Me connecter</button></p>
 <button class="btn ghost" data-go="victime">J'ai été victime d'une arnaque</button>
 <ul class="confiance"><li>Gratuit</li><li>Conforme à la Loi 25</li><li>Sources publiques officielles</li><li>Fait au Québec</li></ul>
 <p class="hint centre"><a href="/">En savoir plus</a> · <a href="/guides/arnaques-courantes">Arnaques courantes</a> · <a href="/en" lang="en" hreflang="en">English</a></p>
 <p class="hint pied">${lienConditions.replace("conditions d'utilisation","Conditions d'utilisation")}${lienConfidentialite.replace("politique de confidentialité","Confidentialité")}</p>`,
 
-inscription:()=>{const t=F.canal||"courriel";return `${top("bienvenue","Inscription")}
-<h2>Crée ton compte ou connecte-toi</h2><p class="soft">Pas de mot de passe : tu reçois un code à 6 chiffres. Même chose pour te reconnecter sur un autre appareil.</p>
+inscription:()=>{const t=F.canal||"courriel";return `${top("bienvenue","Connexion")}
+<h2>Connecte-toi</h2><p class="soft">Entre ton courriel ou ton numéro. <b>Déjà inscrit ?</b> Tu retrouves ton compte et ton historique. <b>Nouveau ?</b> Ton compte est créé. Pas de mot de passe : tu reçois un code à 6 chiffres.</p>
 <form class="card" id="f-ins" novalidate>
 <div class="seg" role="group" aria-label="Moyen de connexion">
 <button type="button" data-canal="courriel" aria-pressed="${t==="courriel"}">Courriel</button>
