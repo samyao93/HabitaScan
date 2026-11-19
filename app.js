@@ -466,7 +466,7 @@ ${r.exemple?`<button class="btn" data-verif="${i}">Vérifier</button>`:`<div cla
 </div></article>`}
 /* Liens vers les sites, avec les critères du formulaire déjà appliqués quand le site le permet.
    Kijiji : adresses vérifiées (catégorie appartements c37, lieu, ?numberbedrooms=, ?price=__max).
-   Facebook Marketplace : maxPrice et minBedrooms (non documentés par Facebook : si ignorés, la page reste utilisable). */
+   Facebook Marketplace : n'applique pas les filtres passés dans l'adresse ; on affiche les critères à reporter. */
 const KIJIJI_LIEUX={"Montréal":["ville-de-montreal","l1700281"],"Québec":["ville-de-quebec","l1700124"],"Gatineau":["gatineau","l1700186"],
  "Sherbrooke":["sherbrooke-qc","l1700156"],"Saguenay":["saguenay-lac-saint-jean","l1700178","Saguenay–Lac-Saint-Jean"],"Rimouski":["rimouski-bas-st-laurent","l1700250","Bas-Saint-Laurent"],
  "Rivière-du-Loup":["rimouski-bas-st-laurent","l1700250","Bas-Saint-Laurent"],"Trois-Rivières":["mauricie","l1700147","Mauricie"],"Drummondville":["centre-du-quebec","l1700121","Centre-du-Québec"]};
@@ -474,17 +474,16 @@ const FB_VILLES={"Montréal":"montreal"};
 function lienKijiji(f){const l=KIJIJI_LIEUX[f.ville];if(!l)return null;const p=new URLSearchParams();
  if(f.ch)p.set("numberbedrooms",f.ch==="3"?"3,4":f.ch);if(f.max)p.set("price","__"+f.max);
  const q=p.toString();return `https://www.kijiji.ca/b-appartement-condo/${l[0]}/c37${l[1]}${q?"?"+q:""}`}
-function lienFacebook(f){const p=new URLSearchParams();if(f.max)p.set("maxPrice",f.max);if(f.ch)p.set("minBedrooms",f.ch);p.set("exact","false");
- const v=FB_VILLES[f.ville];return `https://www.facebook.com/marketplace/${v?v+"/propertyrentals":"category/propertyrentals"}?${p}`}
+function lienFacebook(f){const v=FB_VILLES[f.ville];return `https://www.facebook.com/marketplace/${v?v+"/propertyrentals":"category/propertyrentals"}`}
 function liensSites(f){const ch=f.ch==="3"?"3 chambres":f.ch?f.ch+" chambres":"";const taille=f.ch?`${+f.ch+2} 1/2 `:"";
  const q=`${taille}à louer ${ch} ${f.ville}`.replace(/\s+/g," ").trim();
  const g=site=>`https://www.google.com/search?q=${encodeURIComponent(q+" site:"+site)}&tbs=qdr:w`;
  const crit=[f.ville,f.ch?(f.ch==="3"?"3 ch. et plus":f.ch+" ch."):"",f.max?"max "+m0(+f.max):""].filter(Boolean).join(" · ");
  const kj=lienKijiji(f),reg=KIJIJI_LIEUX[f.ville]&&KIJIJI_LIEUX[f.ville][2];
  const lien=(href,nom,sous)=>`<a class="btn ghost lienbouton" href="${esc(href)}" target="_blank" rel="noopener">${nom}<small>${sous}</small></a>`;
- return `<div class="card"><h2>Chercher aussi directement</h2><p class="hint">Les liens s'ouvrent avec tes critères (${esc(crit)}) quand le site le permet. Trouve une annonce, puis reviens la vérifier.</p>
+ return `<div class="card"><h2>Chercher aussi directement</h2><p class="hint">Kijiji s'ouvre avec tes critères (${esc(crit)}) déjà appliqués ; pour les autres sites, ajoute-les dans leurs filtres. Trouve une annonce, puis reviens la vérifier.</p>
 <div class="choix-accueil sites">
-${lien(lienFacebook(f),"Facebook Marketplace",`${FB_VILLES[f.ville]?esc(f.ville)+" · ":""}${f.ch?"chambres et ":""}prix déjà filtrés${FB_VILLES[f.ville]?"":" · choisis la ville"}`)}
+${lien(lienFacebook(f),"Facebook Marketplace",`${FB_VILLES[f.ville]?"Ajoute":"Choisis "+esc(f.ville)+", puis ajoute"} dans les filtres : ${esc([f.ch?(f.ch==="3"?"3 ch. et plus":f.ch+" ch."):"",f.max?"max "+m0(+f.max):""].filter(Boolean).join(" · ")||"tes critères")}`)}
 ${kj?lien(kj,"Kijiji",`${reg?"Région "+esc(reg):esc(f.ville)} · filtres déjà appliqués`):lien(g("kijiji.ca"),"Kijiji","Annonces des 7 derniers jours")}
 ${[["centris.ca","Centris (courtiers)"],["kangalou.com","Kangalou"],["logisquebec.com","LogisQuébec"],["louer.ca","Louer.ca"],["lespac.com","LesPAC"]].map(([d,n])=>lien(g(d),n,`${esc(taille.trim()||"Logements")} à ${esc(f.ville)} · 7 derniers jours`)).join("")}
 </div></div>`}
@@ -871,7 +870,7 @@ document.head.insertAdjacentHTML("beforeend","<style>"+CSS_PLUS4+"</style>");
 /* Adaptateur mesure (Supabase : fonctions noter, noter_erreur, admin_mesure) */
 const MES={noter(t){sb.rpc("noter",{p_type:t}).then(()=>{},()=>{})},erreur(m,v){sb.rpc("noter_erreur",{p_message:m,p_vue:v||null,p_agent:navigator.userAgent.slice(0,160)}).then(()=>{},()=>{})},admin:()=>rpc("admin_mesure")};
 document.head.insertAdjacentHTML("beforeend","<style>"+CSS_PLUS5+"</style>");
-/* ===== HabitaScan : analyse intelligente (IA) de l'annonce et de la conversation (commun démo + Supabase) =====
+/* ===== HabitaScan : analyse intelligente de l'annonce et de la conversation (commun démo + Supabase) =====
    L'IA extrait les champs et repère les signaux, avec citation. Le verdict reste calculé par les règles.
    Dépend de : F, $, app, go, esc, keep, LOYERS, appliquerLecture, MES ; adaptateur IA_ADAPT : {dispo, analyser({images, texte})} */
 const CLE_IA="hs_ia";
@@ -880,8 +879,8 @@ const SIGNAUX_IA={argent_avant_bail:"Argent demandé avant la signature du bail"
  proprietaire_absent:"Propriétaire « à l'étranger » ou absent",refus_visite:"Visite refusée ou repoussée",urgence:"Pression pour décider vite",
  changement_plateforme:"Demande de continuer sur une autre messagerie",pieces_identite_demandees:"Documents personnels demandés trop tôt",
  prix_anormal_annonce:"Prix présenté comme exceptionnellement bas",autre:"Autre élément inhabituel"};
-const blocIA=()=>IA_ADAPT.dispo?(!iaChoisi()?"":`<label class="ia-opt"><input type="checkbox" id="ia-ok" ${iaActif()?"checked":""}><span><b>Analyse intelligente</b> (IA)<span class="hint">Comprend mieux les captures et la conversation, aussi en anglais. Les images et le texte sont envoyés à Anthropic pour l'analyse, puis oubliés par HabitaScan.</span></span></label>`)
- :`<p class="hint">L'analyse intelligente (IA) est offerte dans la vraie app, pas dans cette démo.</p>`;
+const blocIA=()=>IA_ADAPT.dispo?(!iaChoisi()?"":`<label class="ia-opt"><input type="checkbox" id="ia-ok" ${iaActif()?"checked":""}><span><b>Analyse intelligente</b><span class="hint">Comprend mieux les captures et la conversation, aussi en anglais. Les images et le texte sont envoyés à Anthropic pour l'analyse, puis oubliés par HabitaScan.</span></span></label>`)
+ :`<p class="hint">L'analyse intelligente est offerte dans la vraie app, pas dans cette démo.</p>`;
 /* Réduit une capture à 1 280 px de large au maximum, en JPEG, pour limiter l'envoi */
 function reduireImage(source){return new Promise((ok,ko)=>{const im=new Image();const dataUrl=typeof source==="string"?source:URL.createObjectURL(source);im.onload=()=>{const k=Math.min(1,1280/Math.max(im.width,1));
  const c=document.createElement("canvas");c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext("2d").drawImage(im,0,0,c.width,c.height);
@@ -897,7 +896,7 @@ function appliquerIA(r){F.ia=r;const villes=Object.keys(LOYERS);
  const lus=[r.prix?`${r.prix} $`:"",r.ville||"",r.chambres?`${r.chambres} ch.`:"",r.cession?"cession de bail":""].filter(Boolean).join(", ");
  const n=(r.signaux||[]).length;
  F.lu=`<b>Lu par l'IA :</b> ${esc((lus||"aucune information claire").replace(/\.$/,""))}. ${n?`<b>${n>1?n+" signaux repérés":"1 signal repéré"}</b> : tu les verras dans le résultat.`:"Aucun signal d'arnaque repéré dans le texte."} Vérifie les champs et réponds aux questions.`}
-function itemsIA(F){const r=F.ia;if(!r)return [];const it=(r.signaux||[]).map(s=>({c:"y",t:`<b>${esc(SIGNAUX_IA[s.type]||"Élément inhabituel")}</b> : « ${esc(s.extrait)} »${s.explication?` ${esc(s.explication)}`:""}`,law:"Repéré par l'analyse intelligente (IA). Vérifie dans l'annonce."}));
+function itemsIA(F){const r=F.ia;if(!r)return [];const it=(r.signaux||[]).map(s=>({c:"y",t:`<b>${esc(SIGNAUX_IA[s.type]||"Élément inhabituel")}</b> : « ${esc(s.extrait)} »${s.explication?` ${esc(s.explication)}`:""}`,law:"Repéré par l'analyse intelligente. Vérifie dans l'annonce."}));
  if(r.resume)it.push({c:"i",t:`<b>Résumé de l'IA :</b> ${esc(r.resume)}`});return it}
 function bindPlus6(v){if(v!=="verifier")return;const c=$("#ia-ok");if(c)c.onchange=()=>{try{localStorage.setItem(CLE_IA,c.checked?"1":"0")}catch(e){}}}
 /* Lance l'analyse IA sur les captures (remplace la lecture locale) ; en cas d'échec, revient à la lecture locale */
@@ -989,7 +988,7 @@ ${ADM.estAdmin()?`<button type="button" class="mrow" data-go="admin" id="nouvA">
 ${LIEU.dispo?`<div class="card"><h2>Confidentialité</h2>
 <label class="interrupteur"><span><b>Partager ma ville approximative de connexion</b><small>Désactivé par défaut. Si tu l'actives, nous gardons la ville et la région déduites de ton adresse IP (pas ton adresse, pas ta position GPS) à chaque connexion, pendant 90 jours au plus. Seuls les administrateurs la voient, pour détecter l'usage frauduleux d'un compte et savoir quelles régions nous servons. Tu peux le désactiver en tout temps : l'historique de lieux est alors effacé.</small></span>
 <input type="checkbox" role="switch" id="lieu-ok" ${LIEU.actif()?"checked":""}></label><p class="hint" id="lieu-msg" aria-live="polite"></p></div>`:""}
-${IA_ADAPT.dispo?`<div class="card"><label class="interrupteur"><span><b>Analyse intelligente (IA)</b><small>Comprend le sens des annonces et des conversations, pas seulement des mots. Le texte et les captures sont envoyés à Anthropic (États-Unis) pour l'analyse, puis oubliés. Désactivée tant que tu ne l'actives pas.</small></span><input type="checkbox" role="switch" id="ia-compte" ${iaActif()?"checked":""}></label></div>`:""}
+${IA_ADAPT.dispo?`<div class="card"><label class="interrupteur"><span><b>Analyse intelligente</b><small>Comprend le sens des annonces et des conversations, pas seulement des mots. Le texte et les captures sont envoyés à Anthropic (États-Unis) pour l'analyse, puis oubliés. Désactivée tant que tu ne l'actives pas.</small></span><input type="checkbox" role="switch" id="ia-compte" ${iaActif()?"checked":""}></label></div>`:""}
 <div class="card menu">
 <button type="button" class="mrow" data-go="conditions"><span>Conditions d'utilisation</span><span class="chev">›</span></button>
 <button type="button" class="mrow" data-go="confidentialite"><span>Politique de confidentialité</span><span class="chev">›</span></button>
@@ -1087,7 +1086,7 @@ function blocFiltre(){const lang=F.flang||"fr",ces=F.cession==="oui";const msg=F
 ${typeof navigator!=="undefined"&&navigator.share?`<div class="duo"><button type="button" class="btn" id="f-copier">Copier le message</button><button type="button" class="btn ghost" id="f-partager">Partager</button></div>`:`<button type="button" class="btn" id="f-copier">Copier le message</button>`}
 <label for="f-rep" style="margin-top:14px">Colle sa réponse ici</label><textarea id="f-rep" rows="4" maxlength="3000" placeholder="La réponse de l'annonceur…">${esc(F.frepTxt||"")}</textarea>
 <label class="drop" style="margin-top:4px">${(F.fcaps||[]).length?`<b>${F.fcaps.length} capture${F.fcaps.length>1?"s":""} de la discussion</b> · toucher pour changer`:"Ajouter des captures de la discussion (facultatif)"}<input type="file" accept="image/*" multiple id="f-caps"></label>
-${IA_ADAPT.dispo?`<label class="ia-opt"><input type="checkbox" id="f-ia" ${iaActif()?"checked":""}><span><b>Analyse intelligente de la conversation</b> (IA)<span class="hint">Lit sa réponse et tes captures de la discussion, aussi en anglais : c'est là que les fraudeurs se trahissent. Envoyées à Anthropic pour l'analyse, puis oubliées.</span></span></label>`:""}
+${IA_ADAPT.dispo?`<label class="ia-opt"><input type="checkbox" id="f-ia" ${iaActif()?"checked":""}><span><b>Analyse intelligente de la conversation</b><span class="hint">Lit sa réponse et tes captures de la discussion, aussi en anglais : c'est là que les fraudeurs se trahissent. Envoyées à Anthropic pour l'analyse, puis oubliées.</span></span></label>`:""}
 <button type="button" class="btn ghost" id="f-lire">Analyser sa réponse</button>
 ${A?`<div class="verdict ${A.c}" id="f-res" role="status"><strong>${A.t}</strong><span>${A.s}</span></div>${A.signaux.length?`<ul class="reasons">${A.signaux.map(z=>`<li><span class="dot ${z.c}"></span><div>${z.m}</div></li>`).join("")}</ul>`:""}`:""}
 ${A&&!A.ia&&A.c!=="r"&&IA_ADAPT.dispo&&!iaActif()?`<div class="lu"><b>Aucun mot suspect, mais un fraudeur prudent peut les éviter.</b> L'IA lit le sens de sa réponse.<button type="button" class="btn ghost" id="f-ia-go" style="margin-top:10px">Faire lire sa réponse par l'IA</button></div>`:""}
