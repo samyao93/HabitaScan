@@ -108,6 +108,8 @@ Chaque signalement d'un utilisateur à l'identité confirmée avertit les suivan
 - Console admin, onglet Signalements : voir et retirer ces signalements.
 - Migration : `supabase/migrations/20261119_memoire_collective.sql` (à coller dans SQL Editor si elle n'est pas encore appliquée).
 
+**Annonce recopiée ailleurs** (autre site, autre lien, autre numéro) : chaque vérification garde l'empreinte des photos du logement et du texte de l'annonce (table `verifications`, colonnes `photos` et `texte_empreinte`). La fonction `retrouver_annonce` retrouve la même annonce vérifiée par d'autres : autre prix ou autre ville = jaune ; déjà « Ne paie pas » = jaune ou rouge ; même prix sans alerte = simple information (un vrai propriétaire publie souvent sur plusieurs sites). Migration : `supabase/migrations/20261119b_annonces_recopiees.sql` (déjà appliquée).
+
 ## 7. Espace admin et confidentialité
 
 **Espace admin** : connecte-toi dans l'app avec le compte déclaré admin (section 1). Un bouton « Espace admin » apparaît à l'accueil, visible seulement pour toi. Il a 4 onglets :

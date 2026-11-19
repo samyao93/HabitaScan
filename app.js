@@ -547,7 +547,7 @@ function vueConfidentialite(back){const R=RESPONSABLE;
 <p class="hint">Écris-lui pour toute question, demande d'accès, de correction ou de suppression, ou pour porter plainte.</p></div>
 <div class="card"><h2>Ce que nous recueillons</h2>${t([
  ["Courriel ou cellulaire","Te connecter avec un code, retrouver ton compte, compter les utilisateurs"],
- ["Résumé de tes vérifications : ville, chambres, loyer, lien, résultat ; travaux et licence RBQ","Ton historique. Pour un même lien, les autres voient seulement un nombre"],
+ ["Résumé de tes vérifications : ville, chambres, loyer, lien, résultat ; travaux et licence RBQ ; empreintes non réversibles des photos et du texte de l'annonce (jamais les photos ni le texte eux-mêmes)","Ton historique, et reconnaître la même annonce publiée ailleurs. Les autres voient seulement des nombres, des prix et des villes, jamais qui a vérifié"],
  ["Signalement : lien de l'annonce, numéros de téléphone et courriels de l'annonceur (seulement en empreinte chiffrée, jamais en clair), empreinte visuelle des photos (la photo ne quitte pas ton téléphone), et motif","Avertir les autres utilisateurs (mémoire collective). Ils voient seulement un nombre"],
  ["Photo de pièce d'identité, seulement pour signaler","Éviter les fausses accusations. Lue automatiquement pour pré-remplir les informations, puis vérifiée par l'équipe. Supprimée après la vérification"],
  ["Informations lues sur la pièce : prénom, nom, année de naissance, date d'expiration, province ou pays ; empreinte chiffrée du numéro (jamais le numéro lui-même)","Vérifier l'identité, repérer une pièce expirée, une personne mineure ou une pièce utilisée par deux comptes. Une fois l'identité confirmée, seuls le prénom, l'initiale du nom et la date d'expiration sont gardés ; tout est effacé si elle est refusée"],
@@ -1115,14 +1115,31 @@ function fusionContacts(a,b){a=a||{};b=b||{};
  const cour=[...(a.courriels||[]),...(b.courriels||[]).map(x=>String(x).trim().toLowerCase())].filter(x=>/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/.test(x));
  return {tels:[...new Set(tels)].slice(0,5),courriels:[...new Set(cour)].slice(0,5)}}
 /* Empreinte visuelle (dHash 64 bits) : la même photo, même redimensionnée ou recompressée, garde presque la même empreinte. */
-function empreintePhoto(source){return new Promise(ok=>{const im=new Image();im.onload=()=>{try{
+function empreintePhoto(source,rogner){return new Promise(ok=>{const im=new Image();im.onload=()=>{try{
+ const r=rogner?0.1:0,sx=im.width*r,sy=im.height*r,sw=im.width*(1-2*r),sh=im.height*(1-2*r);
  /* Réduction en deux temps (lissée), puis moyenne par blocs : stable malgré le redimensionnement et la compression. */
  const W=72,Hh=64,c=document.createElement("canvas");c.width=W;c.height=Hh;const x=c.getContext("2d");x.imageSmoothingEnabled=true;x.imageSmoothingQuality="high";
- const t=document.createElement("canvas");t.width=288;t.height=256;const tx=t.getContext("2d");tx.imageSmoothingEnabled=true;tx.imageSmoothingQuality="high";tx.drawImage(im,0,0,288,256);x.drawImage(t,0,0,W,Hh);
+ const t=document.createElement("canvas");t.width=288;t.height=256;const tx=t.getContext("2d");tx.imageSmoothingEnabled=true;tx.imageSmoothingQuality="high";tx.drawImage(im,sx,sy,sw,sh,0,0,288,256);x.drawImage(t,0,0,W,Hh);
  const d=x.getImageData(0,0,W,Hh).data,v=[];for(let by=0;by<8;by++)for(let bx=0;bx<9;bx++){let s=0;for(let yy=0;yy<8;yy++)for(let xx=0;xx<8;xx++){const p=((by*8+yy)*W+bx*8+xx)*4;s+=d[p]*.299+d[p+1]*.587+d[p+2]*.114}v.push(s)}
  let bits="";for(let y=0;y<8;y++)for(let i=0;i<8;i++)bits+=v[y*9+i]>v[y*9+i+1]?"1":"0";
  let h="";for(let k=0;k<64;k+=4)h+=parseInt(bits.slice(k,k+4),2).toString(16);ok(h)}catch(e){ok(null)}};im.onerror=()=>ok(null);im.src=typeof source==="string"?source:URL.createObjectURL(source)})}
-async function empreintesPhotos(fichiers){const L=[];for(const f of (fichiers||[]).slice(0,8)){const h=await empreintePhoto(f);if(h&&!/^0+$|^f+$/.test(h))L.push(h)}return [...new Set(L)]}
+async function empreintesPhotos(fichiers,rogner){const L=[];for(const f of (fichiers||[]).slice(0,8)){for(const rg of rogner?[false,true]:[false]){const h=await empreintePhoto(f,rg);if(h&&!/^0+$|^f+$/.test(h))L.push(h)}}return [...new Set(L)]}
+/* Empreinte du texte (SimHash 64 bits) : deux textes presque identiques (annonce recopiée) donnent presque la même empreinte. */
+function empreinteTexte(t){const mots=String(t||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z\s]/g," ").split(/\s+/).filter(m=>m.length>=3);
+ if(mots.length<12)return null;const v=new Array(64).fill(0);
+ const h32=(s,g)=>{let h=2166136261^g;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0};
+ for(let i=0;i+2<mots.length;i++){const s=mots[i]+" "+mots[i+1]+" "+mots[i+2],a=h32(s,0),b=h32(s,0x9e3779b9);for(let k=0;k<32;k++){v[k]+=(a>>>k)&1?1:-1;v[32+k]+=(b>>>k)&1?1:-1}}
+ let bits="";for(let k=0;k<64;k++)bits+=v[k]>0?"1":"0";let h="";for(let k=0;k<64;k+=4)h+=parseInt(bits.slice(k,k+4),2).toString(16);return h}
+async function retrouverAnnonce(){if(!SESSION||(!F.photos.length&&!F.texteEmp))return null;
+ try{const {data,error}=await sb.rpc("retrouver_annonce",{p_photos:F.photos,p_texte:F.texteEmp,p_prix:F.prixN||null,p_ville:F.ville||null,p_lien:F.lienN||null});return error?null:data}catch(e){return null}}
+function itemsRecopie(r){const it=[];if(!r||!r.vues)return it;const n=+r.vues,rg=+r.rouges||0;
+ const pers=x=>x>1?`${x} personnes`:"une personne";
+ if((r.autres_prix||[]).length)it.push({c:"y",t:`<b>Les mêmes photos ou le même texte apparaissent dans une autre annonce, à un autre prix</b> (${r.autres_prix.map(p=>money(+p)).join(", ")}). Une annonce copiée avec un prix différent est un signe classique de fraude.`,law:"Mémoire collective HabitaScan : vérifications faites par d'autres utilisateurs, sur d'autres sites."});
+ if((r.autres_villes||[]).length)it.push({c:"y",t:`<b>Les mêmes photos ou le même texte ont été vus dans une annonce d'une autre ville</b> (${r.autres_villes.map(esc).join(", ")}). Les fraudeurs réutilisent les photos d'un logement ailleurs.`,law:"Mémoire collective HabitaScan."});
+ if(rg)it.push({c:rg>=2?"r":"y",t:`<b>Cette annonce a déjà été vérifiée ailleurs par ${pers(n)}, dont ${rg} avec le résultat «&nbsp;Ne paie pas&nbsp;».</b> Mêmes photos ou même texte, sur un autre lien.`,law:"Mémoire collective HabitaScan."});
+ else if(!it.length)it.push({c:"i",t:`<b>Cette annonce (mêmes photos ou même texte, même prix) a déjà été vue sur un autre site par ${pers(n)}.</b> C'est normal si le propriétaire la publie à plusieurs endroits : compare simplement le numéro et le nom de l'annonceur.`,law:"Mémoire collective HabitaScan."});
+ return it}
+
 async function memoire(c,photos){c=c||{tels:[],courriels:[]};if(!SESSION||(!c.tels.length&&!c.courriels.length&&!(photos||[]).length))return null;
  try{const {data,error}=await sb.rpc("memoire_collective",{p_tels:c.tels,p_courriels:c.courriels,p_photos:photos||[]});return error?null:data}catch(e){return null}}
 function itemsMemoire(m){const it=[];if(!m)return it;
@@ -1241,7 +1258,8 @@ ${blocHistorique()}
 verifier:()=>`${top("accueil","Vérifier")}
 <h2>L'annonce</h2>
 <form class="card" id="f-ver" novalidate>
-<label class="drop drop-grand">${F.vignettes&&F.vignettes.length?`<span class="vignettes">${F.vignettes.map(u=>`<img src="${u}" alt="Capture">`).join("")}</span>Changer les captures`:`<b>Ajoute des captures d'écran</b><span>L'annonce et, si tu l'as, la conversation. Ajoute surtout la conversation avec l'annonceur : c'est là que les fraudeurs se trahissent.</span>`}<input type="file" accept="image/*" multiple data-captures="1"></label>
+<label class="drop drop-grand">${F.vignettes&&F.vignettes.length?`<span class="vignettes">${F.vignettes.map(u=>`<img src="${u}" alt="Capture">`).join("")}</span>Changer les captures`:`<b>Ajoute des captures d'écran</b><span>L'annonce, et surtout la conversation avec l'annonceur : c'est là que les fraudeurs se trahissent.</span>`}<input type="file" accept="image/*" multiple data-captures="1"></label>
+<label class="drop">${(F.photosLog||[]).length?`<b>${F.photosLog.length} photo${F.photosLog.length>1?"s":""} du logement</b> · toucher pour changer`:`<b>Ajoute 1 ou 2 photos du logement</b> (facultatif)<br><span class="hint">Enregistre-les depuis l'annonce (appui long sur la photo). Elles permettent de retrouver la même annonce publiée ailleurs, même avec un autre lien ou un autre numéro. Elles ne quittent pas ton téléphone.</span>`}<input type="file" accept="image/*" multiple id="photos-log"></label>
 ${blocIA()}
 ${F.lu?`<p class="lu" role="status">${F.lu}</p>`:""}
 <details class="coller" ${F.coller?"open":""}><summary>ou coller le texte</summary>
@@ -1349,6 +1367,7 @@ function bind(v){
  app.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{if(b.id==="nouvR")F={};go(b.dataset.go)});
  app.querySelectorAll("[data-canal]").forEach(b=>b.onclick=()=>{F.canal=b.dataset.canal;F.ident="";go("inscription")});
  app.querySelectorAll("[data-yn]").forEach(b=>b.onclick=()=>{F[b.dataset.yn]=b.dataset.v;b.parentNode.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b));if(b.dataset.yn==="cession")$("#q-accord").hidden=b.dataset.v!=="oui"});
+ {const pl=$("#photos-log");if(pl)pl.onchange=()=>{const fs=[...pl.files].slice(0,4);if(!fs.length)return;keep();F.photosLog=fs;go("verifier")}}
  app.querySelectorAll("input[data-captures]").forEach(inp=>inp.onchange=()=>{const fs=[...inp.files].slice(0,4);if(!fs.length)return;keep();
   F.captures=fs;F.vignettes=fs.map(f=>URL.createObjectURL(f));F.capture=fs[0];F.ocr=true;F.iaOff=false;F.ia=null;go(v)});
  app.querySelectorAll("input[type=file][data-side]").forEach(inp=>inp.onchange=()=>{const f=inp.files[0];if(!f)return;const s=inp.dataset.side;F[s]=f;F[s+"Url"]=URL.createObjectURL(f);keep();lireReno(F);if(v==="verifier"&&s==="capture")F.ocr=true;go(v)});
@@ -1413,10 +1432,13 @@ function bind(v){
   if(F.lienN&&SESSION){const [a,b]=await Promise.all([sb.rpc("stats_lien",{p_lien:F.lienN}),sb.rpc("nb_signalements",{p_lien:F.lienN})]);F.stats=a.data&&a.data[0];F.nbSig=+b.data||0}
   if(F.capture)F.images=await rechercheImages(F.capture);
   F.contacts=fusionContacts(extraireContacts(F.contact,F.annonce,F.ocrTxt,F.txt),{tels:(F.ia||{}).telephones,courriels:(F.ia||{}).courriels});
-  F.photos=await empreintesPhotos(F.captures);F.mem=await memoire(F.contacts,F.photos);
+  F.photos=[...new Set([...(await empreintesPhotos(F.photosLog,true)),...(await empreintesPhotos(F.captures))])].slice(0,12);
+  F.texteEmp=empreinteTexte(F.annonce&&F.annonce.length>80?F.annonce:F.ocrTxt||F.annonce);
+  [F.mem,F.copie]=await Promise.all([memoire(F.contacts,F.photos),retrouverAnnonce()]);
   F.res=analyser();
   const brut=F.res.items.map(i=>({c:i.c,t:String(i.t).slice(0,1500),law:String(i.law||"").slice(0,800)}));
-  const ins=SESSION?sb.from("verifications").insert({ville:F.ville,chambres:+F.ch,prix:F.prixN,couleur:F.res.c,raisons:brut,lien:F.lienN}):Promise.resolve();
+  const base={ville:F.ville,chambres:+F.ch,prix:F.prixN,couleur:F.res.c,raisons:brut,lien:F.lienN};
+  const ins=!SESSION?Promise.resolve():sb.from("verifications").insert({...base,photos:F.photos.length?F.photos:null,texte_empreinte:F.texteEmp||null}).then(r=>r&&r.error?sb.from("verifications").insert(base):r);
   await Promise.all([ins,new Promise(r=>setTimeout(r,900))]);await chargerProfil();go("resultat")}}
  if(v==="resultat")$("#nouv").onclick=()=>{F={};go("verifier")};
 
@@ -1451,6 +1473,7 @@ function analyser(){
   else if(st&&+st.total>0)it.push({c:"i",t:`Cette annonce a déjà été vérifiée ${st.total} fois, sans arnaque probable.`});
   const sg=itemSignalements(F.nbSig);if(sg)it.push(sg);}
  itemsMemoire(F.mem).forEach(x=>it.push(x));
+ itemsRecopie(F.copie).forEach(x=>it.push(x));
  if(F.images&&F.images.pages&&F.images.pages.length)it.push({c:"y",t:`<b>Ces images apparaissent sur ${F.images.pages.length} autre${F.images.pages.length>1?"s":""} page${F.images.pages.length>1?"s":""} du web.</b> Les fraudeurs copient souvent les photos d'une vraie annonce. ${F.images.pages.slice(0,3).map(u=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(new URL(u).hostname)}</a>`).join(", ")}`,law:"Recherche d'image inversée (Google Vision)"});
  else if(F.images&&F.images.ok)it.push({c:"g",t:"Les images de la capture n'ont pas été trouvées ailleurs sur le web."});
  if(!F.images)it.push({c:"i",t:"Astuce : cherche la photo de l'annonce avec Google Lens (dans l'app Google) pour voir si elle est publiée ailleurs."});
