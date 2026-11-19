@@ -859,7 +859,7 @@ const SIGNAUX_IA={argent_avant_bail:"Argent demandé avant la signature du bail"
  proprietaire_absent:"Propriétaire « à l'étranger » ou absent",refus_visite:"Visite refusée ou repoussée",urgence:"Pression pour décider vite",
  changement_plateforme:"Demande de continuer sur une autre messagerie",pieces_identite_demandees:"Documents personnels demandés trop tôt",
  prix_anormal_annonce:"Prix présenté comme exceptionnellement bas",autre:"Autre élément inhabituel"};
-const blocIA=()=>IA_ADAPT.dispo?`<label class="ia-opt"><input type="checkbox" id="ia-ok" ${iaActif()?"checked":""}><span><b>Analyse intelligente</b> (IA)<span class="hint">Comprend mieux les captures et la conversation, aussi en anglais. Les images et le texte sont envoyés à Anthropic pour l'analyse, puis oubliés par HabitaScan.</span></span></label>`
+const blocIA=()=>IA_ADAPT.dispo?(!iaChoisi()?"":`<label class="ia-opt"><input type="checkbox" id="ia-ok" ${iaActif()?"checked":""}><span><b>Analyse intelligente</b> (IA)<span class="hint">Comprend mieux les captures et la conversation, aussi en anglais. Les images et le texte sont envoyés à Anthropic pour l'analyse, puis oubliés par HabitaScan.</span></span></label>`)
  :`<p class="hint">L'analyse intelligente (IA) est offerte dans la vraie app, pas dans cette démo.</p>`;
 /* Réduit une capture à 1 280 px de large au maximum, en JPEG, pour limiter l'envoi */
 function reduireImage(source){return new Promise((ok,ko)=>{const im=new Image();const dataUrl=typeof source==="string"?source:URL.createObjectURL(source);im.onload=()=>{const k=Math.min(1,1280/Math.max(im.width,1));
@@ -968,6 +968,7 @@ ${ADM.estAdmin()?`<button type="button" class="mrow" data-go="admin" id="nouvA">
 ${LIEU.dispo?`<div class="card"><h2>Confidentialité</h2>
 <label class="interrupteur"><span><b>Partager ma ville approximative de connexion</b><small>Désactivé par défaut. Si tu l'actives, nous gardons la ville et la région déduites de ton adresse IP (pas ton adresse, pas ta position GPS) à chaque connexion, pendant 90 jours au plus. Seuls les administrateurs la voient, pour détecter l'usage frauduleux d'un compte et savoir quelles régions nous servons. Tu peux le désactiver en tout temps : l'historique de lieux est alors effacé.</small></span>
 <input type="checkbox" role="switch" id="lieu-ok" ${LIEU.actif()?"checked":""}></label><p class="hint" id="lieu-msg" aria-live="polite"></p></div>`:""}
+${IA_ADAPT.dispo?`<div class="card"><label class="interrupteur"><span><b>Analyse intelligente (IA)</b><small>Comprend le sens des annonces et des conversations, pas seulement des mots. Le texte et les captures sont envoyés à Anthropic (États-Unis) pour l'analyse, puis oubliés. Désactivée tant que tu ne l'actives pas.</small></span><input type="checkbox" role="switch" id="ia-compte" ${iaActif()?"checked":""}></label></div>`:""}
 <div class="card menu">
 <button type="button" class="mrow" data-go="conditions"><span>Conditions d'utilisation</span><span class="chev">›</span></button>
 <button type="button" class="mrow" data-go="confidentialite"><span>Politique de confidentialité</span><span class="chev">›</span></button>
@@ -1068,6 +1069,7 @@ ${typeof navigator!=="undefined"&&navigator.share?`<div class="duo"><button type
 ${IA_ADAPT.dispo?`<label class="ia-opt"><input type="checkbox" id="f-ia" ${iaActif()?"checked":""}><span><b>Analyse intelligente de la conversation</b> (IA)<span class="hint">Lit sa réponse et tes captures de la discussion, aussi en anglais : c'est là que les fraudeurs se trahissent. Envoyées à Anthropic pour l'analyse, puis oubliées.</span></span></label>`:""}
 <button type="button" class="btn ghost" id="f-lire">Analyser sa réponse</button>
 ${A?`<div class="verdict ${A.c}" id="f-res" role="status"><strong>${A.t}</strong><span>${A.s}</span></div>${A.signaux.length?`<ul class="reasons">${A.signaux.map(z=>`<li><span class="dot ${z.c}"></span><div>${z.m}</div></li>`).join("")}</ul>`:""}`:""}
+${A&&!A.ia&&A.c!=="r"&&IA_ADAPT.dispo&&!iaActif()?`<div class="lu"><b>Aucun mot suspect, mais un fraudeur prudent peut les éviter.</b> L'IA lit le sens de sa réponse.<button type="button" class="btn ghost" id="f-ia-go" style="margin-top:10px">Faire lire sa réponse par l'IA</button></div>`:""}
 ${A&&A.resume?`<p class="lu"><b>Résumé de l'IA :</b> ${esc(A.resume)}</p>`:""}
 <p class="hint">${A&&A.ia?"Analysée par l'IA et par les règles de l'app. Elle repère des indices connus, sans certitude.":"Sans l'analyse intelligente, l'analyse se fait sur ton téléphone ; le texte n'est envoyé nulle part. Elle repère des indices connus, sans certitude."}</p></div>`}
 function bindPlus8(v){if(v!=="resultat"||!$("#f-msg"))return;
@@ -1194,6 +1196,32 @@ function itemsCopiesWeb(F){const it=[],actuel=(F.lienN||"").split(/[?#]/)[0];
  if(autrePrix.length)it.push({c:"y",t:`<b>La même annonce apparaît ailleurs sur le web à un autre prix</b> : ${autrePrix.slice(0,3).map(x=>`${money(x.p)} sur ${lien(x)}`).join(", ")}. Une annonce copiée avec un prix différent est un signe classique de fraude.`,law:"Recherche des photos et du texte de l'annonce sur le web"});
  else if(copies.length)it.push({c:"i",t:`<b>Le même texte apparaît aussi sur ${copies.slice(0,3).map(lien).join(", ")}.</b> C'est normal si le propriétaire publie à plusieurs endroits : compare le numéro et le nom de l'annonceur.`,law:"Recherche du texte de l'annonce sur le web"});
  return it}
+/* ===== Analyse intelligente : un choix clair (Loi 25 : désactivée tant que la personne ne l'active pas) ===== */
+function iaChoisi(){try{return localStorage.getItem(CLE_IA)!==null}catch(e){return true}}
+function blocChoixIA(){if(!IA_ADAPT.dispo||iaChoisi())return "";
+ return `<div class="card invite choix-ia" role="region" aria-label="Analyse intelligente"><p class="offre-eti">Recommandé</p><h2>Activer l'analyse intelligente ?</h2>
+<p>Elle comprend le <b>sens</b> des annonces et des messages, pas seulement des mots. Elle repère les fraudeurs prudents qui évitent les mots suspects : « un petit montant pour bloquer le logement », « je suis hors du pays pour le travail ».</p>
+<p class="hint">Le texte et les captures sont envoyés à Anthropic (États-Unis) pour l'analyse, puis oubliés. Tu peux changer ce choix dans Mon compte.</p>
+<div class="duo"><button type="button" class="btn" data-ia-choix="1">Activer</button><button type="button" class="btn ghost" data-ia-choix="0">Non merci</button></div></div>`}
+/* Rappel sur le résultat quand seule l'analyse par mots a été faite. */
+function rappelIA(){if(!IA_ADAPT.dispo||iaActif()||F.ia||!F.res||F.res.c==="r")return "";
+ if(!((F.captures||[]).length||String(F.annonce||"").length>30||String(F.txt||"").length>10))return "";
+ return `<div class="card invite"><p><b>L'analyse simple cherche des mots connus&nbsp;: un fraudeur prudent peut les éviter.</b> L'analyse intelligente lit le sens de l'annonce et de la conversation.</p>
+<button type="button" class="btn" id="ia-relire">Faire lire l'annonce et la conversation par l'IA</button>
+<p class="hint">Le texte et les captures sont envoyés à Anthropic pour l'analyse, puis oubliés. Ce choix est retenu ; tu peux le changer dans Mon compte.</p></div>`}
+document.addEventListener("click",async e=>{const t=e.target.closest?e.target:null;if(!t)return;
+ const choix=t.closest("[data-ia-choix]");
+ if(choix){try{localStorage.setItem(CLE_IA,choix.dataset.iaChoix)}catch(x){}const v=app.dataset.v;if(v==="verifier")keep();go(v);return}
+ const relire=t.closest("#ia-relire");
+ if(relire){try{localStorage.setItem(CLE_IA,"1")}catch(x){}relire.disabled=true;relire.textContent="Lecture par l'IA…";
+  try{const r=await analyserIA(F.captures,`${F.annonce||""}\n${F.txt||""}\n${F.ocrTxt||""}`);F.ia=r;
+   F.contacts=fusionContacts(F.contacts,{tels:r.telephones,courriels:r.courriels});F.mem=await memoire(F.contacts,F.photos);
+   F.res=analyser();try{MES.noter("ia_relecture")}catch(x){}go("resultat")}
+  catch(x){relire.disabled=false;relire.textContent=x&&x.message==="quota"?"Limite d'analyses IA atteinte pour aujourd'hui":"L'analyse intelligente n'a pas fonctionné. Réessayer"}
+  return}
+ const fgo=t.closest("#f-ia-go");
+ if(fgo){try{localStorage.setItem(CLE_IA,"1")}catch(x){}const b=$("#f-lire");if(b)b.click()}});
+document.addEventListener("change",e=>{if(e.target&&e.target.id==="ia-compte")try{localStorage.setItem(CLE_IA,e.target.checked?"1":"0")}catch(x){}});
 async function envoyerPiece(){const doc=F.doc||"permis";err("");
  busy(true,"Envoi sécurisé…");const uid=(await sb.auth.getUser()).data.user.id,stamp=Date.now();
  for(const s of ["recto","verso"]){const f=F[s];if(!f)continue;const ext=(f.type.split("/")[1]||"jpg").replace("jpeg","jpg");
@@ -1299,6 +1327,7 @@ ${blocHistorique()}
 <p class="hint pied">${lienConditions.replace("conditions d'utilisation","Conditions")}${lienConfidentialite.replace("politique de confidentialité","Confidentialité")}</p>`,
 
 verifier:()=>`${top("accueil","Vérifier")}
+${blocChoixIA()}
 <h2>L'annonce</h2>
 <form class="card" id="f-ver" novalidate>
 <label class="drop drop-grand">${F.vignettes&&F.vignettes.length?`<span class="vignettes">${F.vignettes.map(u=>`<img src="${u}" alt="Capture">`).join("")}</span>Changer les captures`:`<b>Ajoute des captures d'écran</b><span>L'annonce, et surtout la conversation avec l'annonceur : c'est là que les fraudeurs se trahissent.</span>`}<input type="file" accept="image/*" multiple data-captures="1"></label>
@@ -1328,6 +1357,7 @@ ${blocProfil(F)}
 resultat:()=>{const R=F.res;return `${top("accueil","Résultat")}
 <div class="verdict ${R.c}"><strong>${{r:"Ne paie pas",y:"Visite d'abord, puis vérifie le propriétaire",g:"Aucun signal. Tu peux visiter."}[R.c]}</strong><span>${esc(F.ville)} · ${F.ch==="3"?"3 ch. et plus":F.ch+" ch."} · <span class="num">${money(F.prixN)}</span></span></div>
 <div class="card"><h2>Ce que l'app a vérifié</h2><ul class="reasons">${R.items.map(i=>`<li><span class="dot ${i.c}"></span><div>${i.t}${i.law?`<div class="law">${i.law}</div>`:""}</div></li>`).join("")}</ul></div>
+${rappelIA()}
 <p class="rule">${{r:"N'envoie aucun argent et ne donne aucune pièce d'identité à cette personne.",y:"Ne paie rien avant d'avoir visité et confirmé qui est le propriétaire.",g:"Avant de payer : confirme le propriétaire, puis signe le bail. Le premier mois se paie à la signature, jamais avant, et jamais de dépôt."}[R.c]}</p>
 ${R.c!=="r"?`<p class="rule paiement">${REGLE_PAIEMENT}</p>`:""}
 <button class="btn ghost" data-go="proprio" id="b-proprio">Vérifier le propriétaire</button>
