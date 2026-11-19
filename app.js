@@ -1279,10 +1279,8 @@ code:()=>`${top("inscription","Code")}
 <button type="button" class="btn ghost" id="renvoi" disabled>Renvoyer le code (<span id="t">60</span> s)</button></form>`,
 
 identite:()=>`${top("accueil","Identité")}
-<h2>Confirme ton identité</h2><p class="soft">Une photo de ta pièce d'identité suffit. Pas de selfie.</p>
+<h2>Confirme ton identité</h2><p class="soft">Une photo de ta pièce d'identité suffit : ton nom, ta date de naissance et la date d'expiration sont lus automatiquement. Rien à taper, pas de selfie.</p>
 <form class="card" id="f-id" novalidate>
-<div class="grid2"><label>Prénom<input id="id-prenom" autocomplete="given-name" maxlength="60" value="${esc(F.prenomDecl||"")}"></label><label>Nom<input id="id-nom" autocomplete="family-name" maxlength="60" value="${esc(F.nomDecl||"")}"></label></div>
-<p class="hint" style="margin-top:-6px">Tels qu'écrits sur ta pièce. Une fois ton identité confirmée, seuls ton prénom et l'initiale de ton nom sont gardés.</p>
 <label>Type de pièce<select id="doc">
 <option value="permis">Permis de conduire (régulier, probatoire ou apprenti)</option><option value="passeport">Passeport</option><option value="rp">Carte de résident permanent</option></select></label>
 <label class="drop">${F.rectoUrl?`<img src="${F.rectoUrl}" alt="Recto">Changer la photo`:"Prendre en photo le recto"}<input type="file" accept="image/*" capture="environment" data-side="recto"></label>
@@ -1294,11 +1292,10 @@ identite:()=>`${top("accueil","Identité")}
 <p class="hint">Pourquoi ? Seuls les comptes à l'identité confirmée peuvent signaler une annonce : ça évite les fausses accusations. Vérifier une annonce ne la demande jamais.</p>
 <p class="hint">Les photos sont envoyées dans un espace privé, au Canada. Pour gagner du temps, elles sont aussi lues par une IA (Anthropic, aux États-Unis), qui n'en garde aucune copie. Seule l'équipe de vérification peut les voir ; elles sont supprimées après la vérification.</p>`,
 
-identiteLecture:()=>{const L=F.lecture||{},al=(L.alertes||[]).filter(a=>a!=="deja_utilisee").concat(nomsConcordent(L.prenom,F.prenomDecl)&&nomsConcordent(L.nom,F.nomDecl)?[]:["nom_different"]);return `${top("identite","Identité")}
+identiteLecture:()=>{const L=F.lecture||{},al=(L.alertes||[]).filter(a=>a!=="deja_utilisee");return `${top("identite","Identité")}
 <h2>Vérifie ce que nous avons lu</h2><p class="soft">Lu automatiquement sur ta pièce. Notre équipe vérifiera ensuite la photo.</p>
 <div class="card"><dl class="details">
-<div><dt>Tu as écrit</dt><dd>${esc([F.prenomDecl,F.nomDecl].filter(Boolean).join(" ")||"—")}</dd></div>
-<div><dt>Prénom lu</dt><dd>${esc(L.prenom||"non lu")}</dd></div><div><dt>Nom lu</dt><dd>${esc(L.nom||"non lu")}</dd></div>
+<div><dt>Prénom</dt><dd>${esc(L.prenom||"non lu")}</dd></div><div><dt>Nom</dt><dd>${esc(L.nom||"non lu")}</dd></div>
 <div><dt>Date de naissance</dt><dd>${dateId(L.date_naissance)}</dd></div><div><dt>Expiration</dt><dd>${dateId(L.date_expiration)}</dd></div>
 <div><dt>Émise par</dt><dd>${esc(L.emetteur||"non lu")}</dd></div></dl>
 ${al.length?`<ul class="reasons">${al.map(a=>`<li><span class="dot y"></span><div>${esc(ALERTES_ID[a]||a)}</div></li>`).join("")}</ul>`:""}
@@ -1472,9 +1469,8 @@ function bind(v){
    const sig=LS.get("vl_sig");if(sig){if(PROFIL&&PROFIL.identite_statut==="confirmee"){F=sig;return go("signaler")}return go(PROFIL&&PROFIL.identite_statut==="en_attente"?"attente":"identite")}
    go("accueil")}}
 
- if(v==="identite"){$("#doc").value=F.doc||"permis";[["id-prenom","prenomDecl"],["id-nom","nomDecl"]].forEach(([i,k])=>{const el=$("#"+i);if(el)el.oninput=()=>{F[k]=el.value}});$("#doc").onchange=e=>{F.doc=e.target.value;if(F.doc==="passeport"){F.verso=null;F.versoUrl=null}go("identite")};
+ if(v==="identite"){$("#doc").value=F.doc||"permis";$("#doc").onchange=e=>{F.doc=e.target.value;if(F.doc==="passeport"){F.verso=null;F.versoUrl=null}go("identite")};
   $("#f-id").onsubmit=async e=>{e.preventDefault();err("");const doc=F.doc||"permis";
-   F.prenomDecl=$("#id-prenom").value.trim();F.nomDecl=$("#id-nom").value.trim();if(!F.prenomDecl||!F.nomDecl)return err("Écris ton prénom et ton nom, tels qu'ils figurent sur ta pièce.");
    if(!F.recto)return err("Ajoute la photo du recto.");if(doc!=="passeport"&&!F.verso)return err("Ajoute la photo du verso.");if(!$("#ok").checked)return err("Coche la case pour continuer.");
    busy(true,"Lecture de la pièce…");F.doc=doc;
    try{const images=[await reduireImage(F.recto)];if(F.verso)images.push(await reduireImage(F.verso));
