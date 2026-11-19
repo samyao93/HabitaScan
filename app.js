@@ -563,7 +563,7 @@ function vueConfidentialite(back){const R=RESPONSABLE;
  ["Supabase (base de données, connexion)","Données à Montréal (AWS Canada Centre) ; entreprise américaine"],
  ["Vercel (pages de l'app)","États-Unis : adresse IP ; si tu l'actives, Vercel en déduit ta ville approximative"],
  ["jsDelivr (bibliothèques de l'app)","Réseau mondial : adresse IP"],
- ["Brave Search (« Trouver »)","États-Unis : mots de la recherche, sans ton nom"],
+ ["Tavily (« Trouver » et recherche des copies d'une annonce)","États-Unis : mots de la recherche ou une phrase de l'annonce, sans ton nom"],
  ["Google Cloud Vision, si activé","États-Unis : capture envoyée pour la recherche"],
  ["Stripe (paiement de la vérification complète)","Entreprise américaine : courriel et carte. HabitaScan ne voit jamais le numéro de carte"],
  ["Anthropic (analyse intelligente, si tu l'actives ; lecture de la pièce d'identité)","Entreprise américaine : captures et texte envoyés pour l'analyse ; photo de la pièce envoyée pour la lecture, sans copie conservée"]],["Fournisseur","Où et quoi"])}
@@ -1151,6 +1151,49 @@ function resumeSignal(F){const c=F.contacts||{tels:[],courriels:[]},p=F.photos||
  if(F.lienN)L.push("le lien de l'annonce");if(c.tels.length)L.push(c.tels.length>1?`${c.tels.length} numéros de téléphone`:"le numéro de téléphone");
  if(c.courriels.length)L.push(c.courriels.length>1?`${c.courriels.length} courriels`:"le courriel");if(p.length)L.push(p.length>1?`${p.length} photos`:"la photo");
  return L.length?`<p class="lu">Ce signalement portera sur : ${L.join(", ")}. Les numéros et courriels sont gardés seulement sous forme chiffrée, jamais en clair.</p>`:""}
+/* Détecte la zone « photo » d'une capture d'écran : là où les couleurs sont variées
+   (une photo), contrairement au texte et aux boutons (deux ou trois couleurs). */
+function detecterPhoto(source){return new Promise(ok=>{const im=new Image();im.onload=()=>{try{
+ const W=180,H=Math.max(1,Math.min(480,Math.round(im.height*W/im.width)));const c=document.createElement("canvas");c.width=W;c.height=H;
+ const x=c.getContext("2d");x.drawImage(im,0,0,W,H);const d=x.getImageData(0,0,W,H).data;
+ const q=p=>((d[p]>>5)<<6)|((d[p+1]>>5)<<3)|(d[p+2]>>5);
+ const riche=[];for(let y=0;y<H;y++){const s=new Set();for(let i=0;i<W;i++)s.add(q((y*W+i)*4));riche.push(s.size)}
+ let best=[0,-1],deb=-1,trou=0;
+ for(let y=0;y<=H;y++){const photo=y<H&&riche[y]>=20;
+  if(photo){if(deb<0)deb=y;trou=0}
+  else if(deb>=0){trou++;if(trou>3||y===H){const fin=y-trou;if(fin-deb>best[1]-best[0])best=[deb,fin];deb=-1;trou=0}}}
+ const [y0,y1]=best;if(y1-y0<Math.max(30,H*0.18)){ok(null);return}
+ const col=i=>{const s=new Set();for(let y=y0;y<=y1;y++)s.add(q((y*W+i)*4));return s.size};
+ let x0=0,x1=W-1;while(x0<x1&&col(x0)<12)x0++;while(x1>x0&&col(x1)<12)x1--;
+ if(x1-x0<W*0.4){ok(null);return}
+ const k=im.width/W,o=document.createElement("canvas");o.width=Math.max(1,Math.round((x1-x0+1)*k));o.height=Math.max(1,Math.round((y1-y0+1)*k));
+ o.getContext("2d").drawImage(im,x0*k,y0*k,o.width,o.height,0,0,o.width,o.height);ok(o.toDataURL("image/jpeg",0.9))}catch(e){ok(null)}};
+ im.onerror=()=>ok(null);im.src=typeof source==="string"?source:URL.createObjectURL(source)})}
+/* Empreintes des captures : la photo détectée (entière et recadrée) et la capture entière. */
+async function empreintesCaptures(fichiers){const L=[];F.zonePhoto=null;
+ for(const f of (fichiers||[]).slice(0,4)){const z=await detecterPhoto(f);
+  if(z){if(!F.zonePhoto)F.zonePhoto=z;for(const rg of [false,true]){const h=await empreintePhoto(z,rg);if(h&&!/^0+$|^f+$/.test(h))L.push(h)}}
+  const h=await empreintePhoto(f);if(h&&!/^0+$|^f+$/.test(h))L.push(h)}
+ return [...new Set(L)]}
+/* Recherche des copies de l'annonce sur le web, même si personne ne l'a vérifiée dans l'app. */
+const hoteDe=u=>{try{return new URL(u).hostname.replace(/^(www|m|fr|en)\./,"")}catch(e){return ""}};
+function phraseDistinctive(t){const phr=String(t||"").split(/\n|(?<=[.!?])\s+/).map(s=>s.replace(/\s+/g," ").trim())
+  .filter(s=>s.split(" ").length>=8&&!/https?:|@|\d{3}[\s.-]?\d{3}[\s.-]?\d{4}/.test(s));
+ if(!phr.length)return null;phr.sort((a,b)=>b.length-a.length);return phr[0].split(" ").slice(0,16).join(" ")}
+function prixDans(t){const m=String(t||"").match(/(\d{1,2}[\s  ,.]?\d{3}|\d{3,4})\s*\$|\$\s*(\d{1,2},?\d{3}|\d{3,4})/);
+ if(!m)return null;const n=+String(m[1]||m[2]).replace(/\D/g,"");return n>=300&&n<=10000?n:null}
+async function chercherCopies(){if(!SESSION||!CFG.recherche)return null;
+ const t=F.annonce&&F.annonce.length>80?F.annonce:(F.ocrTxt||F.annonce||"");const phrase=phraseDistinctive(t);if(!phrase)return null;
+ try{const {data,error}=await sb.functions.invoke("chercher-copies",{body:{phrase}});return error||!data||data.error?null:data}catch(e){return null}}
+function itemsCopiesWeb(F){const it=[],actuel=(F.lienN||"").split(/[?#]/)[0];
+ const copies=((F.copiesWeb||{}).resultats||[]).filter(r=>r&&r.url&&r.url.split(/[?#]/)[0]!==actuel);
+ const imgs=((F.images||{}).details||[]);
+ const tout=[...copies.map(r=>({url:r.url,txt:(r.titre||"")+" "+(r.extrait||"")})),...imgs.map(r=>({url:r.url,txt:r.titre||""}))];
+ const autrePrix=tout.map(x=>({...x,p:prixDans(x.txt)})).filter(x=>x.p&&F.prixN&&Math.abs(x.p-F.prixN)>Math.max(50,F.prixN*0.1));
+ const lien=x=>`<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(hoteDe(x.url))}</a>`;
+ if(autrePrix.length)it.push({c:"y",t:`<b>La même annonce apparaît ailleurs sur le web à un autre prix</b> : ${autrePrix.slice(0,3).map(x=>`${money(x.p)} sur ${lien(x)}`).join(", ")}. Une annonce copiée avec un prix différent est un signe classique de fraude.`,law:"Recherche des photos et du texte de l'annonce sur le web"});
+ else if(copies.length)it.push({c:"i",t:`<b>Le même texte apparaît aussi sur ${copies.slice(0,3).map(lien).join(", ")}.</b> C'est normal si le propriétaire publie à plusieurs endroits : compare le numéro et le nom de l'annonceur.`,law:"Recherche du texte de l'annonce sur le web"});
+ return it}
 async function envoyerPiece(){const doc=F.doc||"permis";err("");
  busy(true,"Envoi sécurisé…");const uid=(await sb.auth.getUser()).data.user.id,stamp=Date.now();
  for(const s of ["recto","verso"]){const f=F[s];if(!f)continue;const ext=(f.type.split("/")[1]||"jpg").replace("jpeg","jpg");
@@ -1340,11 +1383,11 @@ async function envoyerCode(){
  if(SESSION&&ANONYME){F.typeCode=F.cible.email?"email_change":"phone_change";const r=await sb.auth.updateUser(F.cible);
   const m=(r.error&&r.error.message||"").toLowerCase();if(!r.error||!(m.includes("already")||m.includes("registered")||m.includes("exists")))return r}
  F.typeCode=F.cible.email?"email":"sms";return sb.auth.signInWithOtp({...F.cible,options:{shouldCreateUser:true}})}
-async function rechercheImages(f){try{const b64=await new Promise((ok,ko)=>{const r=new FileReader();r.onload=()=>ok(String(r.result).split(",")[1]);r.onerror=ko;r.readAsDataURL(f)});
+async function rechercheImages(f){try{const b64=await reduireImage(f);
  const appel=sb.functions.invoke("recherche-image",{body:{image:b64}});const {data,error}=await Promise.race([appel,new Promise(r=>setTimeout(()=>r({error:"delai"}),9000))]);
  /* La page de l'annonce elle-même n'est pas une copie : on retire les résultats du même site. */
  const hote=u=>{try{return new URL(u).hostname.replace(/^(www|m|web)\./,"")}catch(e){return ""}},site=F.lienN?hote(F.lienN):"";
- return error||!data?null:{ok:true,pages:(data.pages||[]).filter(u=>/^https?:\/\//.test(u)&&(!site||hote(u)!==site))}}catch(e){return null}}
+ return error||!data?null:{ok:true,details:((data&&data.details)||[]).filter(d=>d&&typeof d.url==="string"&&/^https?:\/\//.test(d.url)&&(!site||hote(d.url)!==site)),pages:(data.pages||[]).filter(u=>/^https?:\/\//.test(u)&&(!site||hote(u)!==site))}}catch(e){return null}}
 async function chargerProfil(){
  if(!SESSION){PROFIL=null;HIST=[];EST_ADMIN=false;return}
  const {data}=await sb.from("profiles").select("*").maybeSingle();PROFIL=data;try{EST_ADMIN=!!(await rpc("est_admin"))}catch(e){EST_ADMIN=false}
@@ -1430,11 +1473,12 @@ function bind(v){
   F.titre="Vérification";F.msg="Analyse de l'annonce…";go("analyse");
   F.stats=null;F.nbSig=0;F.images=null;
   if(F.lienN&&SESSION){const [a,b]=await Promise.all([sb.rpc("stats_lien",{p_lien:F.lienN}),sb.rpc("nb_signalements",{p_lien:F.lienN})]);F.stats=a.data&&a.data[0];F.nbSig=+b.data||0}
-  if(F.capture)F.images=await rechercheImages(F.capture);
+  
   F.contacts=fusionContacts(extraireContacts(F.contact,F.annonce,F.ocrTxt,F.txt),{tels:(F.ia||{}).telephones,courriels:(F.ia||{}).courriels});
-  F.photos=[...new Set([...(await empreintesPhotos(F.photosLog,true)),...(await empreintesPhotos(F.captures))])].slice(0,12);
+  F.photos=[...new Set([...(await empreintesPhotos(F.photosLog,true)),...(await empreintesCaptures(F.captures))])].slice(0,12);
   F.texteEmp=empreinteTexte(F.annonce&&F.annonce.length>80?F.annonce:F.ocrTxt||F.annonce);
-  [F.mem,F.copie]=await Promise.all([memoire(F.contacts,F.photos),retrouverAnnonce()]);
+  const img=(F.photosLog||[])[0]||F.zonePhoto||F.capture;
+  [F.mem,F.copie,F.images,F.copiesWeb]=await Promise.all([memoire(F.contacts,F.photos),retrouverAnnonce(),img?rechercheImages(img):null,chercherCopies()]);
   F.res=analyser();
   const brut=F.res.items.map(i=>({c:i.c,t:String(i.t).slice(0,1500),law:String(i.law||"").slice(0,800)}));
   const base={ville:F.ville,chambres:+F.ch,prix:F.prixN,couleur:F.res.c,raisons:brut,lien:F.lienN};
@@ -1474,6 +1518,7 @@ function analyser(){
   const sg=itemSignalements(F.nbSig);if(sg)it.push(sg);}
  itemsMemoire(F.mem).forEach(x=>it.push(x));
  itemsRecopie(F.copie).forEach(x=>it.push(x));
+ itemsCopiesWeb(F).forEach(x=>it.push(x));
  if(F.images&&F.images.pages&&F.images.pages.length)it.push({c:"y",t:`<b>Ces images apparaissent sur ${F.images.pages.length} autre${F.images.pages.length>1?"s":""} page${F.images.pages.length>1?"s":""} du web.</b> Les fraudeurs copient souvent les photos d'une vraie annonce. ${F.images.pages.slice(0,3).map(u=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(new URL(u).hostname)}</a>`).join(", ")}`,law:"Recherche d'image inversée (Google Vision)"});
  else if(F.images&&F.images.ok)it.push({c:"g",t:"Les images de la capture n'ont pas été trouvées ailleurs sur le web."});
  if(!F.images)it.push({c:"i",t:"Astuce : cherche la photo de l'annonce avec Google Lens (dans l'app Google) pour voir si elle est publiée ailleurs."});

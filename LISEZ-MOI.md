@@ -110,6 +110,10 @@ Chaque signalement d'un utilisateur à l'identité confirmée avertit les suivan
 
 **Annonce recopiée ailleurs** (autre site, autre lien, autre numéro) : chaque vérification garde l'empreinte des photos du logement et du texte de l'annonce (table `verifications`, colonnes `photos` et `texte_empreinte`). La fonction `retrouver_annonce` retrouve la même annonce vérifiée par d'autres : autre prix ou autre ville = jaune ; déjà « Ne paie pas » = jaune ou rouge ; même prix sans alerte = simple information (un vrai propriétaire publie souvent sur plusieurs sites). Migration : `supabase/migrations/20261119b_annonces_recopiees.sql` (déjà appliquée).
 
+**Sans historique (copies jamais vérifiées dans l'app)** : à chaque vérification, l'app cherche aussi les copies sur le web. Fonction `chercher-copies` (Tavily, secret `TAVILY_API_KEY`) : une phrase distinctive du texte de l'annonce est cherchée sur les sites d'annonces ; seules les pages qui contiennent vraiment le même texte (au moins la moitié des suites de 3 mots) sont retenues. Fonction `recherche-image` (Google Vision, secret `GOOGLE_VISION_KEY`) : renvoie aussi le titre des pages où la photo apparaît. Le prix lu dans ces titres est comparé au loyer demandé.
+
+**Captures d'écran** : l'app repère automatiquement la zone de la photo dans une capture (là où les couleurs sont variées) et calcule l'empreinte sur cette zone ; elle reconnaît donc la même photo vue sur deux sites différents.
+
 ## 7. Espace admin et confidentialité
 
 **Espace admin** : connecte-toi dans l'app avec le compte déclaré admin (section 1). Un bouton « Espace admin » apparaît à l'accueil, visible seulement pour toi. Il a 4 onglets :
