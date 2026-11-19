@@ -391,3 +391,6 @@ ul.reasons .dot.i::after,.liste .dot.i::after{inset:7px}
 /* Règle du paiement */
 .rule.paiement{background:var(--okbg);border:1px solid var(--okline)}
 .rule.paiement::before{background:var(--ok);-webkit-mask-image:var(--i-check);mask-image:var(--i-check)}
+
+/* Liens vers les sites d'annonces (écran Trouver) */
+.choix-accueil.sites .btn{--ic:var(--i-search)}
