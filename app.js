@@ -621,6 +621,7 @@ async function lierAdmin(){const onglet=F.onglet||"chiffres";
 ${tuile("Vérifications au total",s.verifications)}${tuile("Résultats « Ne paie pas »",s.rouges)}${tuile("Signalements",s.signalements)}${tuile("Identités à vérifier",s.identites_attente)}</div>`}
  if(onglet==="identites"){const L=await ADM.identites();if(!el())return;
   el().innerHTML=L.length?L.map(p=>`<div class="card" data-id="${esc(p.id)}"><p><b>${esc(p.contact||"(sans contact)")}</b></p><p class="hint">Envoyée le ${esc(String(p.soumise_le||"").slice(0,10))}${p.doc_type?` · ${esc(p.doc_type)}`:""}</p>
+${p.prenom_declare||p.nom_declare?`<p><b>Nom déclaré :</b> ${esc([p.prenom_declare,p.nom_declare].filter(Boolean).join(" "))}</p>`:""}
 ${p.lue_le?`<p><b>Lu par l'IA :</b> ${esc([p.prenom,p.nom].filter(Boolean).join(" ")||"nom non lu")}${p.naissance_annee?` · né(e) en ${esc(p.naissance_annee)}`:""} · expire ${p.expire_le?esc(p.expire_le):"(non lue)"}${p.emetteur?` · ${esc(p.emetteur)}`:""}</p>
 ${(p.alertes||[]).length?`<ul class="reasons">${p.alertes.map(a=>`<li><span class="dot r"></span><div>${esc(ALERTES_ID[a]||a)}</div></li>`).join("")}</ul>`:`<p class="hint">Aucune alerte automatique.</p>`}`:`<p class="hint">Pas de lecture automatique : vérification manuelle.</p>`}
 <div class="vignettes photos"><button type="button" class="btn ghost" data-voir="${esc(p.id)}">Voir les photos</button></div>
@@ -1227,11 +1228,14 @@ async function envoyerPiece(){const doc=F.doc||"permis";err("");
  for(const s of ["recto","verso"]){const f=F[s];if(!f)continue;const ext=(f.type.split("/")[1]||"jpg").replace("jpeg","jpg");
   const {error}=await sb.storage.from("pieces-identite").upload(`${uid}/${stamp}-${s}.${ext}`,f,{contentType:f.type,upsert:false});
   if(error){busy(false,"Réessayer");return err("L'envoi de la photo a échoué. Vérifie ta connexion (photo de 8 Mo maximum).")}}
- const {error}=await sb.rpc("soumettre_identite",{doc_type:doc});if(error){busy(false,"Réessayer");return err("Une erreur est survenue. Réessaie.")}
+ let {error}=await sb.rpc("soumettre_identite",{doc_type:doc,p_prenom:F.prenomDecl||null,p_nom:F.nomDecl||null});
+ if(error&&/PGRST20|function|fonction/i.test(String(error.code)+" "+String(error.message)))({error}=await sb.rpc("soumettre_identite",{doc_type:doc}));
+ if(error){busy(false,"Réessayer");return err("Une erreur est survenue. Réessaie.")}
  F={};await chargerProfil();go("identiteOk")}
 /* Alertes de la lecture automatique (l'alerte « déjà utilisée » n'est montrée qu'aux admins). */
 const ALERTES_ID={pas_une_piece:"Ce n'est peut-être pas une pièce d'identité",illisible:"Photo difficile à lire",type_different:"Le type de pièce ne correspond pas à celui choisi",
- expiree:"Pièce expirée",expiration_inconnue:"Date d'expiration non lue",mineur:"Personne mineure",naissance_inconnue:"Date de naissance non lue",deja_utilisee:"Pièce déjà utilisée par un autre compte"};
+ expiree:"Pièce expirée",expiration_inconnue:"Date d'expiration non lue",mineur:"Personne mineure",naissance_inconnue:"Date de naissance non lue",deja_utilisee:"Pièce déjà utilisée par un autre compte",nom_different:"Le nom lu sur la pièce ne correspond pas à celui écrit"};
+const nomsConcordent=(a,b)=>{const n=s=>String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z]/g,"");const x=n(a),y=n(b);return !x||!y||x.includes(y)||y.includes(x)};
 const dateId=s=>{if(!s)return "non lue";const d=new Date(s+"T12:00:00");return isNaN(d)?esc(s):d.toLocaleDateString("fr-CA",{day:"numeric",month:"long",year:"numeric"})};
 async function noterLieu(){if(LIEU_NOTE||!SESSION||!LIEU.actif())return null;LIEU_NOTE=true;
  try{const base=document.documentElement.dataset.natif?"https://habitascan.vercel.app":"";const r=await fetch(base+"/api/lieu",{cache:"no-store"});if(!r.ok)return null;const g=await r.json();
@@ -1277,6 +1281,8 @@ code:()=>`${top("inscription","Code")}
 identite:()=>`${top("accueil","Identité")}
 <h2>Confirme ton identité</h2><p class="soft">Une photo de ta pièce d'identité suffit. Pas de selfie.</p>
 <form class="card" id="f-id" novalidate>
+<div class="grid2"><label>Prénom<input id="id-prenom" autocomplete="given-name" maxlength="60" value="${esc(F.prenomDecl||"")}"></label><label>Nom<input id="id-nom" autocomplete="family-name" maxlength="60" value="${esc(F.nomDecl||"")}"></label></div>
+<p class="hint" style="margin-top:-6px">Tels qu'écrits sur ta pièce. Une fois ton identité confirmée, seuls ton prénom et l'initiale de ton nom sont gardés.</p>
 <label>Type de pièce<select id="doc">
 <option value="permis">Permis de conduire (régulier, probatoire ou apprenti)</option><option value="passeport">Passeport</option><option value="rp">Carte de résident permanent</option></select></label>
 <label class="drop">${F.rectoUrl?`<img src="${F.rectoUrl}" alt="Recto">Changer la photo`:"Prendre en photo le recto"}<input type="file" accept="image/*" capture="environment" data-side="recto"></label>
@@ -1288,10 +1294,11 @@ identite:()=>`${top("accueil","Identité")}
 <p class="hint">Pourquoi ? Seuls les comptes à l'identité confirmée peuvent signaler une annonce : ça évite les fausses accusations. Vérifier une annonce ne la demande jamais.</p>
 <p class="hint">Les photos sont envoyées dans un espace privé, au Canada. Pour gagner du temps, elles sont aussi lues par une IA (Anthropic, aux États-Unis), qui n'en garde aucune copie. Seule l'équipe de vérification peut les voir ; elles sont supprimées après la vérification.</p>`,
 
-identiteLecture:()=>{const L=F.lecture||{},al=(L.alertes||[]).filter(a=>a!=="deja_utilisee");return `${top("identite","Identité")}
+identiteLecture:()=>{const L=F.lecture||{},al=(L.alertes||[]).filter(a=>a!=="deja_utilisee").concat(nomsConcordent(L.prenom,F.prenomDecl)&&nomsConcordent(L.nom,F.nomDecl)?[]:["nom_different"]);return `${top("identite","Identité")}
 <h2>Vérifie ce que nous avons lu</h2><p class="soft">Lu automatiquement sur ta pièce. Notre équipe vérifiera ensuite la photo.</p>
 <div class="card"><dl class="details">
-<div><dt>Prénom</dt><dd>${esc(L.prenom||"non lu")}</dd></div><div><dt>Nom</dt><dd>${esc(L.nom||"non lu")}</dd></div>
+<div><dt>Tu as écrit</dt><dd>${esc([F.prenomDecl,F.nomDecl].filter(Boolean).join(" ")||"—")}</dd></div>
+<div><dt>Prénom lu</dt><dd>${esc(L.prenom||"non lu")}</dd></div><div><dt>Nom lu</dt><dd>${esc(L.nom||"non lu")}</dd></div>
 <div><dt>Date de naissance</dt><dd>${dateId(L.date_naissance)}</dd></div><div><dt>Expiration</dt><dd>${dateId(L.date_expiration)}</dd></div>
 <div><dt>Émise par</dt><dd>${esc(L.emetteur||"non lu")}</dd></div></dl>
 ${al.length?`<ul class="reasons">${al.map(a=>`<li><span class="dot y"></span><div>${esc(ALERTES_ID[a]||a)}</div></li>`).join("")}</ul>`:""}
@@ -1465,8 +1472,9 @@ function bind(v){
    const sig=LS.get("vl_sig");if(sig){if(PROFIL&&PROFIL.identite_statut==="confirmee"){F=sig;return go("signaler")}return go(PROFIL&&PROFIL.identite_statut==="en_attente"?"attente":"identite")}
    go("accueil")}}
 
- if(v==="identite"){$("#doc").value=F.doc||"permis";$("#doc").onchange=e=>{F.doc=e.target.value;if(F.doc==="passeport"){F.verso=null;F.versoUrl=null}go("identite")};
+ if(v==="identite"){$("#doc").value=F.doc||"permis";[["id-prenom","prenomDecl"],["id-nom","nomDecl"]].forEach(([i,k])=>{const el=$("#"+i);if(el)el.oninput=()=>{F[k]=el.value}});$("#doc").onchange=e=>{F.doc=e.target.value;if(F.doc==="passeport"){F.verso=null;F.versoUrl=null}go("identite")};
   $("#f-id").onsubmit=async e=>{e.preventDefault();err("");const doc=F.doc||"permis";
+   F.prenomDecl=$("#id-prenom").value.trim();F.nomDecl=$("#id-nom").value.trim();if(!F.prenomDecl||!F.nomDecl)return err("Écris ton prénom et ton nom, tels qu'ils figurent sur ta pièce.");
    if(!F.recto)return err("Ajoute la photo du recto.");if(doc!=="passeport"&&!F.verso)return err("Ajoute la photo du verso.");if(!$("#ok").checked)return err("Coche la case pour continuer.");
    busy(true,"Lecture de la pièce…");F.doc=doc;
    try{const images=[await reduireImage(F.recto)];if(F.verso)images.push(await reduireImage(F.verso));
