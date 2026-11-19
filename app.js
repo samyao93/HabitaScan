@@ -1223,6 +1223,7 @@ document.addEventListener("click",async e=>{const t=e.target.closest?e.target:nu
  const fgo=t.closest("#f-ia-go");
  if(fgo){try{localStorage.setItem(CLE_IA,"1")}catch(x){}const b=$("#f-lire");if(b)b.click()}});
 document.addEventListener("change",e=>{if(e.target&&e.target.id==="ia-compte")try{localStorage.setItem(CLE_IA,e.target.checked?"1":"0")}catch(x){}});
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-mode]");if(b)F.modeCx=b.dataset.mode==="connexion"},true);
 async function envoyerPiece(){const doc=F.doc||"permis";err("");
  busy(true,"Envoi sécurisé…");const uid=(await sb.auth.getUser()).data.user.id,stamp=Date.now();
  for(const s of ["recto","verso"]){const f=F[s];if(!f)continue;const ext=(f.type.split("/")[1]||"jpg").replace("jpeg","jpg");
@@ -1252,15 +1253,15 @@ bienvenue:()=>`${top()}
 <li><b>Vérifie une annonce</b> en une minute, avec une capture d'écran.</li>
 <li><b>Confirme le vrai propriétaire</b> grâce aux registres publics du Québec.</li>
 <li><b>Calcule ton budget</b> et trouve un logement à ta mesure.</li></ul>
-<button class="btn" data-go="inscription" id="commencer">Commencer gratuitement</button>
-<p class="centre" style="margin:-4px 0 2px"><button type="button" class="lienbtn" data-go="inscription">Déjà inscrit ? Me connecter</button></p>
+<button class="btn" data-go="inscription" data-mode="inscription" id="commencer">Commencer gratuitement</button>
+<p class="centre" style="margin:-4px 0 2px"><button type="button" class="lienbtn" data-go="inscription" data-mode="connexion">Déjà inscrit ? Me connecter</button></p>
 <button class="btn ghost" data-go="victime">J'ai été victime d'une arnaque</button>
 <ul class="confiance"><li>Gratuit</li><li>Conforme à la Loi 25</li><li>Sources publiques officielles</li><li>Fait au Québec</li></ul>
 <p class="hint centre"><a href="/">En savoir plus</a> · <a href="/guides/arnaques-courantes">Arnaques courantes</a> · <a href="/en" lang="en" hreflang="en">English</a></p>
 <p class="hint pied">${lienConditions.replace("conditions d'utilisation","Conditions d'utilisation")}${lienConfidentialite.replace("politique de confidentialité","Confidentialité")}</p>`,
 
-inscription:()=>{const t=F.canal||"courriel";return `${top("bienvenue","Connexion")}
-<h2>Connecte-toi</h2><p class="soft">Entre ton courriel ou ton numéro. <b>Déjà inscrit ?</b> Tu retrouves ton compte et ton historique. <b>Nouveau ?</b> Ton compte est créé. Pas de mot de passe : tu reçois un code à 6 chiffres.</p>
+inscription:()=>{const t=F.canal||"courriel";return `${top("bienvenue",F.modeCx?"Connexion":"Inscription")}
+${F.modeCx?`<h2>Connecte-toi</h2><p class="soft">Entre le courriel ou le numéro de ton compte : tu retrouves ton historique. Pas de mot de passe : tu reçois un code à 6 chiffres.</p>`:`<h2>Crée ton compte</h2><p class="soft">Gratuit, en 30 secondes. Pas de mot de passe : tu reçois un code à 6 chiffres. Si ce courriel a déjà un compte, tu le retrouves simplement.</p>`}
 <form class="card" id="f-ins" novalidate>
 <div class="seg" role="group" aria-label="Moyen de connexion">
 <button type="button" data-canal="courriel" aria-pressed="${t==="courriel"}">Courriel</button>
@@ -1269,7 +1270,8 @@ ${t==="courriel"?`<label>Adresse courriel<input id="ident" type="email" inputmod
 :`<label>Numéro de cellulaire<input id="ident" type="tel" inputmode="tel" autocomplete="tel" placeholder="514 555-0123" value="${esc(F.ident)}"></label>`}
 <p class="err" id="e" hidden></p>
 <button class="btn" id="go">Recevoir le code par ${t==="courriel"?"courriel":"SMS"}</button>
-<p class="hint">Ton ${t==="courriel"?"courriel":"numéro"} sert seulement à te connecter. En continuant, tu acceptes les ${lienConditions} et la ${lienConfidentialite}.</p></form>`},
+<p class="hint">Ton ${t==="courriel"?"courriel":"numéro"} sert seulement à te connecter. En continuant, tu acceptes les ${lienConditions} et la ${lienConfidentialite}.</p></form>
+<p class="centre">${F.modeCx?`<button type="button" class="lienbtn" data-go="inscription" data-mode="inscription">Pas encore de compte ? M'inscrire</button>`:`<button type="button" class="lienbtn" data-go="inscription" data-mode="connexion">Déjà inscrit ? Me connecter</button>`}</p>`},
 
 code:()=>`${top("inscription","Code")}
 <h2>Entre le code reçu</h2><p class="soft">Envoyé à <b>${esc(F.affiche)}</b>. Vérifie aussi tes courriels indésirables.</p>
