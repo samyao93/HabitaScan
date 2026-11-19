@@ -40,7 +40,7 @@ async function tavily(q: string, cle: string): Promise<Resultat[]> {
       max_results: 20,
       time_range: "month",
       include_domains: SITES,
-      country: "canada",
+      // Pas de paramètre « country » : il réduit fortement (parfois à zéro) les résultats de Tavily.
     }),
   });
   if (!r.ok) throw new Error("tavily " + r.status);
