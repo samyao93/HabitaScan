@@ -86,7 +86,7 @@ function itemSignalements(n){if(!n)return null;
  return n>=SEUIL_ROUGE?{c:"r",t:`<b>Annonce signalée ${n} fois</b> par des utilisateurs à l'identité confirmée.`}
   :{c:"y",t:`<b>Annonce signalée ${n} fois</b> par ${n>1?"des utilisateurs":"un utilisateur"} à l'identité confirmée. Redouble de prudence.`}}
 const vueSignaler=(F,retour)=>`${top(retour,"Signaler")}
-<h2>Signaler cette annonce</h2><p class="soft">Ton signalement prévient les prochaines personnes qui vérifient la même annonce. Ton nom n'est jamais montré.</p>
+<h2>Signaler cette annonce</h2><p class="soft">Ton signalement prévient les prochaines personnes qui vérifient la même annonce, le même numéro ou les mêmes photos. Ton nom n'est jamais montré.</p>${resumeSignal(F)}
 <form class="card" id="f-sig" novalidate>
 <div class="q">Qu'est-ce qui s'est passé ?<div class="choix" role="radiogroup" aria-label="Raison">${Object.entries(MOTIFS).map(([k,l])=>`<button type="button" data-motif="${k}" aria-pressed="${F.motif===k}">${l}</button>`).join("")}</div></div>
 <label style="flex-direction:row;align-items:flex-start;gap:10px;font-weight:500"><input type="checkbox" id="bonnefoi" style="width:22px;min-height:22px;margin-top:2px">Je signale de bonne foi, à partir de ce que j'ai vécu.</label>
@@ -97,9 +97,9 @@ function lierSignaler(F){app.querySelectorAll("[data-motif]").forEach(b=>b.oncli
 function validerSignal(F){if(!F.motif)return "Choisis une raison.";if(!$("#bonnefoi").checked)return "Coche la case pour confirmer.";return ""}
 const vueSignalOk=()=>`${top(null,"Merci")}
 <svg class="seal" role="img" aria-label="Signalement reçu"><use href="#seal"/></svg>
-<h1>Signalement reçu</h1><p class="soft">Les prochaines personnes qui vérifient cette annonce verront l'avertissement.</p>
+<h1>Signalement reçu</h1><p class="soft">Les prochaines personnes qui vérifient cette annonce, ce numéro ou ces photos verront l'avertissement. Plus nous sommes nombreux, plus l'app devient fiable.</p>
 <button class="btn" data-go="accueil">Retour à l'accueil</button>`;
-const boutonSignaler=F=>F.lienN?`<button class="btn ghost" id="signaler">Signaler cette annonce comme frauduleuse</button>`:`<p class="hint">Pour pouvoir signaler cette annonce, ajoute son lien.</p>`;
+const boutonSignaler=F=>peutSignaler(F)?`<button class="btn ghost" id="signaler">Signaler cette annonce comme frauduleuse</button>`:`<p class="hint">Pour pouvoir signaler cette annonce, ajoute son lien, le téléphone de l'annonceur ou une capture.</p>`;
 
 /* ===== Module Vérif-Réno : règles communes (démo et version Supabase) =====
    Sources : RBQ, liste des sous-catégories de licence ; OPC, guide du commerce itinérant
@@ -548,14 +548,15 @@ function vueConfidentialite(back){const R=RESPONSABLE;
 <div class="card"><h2>Ce que nous recueillons</h2>${t([
  ["Courriel ou cellulaire","Te connecter avec un code, retrouver ton compte, compter les utilisateurs"],
  ["Résumé de tes vérifications : ville, chambres, loyer, lien, résultat ; travaux et licence RBQ","Ton historique. Pour un même lien, les autres voient seulement un nombre"],
- ["Signalement : lien et motif","Avertir les autres. Ils voient seulement un nombre"],
+ ["Signalement : lien de l'annonce, numéros de téléphone et courriels de l'annonceur (seulement en empreinte chiffrée, jamais en clair), empreinte visuelle des photos (la photo ne quitte pas ton téléphone), et motif","Avertir les autres utilisateurs (mémoire collective). Ils voient seulement un nombre"],
  ["Photo de pièce d'identité, seulement pour signaler","Éviter les fausses accusations. Lue automatiquement pour pré-remplir les informations, puis vérifiée par l'équipe. Supprimée après la vérification"],
  ["Informations lues sur la pièce : prénom, nom, année de naissance, date d'expiration, province ou pays ; empreinte chiffrée du numéro (jamais le numéro lui-même)","Vérifier l'identité, repérer une pièce expirée, une personne mineure ou une pièce utilisée par deux comptes. Une fois l'identité confirmée, seuls le prénom, l'initiale du nom et la date d'expiration sont gardés ; tout est effacé si elle est refusée"],
  ["Ville, chambres et budget de « Trouver »","Chercher des annonces. Non conservés"],
  ["Vérification complète : adresse, lot, lien de l'annonce et, si tu le donnes, le nom de l'annonceur","Faire la vérification que tu as payée et te remettre le rapport. Le rapport donne le nom du propriétaire inscrit au Registre foncier (information publique), sans aucun document"],
  ["Compteurs d'utilisation (écrans ouverts par jour) et erreurs techniques","Améliorer l'app. Compteurs sans lien avec ton compte ; erreurs sans renseignement personnel"],
  ["Ville approximative de connexion, seulement si tu l'actives dans Mon compte : ville, région, pays (déduits de l'adresse IP, sans GPS ni adresse IP conservée) et type d'appareil","Repérer une connexion inhabituelle sur ton compte et savoir quelles régions nous servons. Visible seulement par les administrateurs"],
- ["Analyse intelligente, seulement si tu l'actives : captures et texte de l'annonce et de la conversation","Extraire les informations et repérer les signaux d'arnaque. Envoyés à Anthropic pour l'analyse, jamais conservés par HabitaScan"]],["Renseignement","Pourquoi"])}
+ ["Analyse intelligente, seulement si tu l'actives : captures et texte de l'annonce, réponse de l'annonceur et captures de la discussion","Extraire les informations et repérer les signaux d'arnaque, surtout dans la conversation. Envoyés à Anthropic pour l'analyse, jamais conservés par HabitaScan"],
+ ["Numéros de téléphone et courriels de l'annonceur trouvés dans l'annonce ou la conversation","Vérifier s'ils ont déjà été signalés. Comparés puis oubliés, sauf si tu les signales (empreinte chiffrée seulement)"]],["Renseignement","Pourquoi"])}
 <p class="hint"><b>Restent sur ton téléphone :</b> le texte des annonces et des conversations, tes captures (sauf si la recherche des photos est activée : envoyée à Google Cloud Vision puis oubliée), la photo du compte de taxes, ton budget et ton revenu.</p>
 <p class="hint"><b>Résultat automatique :</b> le verdict est calculé à partir de règles publiques. Il porte sur l'annonce, pas sur toi. Tu peux demander quelles règles ont mené à un résultat.</p></div>
 <div class="card"><h2>Fournisseurs, dont hors du Québec</h2>${t([
@@ -717,7 +718,8 @@ const RAPPORT={global:{continuer:["g","Tu peux continuer","Rien d'anormal n'a é
  doublons:{aucun:["g","Aucune autre annonce du même logement n'a été trouvée."],trouves:["y","Le même logement est annoncé ailleurs, sous un autre nom ou à un autre prix."],non_verifie:["i","Autres annonces non vérifiées."]}};
 function htmlRapport(d){const r=d.rapport||{},g=RAPPORT.global[d.verdict_global||r.global];const L=[];
  const ajout=(m,k,det)=>{const x=m&&m[k];if(x)L.push(`<li><span class="dot ${x[0]}"></span><div>${x[1]}${det?`<div class="law">${esc(det)}</div>`:""}</div></li>`)};
- const reg=r.registre||{},e=r.entreprise||{};if(reg.nom)L.push(`<li><span class="dot i"></span><div><b>Au moment de signer, le bail doit être au nom de : ${esc(reg.nom)}</b>${d.role==="locataire"?" (c'est aussi ce nom qui doit signer l'accord écrit de cession)":""}. Sinon, ne paie pas avant d'avoir un mandat écrit de ce propriétaire.</div></li>`);if((reg.resultat||d.verdict)==="compagnie"&&e.applicable)L.push(`<li><span class="dot i"></span><div>Le propriétaire inscrit au Registre foncier est une entreprise.${reg.details?`<div class="law">${esc(reg.details)}</div>`:""}</div></li>`);else ajout(VERDICTS,reg.resultat||d.verdict,reg.details);
+ const reg=r.registre||{},e=r.entreprise||{};if(reg.nom)L.push(`<li><span class="dot i"></span><div><b>Au moment de signer, le bail doit être au nom de : ${esc(reg.nom)}</b>${d.role==="locataire"?" (c'est aussi ce nom qui doit signer l'accord écrit de cession)":""}. Sinon, ne paie pas avant d'avoir un mandat écrit de ce propriétaire.</div></li>`);
+ L.push(`<li><span class="dot g"></span><div><b>Paie seulement par chèque ou virement au nom ${reg.nom?`de ${esc(reg.nom)}`:"du propriétaire inscrit au Registre foncier"}.</b> Jamais en argent comptant, par carte-cadeau, cryptomonnaie, ni à une autre personne. Si un gestionnaire perçoit les loyers, demande d'abord le mandat écrit du propriétaire.</div></li>`);if((reg.resultat||d.verdict)==="compagnie"&&e.applicable)L.push(`<li><span class="dot i"></span><div>Le propriétaire inscrit au Registre foncier est une entreprise.${reg.details?`<div class="law">${esc(reg.details)}</div>`:""}</div></li>`);else ajout(VERDICTS,reg.resultat||d.verdict,reg.details);
  if(e.applicable){ajout(RAPPORT.entreprise,e.lien,[e.nom,e.neq?`NEQ ${e.neq}`:"",e.details].filter(Boolean).join(" · "))}
  ajout(RAPPORT.photos,(r.photos||{}).resultat,(r.photos||{}).details);ajout(RAPPORT.doublons,(r.doublons||{}).resultat,(r.doublons||{}).details);
  return `${g?`<div class="verdict ${g[0]}"><strong>${g[1]}</strong><span>${g[2]}</span></div>`:""}
@@ -948,7 +950,7 @@ ${m==="logement"?ligne("Ville",esc(x.ville||""))+ligne("Chambres",x.ch==3?"3 et 
 ${ligne("Référence",`<span class="num">${esc(String(x.id).slice(0,8).toUpperCase())}</span>`)}
 </dl></div>
 <div class="card"><h2>Ce que l'app a vérifié</h2>${R.length?`<ul class="reasons">${R.map(i=>`<li><span class="dot ${esc(i.c)}"></span><div>${nettoyerHTML(i.t)}${i.law?`<div class="law">${nettoyerHTML(i.law)}</div>`:""}</div></li>`).join("")}</ul>`:`<p class="soft">Le détail n'a pas été conservé pour cette ancienne vérification.</p>`}</div>
-<p class="rule">${REGLE_VERDICT[m][x.c]||""}</p>
+<p class="rule">${REGLE_VERDICT[m][x.c]||""}</p>${m==="logement"&&x.c!=="r"?`<p class="rule paiement">${REGLE_PAIEMENT}</p>`:""}
 <p class="hint">Résultat calculé le ${esc(dateCourte(x.date))} avec les informations fournies à ce moment. Une annonce peut changer : vérifie-la de nouveau avant de payer.</p>
 ${m==="logement"?`<button class="btn" data-go="verifier">Vérifier une autre annonce</button>`:`<button class="btn" data-go="reno">Vérifier un autre entrepreneur</button>`}
 <button class="btn ghost danger-txt" id="h-suppr">Retirer de mon historique</button>
@@ -1038,13 +1040,22 @@ const FILTRE_SIGNAUX=[
  ["g",/(oui|yes|bien sur|sure|parfait|ok|d.accord).{0,60}(visite|visiter|visit)|(visite|visit).{0,40}(possible|disponible|available)/, "Il accepte la visite."],
  ["g",/(signature|signer|sign).{0,60}(bail|lease)|(bail|lease).{0,60}(signature|signer|sign)/, "Il accepte de signer un bail."]];
 const sansAcc=t=>String(t||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[’']/g,"'");
+const TEXTES_FILTRE={r:["Ne paie pas","Sa réponse contient un signal d'arnaque. Ne paie rien et n'envoie aucun document."],
+ y:["Prudence","Rien d'alarmant, mais garde la règle : visite d'abord, et paie seulement à la signature du bail."],
+ g:["Bonne réponse","Il accepte la visite et la signature. Continue : visite, puis compare le nom sur le bail avec le propriétaire inscrit."],
+ i:["Pas assez d'indices","Sa réponse ne dit ni oui ni non à la visite. Repose la question : « Quand puis-je visiter ? »"]};
+const IA_ROUGES=["argent_avant_bail","depot","paiement_suspect","proprietaire_absent","refus_visite","refus_bail","paiement_autre_personne"];
+SIGNAUX_IA.refus_bail="Refus de signer un bail";SIGNAUX_IA.paiement_autre_personne="Paiement demandé au nom d'une autre personne";SIGNAUX_IA.histoire_incoherente="Histoire qui change ou se contredit";
+/* Combine l'analyse locale et l'analyse IA de la conversation, puis recalcule le verdict. */
+function fusionFiltre(A,r){const s=[...A.signaux];
+ for(const x of (r.signaux||[]))s.push({c:IA_ROUGES.includes(x.type)?"r":"y",m:`<b>${esc(SIGNAUX_IA[x.type]||"Élément inhabituel")}</b> : « ${esc(x.extrait)} »${x.explication?" "+esc(x.explication):""}`});
+ let c=s.some(z=>z.c==="r")?"r":s.some(z=>z.c==="y")?"y":s.some(z=>z.c==="g")?"g":"i";
+ if(r.reponse_filtre==="refuse")c="r";else if(r.reponse_filtre==="accepte"&&c==="i")c="g";else if(r.reponse_filtre==="esquive"&&c==="g")c="y";
+ const t=TEXTES_FILTRE[c];return {c,t:t[0],s:t[1],signaux:s,ia:true,resume:r.resume||""}}
 function analyserReponse(t){const x=sansAcc(t);const s=FILTRE_SIGNAUX.filter(([,re])=>re.test(x)).map(([c,,m])=>({c,m}));
  const r=s.filter(z=>z.c==="r").length,y=s.filter(z=>z.c==="y").length,g=s.filter(z=>z.c==="g").length;
  const c=r?"r":y?"y":g?"g":"i";
- const t2={r:["Ne paie pas","Sa réponse contient un signal d'arnaque. Ne paie rien et n'envoie aucun document."],
-  y:["Prudence","Rien d'alarmant, mais garde la règle : visite d'abord, et paie seulement à la signature du bail."],
-  g:["Bonne réponse","Il accepte la visite et la signature. Continue : visite, puis compare le nom sur le bail avec le propriétaire inscrit."],
-  i:["Pas assez d'indices","Sa réponse ne dit ni oui ni non à la visite. Repose la question : « Quand puis-je visiter ? »"]}[c];
+ const t2=TEXTES_FILTRE[c];
  return {c,t:t2[0],s:t2[1],signaux:s}}
 function blocFiltre(){const lang=F.flang||"fr",ces=F.cession==="oui";const msg=FILTRE_MSG[lang][ces?"ces":"std"];const A=F.frep;
  return `<div class="card filtre"><p class="offre-eti">Gratuit · nouveau</p><h2>Le message-filtre</h2>
@@ -1053,15 +1064,30 @@ function blocFiltre(){const lang=F.flang||"fr",ces=F.cession==="oui";const msg=F
 <blockquote class="msg" id="f-msg" lang="${lang}">${esc(msg)}</blockquote>
 ${typeof navigator!=="undefined"&&navigator.share?`<div class="duo"><button type="button" class="btn" id="f-copier">Copier le message</button><button type="button" class="btn ghost" id="f-partager">Partager</button></div>`:`<button type="button" class="btn" id="f-copier">Copier le message</button>`}
 <label for="f-rep" style="margin-top:14px">Colle sa réponse ici</label><textarea id="f-rep" rows="4" maxlength="3000" placeholder="La réponse de l'annonceur…">${esc(F.frepTxt||"")}</textarea>
+<label class="drop" style="margin-top:4px">${(F.fcaps||[]).length?`<b>${F.fcaps.length} capture${F.fcaps.length>1?"s":""} de la discussion</b> · toucher pour changer`:"Ajouter des captures de la discussion (facultatif)"}<input type="file" accept="image/*" multiple id="f-caps"></label>
+${IA_ADAPT.dispo?`<label class="ia-opt"><input type="checkbox" id="f-ia" ${iaActif()?"checked":""}><span><b>Analyse intelligente de la conversation</b> (IA)<span class="hint">Lit sa réponse et tes captures de la discussion, aussi en anglais : c'est là que les fraudeurs se trahissent. Envoyées à Anthropic pour l'analyse, puis oubliées.</span></span></label>`:""}
 <button type="button" class="btn ghost" id="f-lire">Analyser sa réponse</button>
 ${A?`<div class="verdict ${A.c}" id="f-res" role="status"><strong>${A.t}</strong><span>${A.s}</span></div>${A.signaux.length?`<ul class="reasons">${A.signaux.map(z=>`<li><span class="dot ${z.c}"></span><div>${z.m}</div></li>`).join("")}</ul>`:""}`:""}
-<p class="hint">L'analyse se fait sur ton téléphone ; le texte n'est envoyé nulle part. Elle repère des indices connus, sans certitude.</p></div>`}
+${A&&A.resume?`<p class="lu"><b>Résumé de l'IA :</b> ${esc(A.resume)}</p>`:""}
+<p class="hint">${A&&A.ia?"Analysée par l'IA et par les règles de l'app. Elle repère des indices connus, sans certitude.":"Sans l'analyse intelligente, l'analyse se fait sur ton téléphone ; le texte n'est envoyé nulle part. Elle repère des indices connus, sans certitude."}</p></div>`}
 function bindPlus8(v){if(v!=="resultat"||!$("#f-msg"))return;
  app.querySelectorAll("[data-flang]").forEach(b=>b.onclick=()=>{F.flang=b.dataset.flang;F.frepTxt=$("#f-rep").value;go("resultat");setTimeout(()=>{const e=$("#f-msg");if(e)e.scrollIntoView({block:"center"})},0)});
  const msg=()=>$("#f-msg").textContent;
  $("#f-copier").onclick=async()=>{const b=$("#f-copier");try{await navigator.clipboard.writeText(msg());b.textContent="Copié ✓"}catch(e){const r=document.createRange();r.selectNodeContents($("#f-msg"));const s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent="Sélectionné : copie-le"}setTimeout(()=>{if(b.isConnected)b.textContent="Copier le message"},2500)};
  const p=$("#f-partager");if(p)p.onclick=()=>navigator.share({text:msg()}).catch(()=>{});
- $("#f-lire").onclick=()=>{const t=$("#f-rep").value.trim();if(t.length<3){$("#f-rep").focus();return}F.frepTxt=t;F.frep=analyserReponse(t);try{MES.noter("filtre_analyse")}catch(e){}go("resultat");setTimeout(()=>{const e=$("#f-res");if(e)e.scrollIntoView({block:"center"})},0)}}
+ const fc=$("#f-caps");if(fc)fc.onchange=()=>{F.frepTxt=$("#f-rep").value;F.fcaps=[...fc.files].slice(0,4);go("resultat");setTimeout(()=>{const e=$("#f-msg");if(e)e.scrollIntoView({block:"center"})},0)};
+ const fia=$("#f-ia");if(fia)fia.onchange=()=>{try{localStorage.setItem(CLE_IA,fia.checked?"1":"0")}catch(e){}};
+ $("#f-lire").onclick=async()=>{const t=$("#f-rep").value.trim(),caps=F.fcaps||[];if(t.length<3&&!caps.length){$("#f-rep").focus();return}
+  F.frepTxt=t;let A=analyserReponse(t);const b=$("#f-lire");
+  if(iaActif()){b.disabled=true;b.textContent="Analyse de la conversation…";
+   try{const images=[];for(const c of caps)images.push(await reduireImage(c));const r=await IA_ADAPT.analyser({images,texte:t,mode:"conversation"});A=fusionFiltre(A,r);
+    F.contacts=fusionContacts(F.contacts,{tels:r.telephones,courriels:r.courriels});try{MES.noter("ia_conversation")}catch(e){}}
+   catch(x){A.s+=x&&x.message==="quota"?" (Limite d'analyses IA atteinte pour aujourd'hui : analyse simple utilisée.)":" (L'analyse intelligente n'a pas fonctionné : analyse simple utilisée.)"}}
+  /* Mémoire collective : les numéros et courriels donnés dans la conversation. */
+  const cc=extraireContacts(t);F.contacts=fusionContacts(F.contacts,cc);
+  const m=await memoire(cc.tels.length||cc.courriels.length?F.contacts:{tels:[],courriels:[]},[]);
+  itemsMemoire(m).forEach(x=>A.signaux.unshift({c:x.c,m:x.t}));if(A.signaux.some(z=>z.c==="r")&&A.c!=="r"){A.c="r";A.t=TEXTES_FILTRE.r[0];A.s=TEXTES_FILTRE.r[1]}
+  F.frep=A;try{MES.noter("filtre_analyse")}catch(e){}go("resultat");setTimeout(()=>{const e=$("#f-res");if(e)e.scrollIntoView({block:"center"})},0)}}
 const CSS_PLUS8=""; /* styles déplacés dans app.css */
 document.head.insertAdjacentHTML("beforeend","<style>"+CSS_PLUS8+"</style>");
 /* Adaptateurs historique, compte, lieu (Supabase : table verifications, profil, fonctions *_connexion, fonction Vercel /api/lieu) */
@@ -1075,6 +1101,39 @@ const LIEU={dispo:true,demo:false,actif:()=>!!(PROFIL&&PROFIL.partage_lieu),
  async definir(b){await rpc("definir_partage_lieu",{p_actif:b});if(PROFIL)PROFIL.partage_lieu=b;if(b){LIEU_NOTE=false;return noterLieu()}return null},
  };
 /* Une fois par ouverture de l'app, seulement si la personne l'a activé */
+/* ===== Mémoire collective : numéros, courriels et photos déjà signalés par d'autres utilisateurs =====
+   Les numéros et courriels sont envoyés au serveur seulement pour être comparés ; il ne les garde qu'en empreinte chiffrée,
+   et seulement si la personne les signale. Les photos ne quittent jamais le téléphone : seule leur empreinte visuelle est envoyée. */
+const REGLE_PAIEMENT="Paie seulement par chèque ou virement au nom du propriétaire inscrit au Registre foncier. Jamais en argent comptant, par carte-cadeau, cryptomonnaie, ni à une autre personne.";
+const RE_TEL=/(?:\+?1[\s.\-]?)?\(?([2-9]\d{2})\)?[\s.\-]?(\d{3})[\s.\-]?(\d{4})\b/g,RE_COURRIEL=/[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}/g;
+function extraireContacts(...textes){const t=textes.filter(Boolean).join("\n"),tels=new Set(),cour=new Set();
+ for(const m of t.matchAll(RE_TEL))tels.add(m[1]+m[2]+m[3]);
+ for(const m of t.matchAll(RE_COURRIEL))cour.add(m[0].toLowerCase());
+ return {tels:[...tels].slice(0,5),courriels:[...cour].slice(0,5)}}
+function fusionContacts(a,b){a=a||{};b=b||{};
+ const tels=[...(a.tels||[]),...(b.tels||[]).map(x=>String(x).replace(/\D/g,"").slice(-10))].filter(x=>/^\d{10}$/.test(x));
+ const cour=[...(a.courriels||[]),...(b.courriels||[]).map(x=>String(x).trim().toLowerCase())].filter(x=>/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/.test(x));
+ return {tels:[...new Set(tels)].slice(0,5),courriels:[...new Set(cour)].slice(0,5)}}
+/* Empreinte visuelle (dHash 64 bits) : la même photo, même redimensionnée ou recompressée, garde presque la même empreinte. */
+function empreintePhoto(source){return new Promise(ok=>{const im=new Image();im.onload=()=>{try{
+ /* Réduction en deux temps (lissée), puis moyenne par blocs : stable malgré le redimensionnement et la compression. */
+ const W=72,Hh=64,c=document.createElement("canvas");c.width=W;c.height=Hh;const x=c.getContext("2d");x.imageSmoothingEnabled=true;x.imageSmoothingQuality="high";
+ const t=document.createElement("canvas");t.width=288;t.height=256;const tx=t.getContext("2d");tx.imageSmoothingEnabled=true;tx.imageSmoothingQuality="high";tx.drawImage(im,0,0,288,256);x.drawImage(t,0,0,W,Hh);
+ const d=x.getImageData(0,0,W,Hh).data,v=[];for(let by=0;by<8;by++)for(let bx=0;bx<9;bx++){let s=0;for(let yy=0;yy<8;yy++)for(let xx=0;xx<8;xx++){const p=((by*8+yy)*W+bx*8+xx)*4;s+=d[p]*.299+d[p+1]*.587+d[p+2]*.114}v.push(s)}
+ let bits="";for(let y=0;y<8;y++)for(let i=0;i<8;i++)bits+=v[y*9+i]>v[y*9+i+1]?"1":"0";
+ let h="";for(let k=0;k<64;k+=4)h+=parseInt(bits.slice(k,k+4),2).toString(16);ok(h)}catch(e){ok(null)}};im.onerror=()=>ok(null);im.src=typeof source==="string"?source:URL.createObjectURL(source)})}
+async function empreintesPhotos(fichiers){const L=[];for(const f of (fichiers||[]).slice(0,8)){const h=await empreintePhoto(f);if(h&&!/^0+$|^f+$/.test(h))L.push(h)}return [...new Set(L)]}
+async function memoire(c,photos){c=c||{tels:[],courriels:[]};if(!SESSION||(!c.tels.length&&!c.courriels.length&&!(photos||[]).length))return null;
+ try{const {data,error}=await sb.rpc("memoire_collective",{p_tels:c.tels,p_courriels:c.courriels,p_photos:photos||[]});return error?null:data}catch(e){return null}}
+function itemsMemoire(m){const it=[];if(!m)return it;
+ const max=L=>Math.max(0,...(L||[]).map(Number)),nt=max(m.tels),nc=max(m.courriels),np=+m.photo||0;
+ const item=(n,quoi,fem)=>({c:n>=SEUIL_ROUGE?"r":"y",t:`<b>${quoi} a déjà été signalé${fem?"e":""} ${n} fois</b> par ${n>1?"des utilisateurs":"un utilisateur"} à l'identité confirmée.${n>=SEUIL_ROUGE?" Ne paie rien.":" Redouble de prudence."}`,law:"Mémoire collective HabitaScan : chaque signalement avertit les personnes suivantes."});
+ if(nt)it.push(item(nt,"Ce numéro de téléphone"));if(nc)it.push(item(nc,"Ce courriel"));if(np)it.push(item(np,"Cette photo",true));return it}
+const peutSignaler=F=>!!(F.lienN||(F.contacts&&(F.contacts.tels.length||F.contacts.courriels.length))||(F.photos&&F.photos.length));
+function resumeSignal(F){const c=F.contacts||{tels:[],courriels:[]},p=F.photos||[],L=[];
+ if(F.lienN)L.push("le lien de l'annonce");if(c.tels.length)L.push(c.tels.length>1?`${c.tels.length} numéros de téléphone`:"le numéro de téléphone");
+ if(c.courriels.length)L.push(c.courriels.length>1?`${c.courriels.length} courriels`:"le courriel");if(p.length)L.push(p.length>1?`${p.length} photos`:"la photo");
+ return L.length?`<p class="lu">Ce signalement portera sur : ${L.join(", ")}. Les numéros et courriels sont gardés seulement sous forme chiffrée, jamais en clair.</p>`:""}
 async function envoyerPiece(){const doc=F.doc||"permis";err("");
  busy(true,"Envoi sécurisé…");const uid=(await sb.auth.getUser()).data.user.id,stamp=Date.now();
  for(const s of ["recto","verso"]){const f=F[s];if(!f)continue;const ext=(f.type.split("/")[1]||"jpg").replace("jpeg","jpg");
@@ -1182,7 +1241,7 @@ ${blocHistorique()}
 verifier:()=>`${top("accueil","Vérifier")}
 <h2>L'annonce</h2>
 <form class="card" id="f-ver" novalidate>
-<label class="drop drop-grand">${F.vignettes&&F.vignettes.length?`<span class="vignettes">${F.vignettes.map(u=>`<img src="${u}" alt="Capture">`).join("")}</span>Changer les captures`:`<b>Ajoute des captures d'écran</b><span>L'annonce et, si tu l'as, la conversation. L'app lit tout.</span>`}<input type="file" accept="image/*" multiple data-captures="1"></label>
+<label class="drop drop-grand">${F.vignettes&&F.vignettes.length?`<span class="vignettes">${F.vignettes.map(u=>`<img src="${u}" alt="Capture">`).join("")}</span>Changer les captures`:`<b>Ajoute des captures d'écran</b><span>L'annonce et, si tu l'as, la conversation. Ajoute surtout la conversation avec l'annonceur : c'est là que les fraudeurs se trahissent.</span>`}<input type="file" accept="image/*" multiple data-captures="1"></label>
 ${blocIA()}
 ${F.lu?`<p class="lu" role="status">${F.lu}</p>`:""}
 <details class="coller" ${F.coller?"open":""}><summary>ou coller le texte</summary>
@@ -1195,6 +1254,7 @@ ${F.lu?`<p class="lu" role="status">${F.lu}</p>`:""}
 <div class="grid2"><label>Chambres<select id="ch"><option value="1">1</option><option value="2">2</option><option value="3">3 et plus</option></select></label>
 <label>Loyer demandé<input id="prix" inputmode="numeric" placeholder="1 300" value="${esc(F.prix)}"></label></div>
 <label>Adresse (facultatif, reste sur ton téléphone)<input id="adr" autocomplete="off" placeholder="1234, rue Exemple" value="${esc(F.adr||"")}"></label>
+<label>Téléphone ou courriel de l'annonceur (facultatif)<input id="contact" autocomplete="off" placeholder="514 555-0123 ou nom@exemple.com" value="${esc(F.contact||"")}"><span class="hint" style="font-weight:400">Pour savoir s'il a déjà été signalé par d'autres utilisateurs.</span></label>
 ${yn("argent","On te demande de l'argent avant la signature du bail ?")}
 ${yn("visite","As-tu pu visiter le logement en personne ?")}
 ${yn("cession","Est-ce le locataire actuel qui annonce (cession de bail ou sous-location) ?")}
@@ -1208,6 +1268,7 @@ resultat:()=>{const R=F.res;return `${top("accueil","Résultat")}
 <div class="verdict ${R.c}"><strong>${{r:"Ne paie pas",y:"Visite d'abord, puis vérifie le propriétaire",g:"Aucun signal. Tu peux visiter."}[R.c]}</strong><span>${esc(F.ville)} · ${F.ch==="3"?"3 ch. et plus":F.ch+" ch."} · <span class="num">${money(F.prixN)}</span></span></div>
 <div class="card"><h2>Ce que l'app a vérifié</h2><ul class="reasons">${R.items.map(i=>`<li><span class="dot ${i.c}"></span><div>${i.t}${i.law?`<div class="law">${i.law}</div>`:""}</div></li>`).join("")}</ul></div>
 <p class="rule">${{r:"N'envoie aucun argent et ne donne aucune pièce d'identité à cette personne.",y:"Ne paie rien avant d'avoir visité et confirmé qui est le propriétaire.",g:"Avant de payer : confirme le propriétaire, puis signe le bail. Le premier mois se paie à la signature, jamais avant, et jamais de dépôt."}[R.c]}</p>
+${R.c!=="r"?`<p class="rule paiement">${REGLE_PAIEMENT}</p>`:""}
 <button class="btn ghost" data-go="proprio" id="b-proprio">Vérifier le propriétaire</button>
 <p class="hint">Sans rien demander à l'annonceur : l'adresse suffit, et la comparaison se fait au moment de signer.</p>
 ${blocFiltre()}
@@ -1251,7 +1312,7 @@ const err=m=>{const e=$("#e");if(e){e.textContent=m;e.hidden=!m}};
 const busy=(on,label)=>{const b=$("#go");if(b){b.disabled=on;if(label)b.textContent=label}};
 function appliquerLecture(r){["prix","ch","ville","cession"].forEach(k=>{if(r[k])F[k]=r[k]});if(r.lien&&!F.lien)F.lien=r.lien;
  const res=resumeLecture(r);F.lu=res?`<b>Lu :</b> ${esc(res)}. Vérifie et corrige si besoin.`:"Je n'ai pas trouvé le prix ni la ville : remplis-les ci-dessous."}
-function keep(){["annonce","lien","ville","ch","prix","adr","txt"].forEach(k=>{const el=$("#"+k);if(el)F[k]=el.value})}
+function keep(){["annonce","lien","ville","ch","prix","adr","txt","contact"].forEach(k=>{const el=$("#"+k);if(el)F[k]=el.value})}
 
 /* Compte facultatif : chaque appareil reçoit une session anonyme ; créer un compte la relie à un courriel ou un cellulaire (même historique). */
 /* Compte obligatoire : une session existe seulement après la validation du code (courriel ou cellulaire). */
@@ -1325,12 +1386,15 @@ function bind(v){
   $("#reprendre").onclick=()=>{F.recto=F.verso=F.rectoUrl=F.versoUrl=F.lecture=null;go("identite")}}
 
  if(v==="compte"&&$("#deco"))$("#deco").onclick=async()=>{await sb.auth.signOut();PROFIL=null;HIST=[];F={};SESSION=false;LIEU_NOTE=false;go("bienvenue")};
- if(v==="resultat"&&$("#signaler"))$("#signaler").onclick=()=>{const sig={lienN:F.lienN,ville:F.ville};LS.set("vl_sig",sig);
+ if(v==="resultat"&&$("#signaler"))$("#signaler").onclick=()=>{const sig={lienN:F.lienN,ville:F.ville,contacts:F.contacts,photos:F.photos};LS.set("vl_sig",sig);
   if(ANONYME)return go("inscription");const st=PROFIL&&PROFIL.identite_statut;
   if(st==="confirmee"){F=sig;return go("signaler")}go(st==="en_attente"?"attente":"identite")};
- if(v==="signaler"){if(!F.lienN){const sig=LS.get("vl_sig");if(sig)F=sig}lierSignaler(F);$("#f-sig").onsubmit=async e=>{e.preventDefault();err("");const m=validerSignal(F);if(m)return err(m);
-  busy(true,"Envoi…");const {error}=await sb.from("signalements").insert({lien:F.lienN,motif:F.motif});
-  if(error&&!String(error.code).includes("23505")){busy(false,"Réessayer");return err("Le signalement n'a pas pu être envoyé. Réessaie.")}
+ if(v==="signaler"){if(!peutSignaler(F)){const sig=LS.get("vl_sig");if(sig)F=sig}lierSignaler(F);$("#f-sig").onsubmit=async e=>{e.preventDefault();err("");const m=validerSignal(F);if(m)return err(m);
+  busy(true,"Envoi…");let ok=false;
+  if(F.lienN){const {error}=await sb.from("signalements").insert({lien:F.lienN,motif:F.motif});if(!error||String(error.code).includes("23505"))ok=true}
+  const c=F.contacts||{tels:[],courriels:[]};
+  if(c.tels.length||c.courriels.length||(F.photos||[]).length){const {error}=await sb.rpc("signaler_cles",{p_motif:F.motif,p_tels:c.tels,p_courriels:c.courriels,p_photos:F.photos||[]});if(!error)ok=true}
+  if(!ok){busy(false,"Réessayer");return err("Le signalement n'a pas pu être envoyé. Réessaie.")}
   LS.set("vl_sig",null);F={};go("signalOk")}}
  if(v==="verifier"){$("#lire").onclick=()=>{keep();F.coller=true;if(iaActif()&&!F.iaOff){go("verifier");return lancerIA(true)}appliquerLecture(extraireAnnonce(F.annonce,Object.keys(LOYERS)));go("verifier")};
   if(F.partage){F.partage=false;appliquerLecture(extraireAnnonce(F.annonce,Object.keys(LOYERS)));return go("verifier")}
@@ -1348,6 +1412,8 @@ function bind(v){
   F.stats=null;F.nbSig=0;F.images=null;
   if(F.lienN&&SESSION){const [a,b]=await Promise.all([sb.rpc("stats_lien",{p_lien:F.lienN}),sb.rpc("nb_signalements",{p_lien:F.lienN})]);F.stats=a.data&&a.data[0];F.nbSig=+b.data||0}
   if(F.capture)F.images=await rechercheImages(F.capture);
+  F.contacts=fusionContacts(extraireContacts(F.contact,F.annonce,F.ocrTxt,F.txt),{tels:(F.ia||{}).telephones,courriels:(F.ia||{}).courriels});
+  F.photos=await empreintesPhotos(F.captures);F.mem=await memoire(F.contacts,F.photos);
   F.res=analyser();
   const brut=F.res.items.map(i=>({c:i.c,t:String(i.t).slice(0,1500),law:String(i.law||"").slice(0,800)}));
   const ins=SESSION?sb.from("verifications").insert({ville:F.ville,chambres:+F.ch,prix:F.prixN,couleur:F.res.c,raisons:brut,lien:F.lienN}):Promise.resolve();
@@ -1384,6 +1450,7 @@ function analyser(){
   const st=F.stats;if(st&&+st.rouges>0)it.push({c:"r",t:`<b>${st.rouges} vérification${st.rouges>1?"s":""} précédente${st.rouges>1?"s":""} de cette annonce ${st.rouges>1?"ont":"a"} donné « Ne paie pas ».</b>`});
   else if(st&&+st.total>0)it.push({c:"i",t:`Cette annonce a déjà été vérifiée ${st.total} fois, sans arnaque probable.`});
   const sg=itemSignalements(F.nbSig);if(sg)it.push(sg);}
+ itemsMemoire(F.mem).forEach(x=>it.push(x));
  if(F.images&&F.images.pages&&F.images.pages.length)it.push({c:"y",t:`<b>Ces images apparaissent sur ${F.images.pages.length} autre${F.images.pages.length>1?"s":""} page${F.images.pages.length>1?"s":""} du web.</b> Les fraudeurs copient souvent les photos d'une vraie annonce. ${F.images.pages.slice(0,3).map(u=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(new URL(u).hostname)}</a>`).join(", ")}`,law:"Recherche d'image inversée (Google Vision)"});
  else if(F.images&&F.images.ok)it.push({c:"g",t:"Les images de la capture n'ont pas été trouvées ailleurs sur le web."});
  if(!F.images)it.push({c:"i",t:"Astuce : cherche la photo de l'annonce avec Google Lens (dans l'app Google) pour voir si elle est publiée ailleurs."});
