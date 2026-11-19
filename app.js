@@ -619,8 +619,8 @@ const PARAMS=[ // clé en base → où l'app l'utilise
  {cle:"epicerie",n:"Épicerie par personne par mois",get:()=>EPICERIE.p,set:v=>EPICERIE.p=v},
  {cle:"garde_jour",n:"Garderie subventionnée par jour",get:()=>GARDE.jour,set:v=>GARDE.jour=v}];
 /* Réglages modifiables dans la console d'administration */
-const CFG={ia:true,recherche:true,approfondie:true,message:"",support:""};
-const DRAPEAUX={ia_active:"ia",recherche_active:"recherche",approfondie_active:"approfondie"};
+const CFG={ia:true,recherche:true,approfondie:true,sms:false,message:"",support:""};
+const DRAPEAUX={ia_active:"ia",recherche_active:"recherche",approfondie_active:"approfondie",sms_actif:"sms"};
 function appliquerParametres(rows){(rows||[]).forEach(r=>{const p=PARAMS.find(x=>x.cle===r.cle);const v=+r.valeur;if(p&&v>0)p.set(v);if(DRAPEAUX[r.cle])CFG[DRAPEAUX[r.cle]]=v!==0})}
 const nb=v=>Number(v||0).toLocaleString("fr-CA");
 function vueAdmin(){const onglet=F.onglet||"chiffres";
@@ -1279,12 +1279,12 @@ bienvenue:()=>`${top()}
 <p class="hint centre"><a href="/">En savoir plus</a> · <a href="/guides/arnaques-courantes">Arnaques courantes</a> · <a href="/en" lang="en" hreflang="en">English</a></p>
 <p class="hint pied">${lienConditions.replace("conditions d'utilisation","Conditions d'utilisation")}${lienConfidentialite.replace("politique de confidentialité","Confidentialité")}</p>`,
 
-inscription:()=>{const t=F.canal||"courriel";return `${top("bienvenue",F.modeCx?"Connexion":"Inscription")}
-${F.modeCx?`<h2>Connecte-toi</h2><p class="soft">Entre le courriel ou le numéro de ton compte : tu retrouves ton historique. Pas de mot de passe : tu reçois un code à 6 chiffres.</p>`:`<h2>Crée ton compte</h2><p class="soft">Gratuit, en 30 secondes. Pas de mot de passe : tu reçois un code à 6 chiffres. Si ce courriel a déjà un compte, tu le retrouves simplement.</p>`}
+inscription:()=>{const t=CFG.sms?(F.canal||"courriel"):"courriel";return `${top("bienvenue",F.modeCx?"Connexion":"Inscription")}
+${F.modeCx?`<h2>Connecte-toi</h2><p class="soft">Entre ${CFG.sms?"le courriel ou le numéro":"le courriel"} de ton compte : tu retrouves ton historique. Pas de mot de passe : tu reçois un code à 6 chiffres.</p>`:`<h2>Crée ton compte</h2><p class="soft">Gratuit, en 30 secondes. Pas de mot de passe : tu reçois un code à 6 chiffres. Si ce courriel a déjà un compte, tu le retrouves simplement.</p>`}
 <form class="card" id="f-ins" novalidate>
-<div class="seg" role="group" aria-label="Moyen de connexion">
+${CFG.sms?`<div class="seg" role="group" aria-label="Moyen de connexion">
 <button type="button" data-canal="courriel" aria-pressed="${t==="courriel"}">Courriel</button>
-<button type="button" data-canal="tel" aria-pressed="${t==="tel"}">Téléphone</button></div>
+<button type="button" data-canal="tel" aria-pressed="${t==="tel"}">Téléphone</button></div>`:""}
 ${t==="courriel"?`<label>Adresse courriel<input id="ident" type="email" inputmode="email" autocomplete="email" placeholder="nom@exemple.com" value="${esc(F.ident)}"></label>`
 :`<label>Numéro de cellulaire<input id="ident" type="tel" inputmode="tel" autocomplete="tel" placeholder="514 555-0123" value="${esc(F.ident)}"></label>`}
 <p class="err" id="e" hidden></p>
@@ -1460,6 +1460,7 @@ const msgAuth=e=>{const m=(e&&e.message||"").toLowerCase();
  if(m.includes("rate")||m.includes("seconds"))return "Trop de demandes. Attends une minute avant de redemander un code.";
  if(m.includes("phone")||m.includes("sms")||m.includes("provider"))return "L'envoi par SMS n'est pas encore activé. Utilise ton courriel.";
  if(m.includes("expired")||m.includes("invalid"))return "Code incorrect ou expiré.";
+ if(m.includes("sending")||m.includes("email")||(e&&e.status===500))return "Le courriel n'a pas pu être envoyé. Vérifie l'adresse, puis réessaie dans quelques minutes.";
  return "Une erreur est survenue. Réessaie dans un instant.";};
 
 function bind(v){
