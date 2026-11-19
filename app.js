@@ -464,12 +464,29 @@ ${r.source.courtier?`<li><span class="dot g"></span><div>Publiée par un courtie
 ${r.prix&&r.moy?`<li><span class="dot i"></span><div>Loyer moyen SCHL ici : ${m0(r.moy)}.</div></li>`:""}</ul>
 ${r.exemple?`<button class="btn" data-verif="${i}">Vérifier</button>`:`<div class="grid2"><a class="btn ghost lienbouton" href="${esc(r.url)}" target="_blank" rel="noopener">Ouvrir</a><button class="btn" data-verif="${i}">Vérifier</button></div>`}
 </div></article>`}
-function liensSites(f){const ch=f.ch==="3"?"3 chambres":f.ch?f.ch+" chambres":"";const q=`logement à louer ${ch} ${f.ville}`.replace(/\s+/g," ");
+/* Liens vers les sites, avec les critères du formulaire déjà appliqués quand le site le permet.
+   Kijiji : adresses vérifiées (catégorie appartements c37, lieu, ?numberbedrooms=, ?price=__max).
+   Facebook Marketplace : maxPrice et minBedrooms (non documentés par Facebook : si ignorés, la page reste utilisable). */
+const KIJIJI_LIEUX={"Montréal":["ville-de-montreal","l1700281"],"Québec":["ville-de-quebec","l1700124"],"Gatineau":["gatineau","l1700186"],
+ "Sherbrooke":["sherbrooke-qc","l1700156"],"Saguenay":["saguenay-lac-saint-jean","l1700178","Saguenay–Lac-Saint-Jean"],"Rimouski":["rimouski-bas-st-laurent","l1700250","Bas-Saint-Laurent"],
+ "Rivière-du-Loup":["rimouski-bas-st-laurent","l1700250","Bas-Saint-Laurent"],"Trois-Rivières":["mauricie","l1700147","Mauricie"],"Drummondville":["centre-du-quebec","l1700121","Centre-du-Québec"]};
+const FB_VILLES={"Montréal":"montreal"};
+function lienKijiji(f){const l=KIJIJI_LIEUX[f.ville];if(!l)return null;const p=new URLSearchParams();
+ if(f.ch)p.set("numberbedrooms",f.ch==="3"?"3,4":f.ch);if(f.max)p.set("price","__"+f.max);
+ const q=p.toString();return `https://www.kijiji.ca/b-appartement-condo/${l[0]}/c37${l[1]}${q?"?"+q:""}`}
+function lienFacebook(f){const p=new URLSearchParams();if(f.max)p.set("maxPrice",f.max);if(f.ch)p.set("minBedrooms",f.ch);p.set("exact","false");
+ const v=FB_VILLES[f.ville];return `https://www.facebook.com/marketplace/${v?v+"/propertyrentals":"category/propertyrentals"}?${p}`}
+function liensSites(f){const ch=f.ch==="3"?"3 chambres":f.ch?f.ch+" chambres":"";const taille=f.ch?`${+f.ch+2} 1/2 `:"";
+ const q=`${taille}à louer ${ch} ${f.ville}`.replace(/\s+/g," ").trim();
  const g=site=>`https://www.google.com/search?q=${encodeURIComponent(q+" site:"+site)}&tbs=qdr:w`;
- return `<div class="card"><h2>Chercher aussi directement</h2><p class="hint">Recherches des 7 derniers jours sur chaque site. Trouve une annonce, puis reviens la vérifier.</p>
-<div class="choix-accueil">
-<a class="btn ghost lienbouton" href="https://www.facebook.com/marketplace/category/propertyrentals" target="_blank" rel="noopener">Facebook Marketplace<small>Choisis ${esc(f.ville)} et ton prix dans les filtres</small></a>
-${[["kijiji.ca","Kijiji"],["centris.ca","Centris (courtiers)"],["kangalou.com","Kangalou"],["louer.ca","Louer.ca"],["duproprio.com","DuProprio"]].map(([d,n])=>`<a class="btn ghost lienbouton" href="${g(d)}" target="_blank" rel="noopener">${n}</a>`).join("")}
+ const crit=[f.ville,f.ch?(f.ch==="3"?"3 ch. et plus":f.ch+" ch."):"",f.max?"max "+m0(+f.max):""].filter(Boolean).join(" · ");
+ const kj=lienKijiji(f),reg=KIJIJI_LIEUX[f.ville]&&KIJIJI_LIEUX[f.ville][2];
+ const lien=(href,nom,sous)=>`<a class="btn ghost lienbouton" href="${esc(href)}" target="_blank" rel="noopener">${nom}<small>${sous}</small></a>`;
+ return `<div class="card"><h2>Chercher aussi directement</h2><p class="hint">Les liens s'ouvrent avec tes critères (${esc(crit)}) quand le site le permet. Trouve une annonce, puis reviens la vérifier.</p>
+<div class="choix-accueil sites">
+${lien(lienFacebook(f),"Facebook Marketplace",`${FB_VILLES[f.ville]?esc(f.ville)+" · ":""}${f.ch?"chambres et ":""}prix déjà filtrés${FB_VILLES[f.ville]?"":" · choisis la ville"}`)}
+${kj?lien(kj,"Kijiji",`${reg?"Région "+esc(reg):esc(f.ville)} · filtres déjà appliqués`):lien(g("kijiji.ca"),"Kijiji","Annonces des 7 derniers jours")}
+${[["centris.ca","Centris (courtiers)"],["kangalou.com","Kangalou"],["logisquebec.com","LogisQuébec"],["louer.ca","Louer.ca"],["lespac.com","LesPAC"]].map(([d,n])=>lien(g(d),n,`${esc(taille.trim()||"Logements")} à ${esc(f.ville)} · 7 derniers jours`)).join("")}
 </div></div>`}
 function vueTrouver(F,back){const f=F.filtre||(F.filtre={ville:villeDefaut(),ch:"",max:""});
  return `${top(back,"Trouver")}
