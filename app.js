@@ -517,6 +517,9 @@ function lierTrouver(F){const f=F.filtre;
   catch(x){F.resultats=[];F.noteRecherche=x&&x.message==="quota"?"Tu as atteint la limite de recherches pour aujourd'hui. Réessaie demain, ou cherche directement sur les sites ci-dessous.":"La recherche n'a pas fonctionné. Réessaie, ou cherche directement sur les sites ci-dessous."}
   if(!$("#f-tr"))return;b.disabled=false;b.textContent="Chercher";afficher()};
  $("#f-tr").onsubmit=e=>{e.preventDefault();chercher()};
+ /* Les liens suivent les critères dès qu'un champ change. */
+ const majLiens=()=>{f.ville=$("#t-ville").value;f.ch=$("#t-ch").value;f.max=nombre($("#t-max").value)||"";const s=$("#sites");if(s)s.innerHTML=liensSites(f)};
+ ["t-ville","t-ch","t-max"].forEach(i=>{const el=$("#"+i);if(el){el.addEventListener("input",majLiens);el.addEventListener("change",majLiens)}});
  if(F.resultats)afficher();else if(f.max)chercher();else $("#sites").innerHTML=liensSites(f)}
 
 /* ---------- Liaison ---------- */
