@@ -99,6 +99,15 @@ Tout le pas-à-pas (Google Play, App Store, textes des fiches, captures, questio
 - **iPhone** : demande un Mac avec Xcode et l'Apple Developer Program (99 $ US par an).
 - Pas encore inclus : la réception d'une annonce partagée depuis Facebook ou Kijiji (bouton « Partager » du téléphone). L'app web la gère déjà ; l'app native pourra l'ajouter plus tard.
 
+## 6 b. Mémoire collective (signalements)
+
+Chaque signalement d'un utilisateur à l'identité confirmée avertit les suivants : le **lien** de l'annonce (table `signalements`), et maintenant les **numéros de téléphone**, **courriels** et **photos** de l'annonceur (table `signalements_cles`).
+- Les numéros et courriels ne sont jamais conservés en clair : seulement une empreinte SHA-256 (fonction `empreinte_contact`).
+- Les photos ne quittent pas le téléphone : seule une empreinte visuelle de 64 bits est envoyée ; deux photos sont jugées identiques à 6 bits d'écart au plus (même photo redimensionnée ou recompressée).
+- À 3 signalements (`SEUIL_ROUGE` dans `app.js`), l'avertissement passe au rouge : « Ce numéro de téléphone a déjà été signalé 3 fois ».
+- Console admin, onglet Signalements : voir et retirer ces signalements.
+- Migration : `supabase/migrations/20261119_memoire_collective.sql` (à coller dans SQL Editor si elle n'est pas encore appliquée).
+
 ## 7. Espace admin et confidentialité
 
 **Espace admin** : connecte-toi dans l'app avec le compte déclaré admin (section 1). Un bouton « Espace admin » apparaît à l'accueil, visible seulement pour toi. Il a 4 onglets :
