@@ -1,12 +1,9 @@
+# Inutiles à la construction du site (le site publié est seulement le dossier public/)
 app-native/
 supabase/
+tests/
+.github/
 *.sql
-*.mjs
+preparer-licences.mjs
 LISEZ-MOI.md
 courriel-*.html
-src/
-tests/
-outils/
-.github/
-.prettierrc.json
-.gitattributes

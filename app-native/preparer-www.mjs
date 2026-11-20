@@ -1,10 +1,12 @@
 // Copie l'app web (dossier parent) dans www/ pour Capacitor.
+// - L'app est construite à partir de src/ (outils/construire.mjs) : installer d'abord les outils (cd outils && npm install).
 // - Supabase est intégré (pas de chargement depuis Internet au démarrage).
 // - Les liens vers le site public deviennent des adresses complètes : ils s'ouvrent dans le navigateur du téléphone.
 // - Pas de service worker ni de manifeste : inutiles dans une app native.
 import { mkdirSync, rmSync, readFileSync, writeFileSync, copyFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { texteApp } from "../outils/construire.mjs";
 
 const ici = dirname(fileURLToPath(import.meta.url));
 const web = join(ici, "..");
@@ -17,7 +19,7 @@ mkdirSync(join(www, "vendor"), { recursive: true });
 for (const f of ["app.css", "theme.js", "md.js", "icon.svg", "icon-180.png", "icon-192.png", "icon-512.png"]) copyFileSync(join(web, f), join(www, f));
 copyFileSync(join(ici, "node_modules/@supabase/supabase-js/dist/umd/supabase.js"), join(www, "vendor/supabase.js"));
 
-let js = readFileSync(join(web, "app.js"), "utf8");
+let js = await texteApp();
 const avant = js;
 js = js.replace(/href="\/(?!\/)/g, `href="${SITE}/`);
 if (js === avant) console.warn("Aucun lien relatif trouvé dans app.js (vérifier).");

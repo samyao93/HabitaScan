@@ -1,91 +1,18 @@
-// Génère les pages du site /confidentialite et /conditions à partir des écrans de l'app (app.js),
-// pour que le texte soit toujours le même dans l'app et sur le site.
+// Génère les pages du site /confidentialite et /conditions à partir des écrans de l'app (src/legal/),
+// pour que le texte d'origine soit le même dans l'app et sur le site.
 // Usage (à la racine du projet) :  node outils/pages-legales.mjs
 // Prérequis : Node 22 ou plus récent, et Google Chrome (chemin modifiable avec la variable CHROME).
-// À relancer après toute modification des textes juridiques dans app.js.
-import { spawn } from "node:child_process";
-import { mkdtempSync, writeFileSync, readFileSync, copyFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join, dirname } from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+// À relancer après toute modification des textes d'origine dans src/legal/confidentialite.js ou src/legal/conditions.js.
+// (Les versions modifiées dans la console admin s'affichent par-dessus, sans relancer cet outil.)
+import { writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { RACINE, rendreEcrans } from "./ecrans.mjs";
 
-const RACINE = join(dirname(fileURLToPath(import.meta.url)), "..");
-const CHROME =
-  process.env.CHROME ||
-  (process.platform === "win32"
-    ? "C:/Program Files/Google/Chrome/Application/chrome.exe"
-    : process.platform === "darwin"
-      ? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-      : "google-chrome");
+// 1. Rendu des deux écrans dans Chrome sans interface (Supabase simulé, comme pour les tests)
+const rendu = await rendreEcrans();
+const ecrans = { confidentialite: rendu.sansSession.confidentialite, conditions: rendu.sansSession.conditions };
 
-// 1. Copie de l'app, sans serveur : Supabase est simulé, et une fonction rend un écran à la demande.
-const tmp = mkdtempSync(join(tmpdir(), "hs-legal-"));
-let js = readFileSync(join(RACINE, "app.js"), "utf8");
-const fin = js.lastIndexOf("}");
-js = js.slice(0, fin) + "\nwindow.HS_ECRAN=v=>{SESSION=false;go(v);return app.innerHTML};\n" + js.slice(fin);
-writeFileSync(join(tmp, "app.js"), js);
-writeFileSync(
-  join(tmp, "stub.js"),
-  'function mk(){const f=function(){};return new Proxy(f,{get(t,p){if(p==="then")return r=>r({data:null,error:null});return mk()},apply(){return mk()}})}window.supabase={createClient:()=>mk()};',
-);
-for (const f of ["app.css", "theme.js", "icon.svg"]) copyFileSync(join(RACINE, f), join(tmp, f));
-const html = readFileSync(join(RACINE, "app.html"), "utf8").replace(
-  /<script src="https:\/\/cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@[^"]+"><\/script>/,
-  '<script src="stub.js"></script>',
-);
-writeFileSync(join(tmp, "app.html"), html);
-
-// 2. Chrome sans interface : rendu des deux écrans.
-const port = 9600 + Math.floor(Math.random() * 300);
-const chrome = spawn(
-  CHROME,
-  [
-    "--headless=new",
-    "--disable-gpu",
-    `--remote-debugging-port=${port}`,
-    `--user-data-dir=${mkdtempSync(join(tmpdir(), "hs-chrome-"))}`,
-    "--allow-file-access-from-files",
-    "about:blank",
-  ],
-  { stdio: "ignore" },
-);
-const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
-let cible;
-for (let i = 0; i < 50 && !cible; i++) {
-  try {
-    cible = (await (await fetch(`http://127.0.0.1:${port}/json`)).json()).find((t) => t.type === "page");
-  } catch {}
-  await attendre(200);
-}
-if (!cible) throw new Error("Chrome ne répond pas. Vérifie le chemin (variable CHROME).");
-const ws = new WebSocket(cible.webSocketDebuggerUrl);
-await new Promise((r) => (ws.onopen = r));
-let id = 0;
-const att = new Map();
-ws.onmessage = (e) => {
-  const m = JSON.parse(e.data);
-  if (m.id && att.has(m.id)) {
-    att.get(m.id)(m);
-    att.delete(m.id);
-  }
-};
-const env = (method, params = {}) =>
-  new Promise((r) => {
-    const i = ++id;
-    att.set(i, r);
-    ws.send(JSON.stringify({ id: i, method, params }));
-  });
-await env("Page.enable");
-await env("Page.navigate", { url: pathToFileURL(join(tmp, "app.html")).href });
-await attendre(2000);
-const rendre = async (v) =>
-  (await env("Runtime.evaluate", { expression: `HS_ECRAN(${JSON.stringify(v)})`, returnByValue: true })).result.result
-    .value;
-const ecrans = { confidentialite: await rendre("confidentialite"), conditions: await rendre("conditions") };
-ws.close();
-chrome.kill();
-
-// 3. Adaptation au site : sans la barre de l'app, liens internes → pages du site, premier titre en h1.
+// 2. Adaptation au site : sans la barre de l'app, liens internes → pages du site, premier titre en h1.
 const adapter = (h) =>
   h
     .replace(/<div class="top">[\s\S]*?<\/div>/, "")
@@ -119,7 +46,7 @@ for (const [nom, p] of Object.entries(PAGES)) {
 <link rel="icon" href="/icon.svg" type="image/svg+xml"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet"><script src="/theme.js"></script><link rel="stylesheet" href="/site.css">
 </head>
 <body>
-<!-- Page générée par outils/pages-legales.mjs à partir de app.js : ne pas modifier à la main. -->
+<!-- Page générée par outils/pages-legales.mjs à partir de src/legal/ : ne pas modifier à la main. -->
 ${NAV}
 <article class="legal"><p class="fil"><a href="/">Accueil</a> › ${p.titre}</p>
 ${adapter(ecrans[nom])}

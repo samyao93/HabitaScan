@@ -9,6 +9,8 @@ import { mkdtempSync, writeFileSync, readFileSync, copyFileSync, mkdirSync, exis
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { build } from "esbuild";
+import { optionsApp } from "./construire.mjs";
 
 export const RACINE = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -38,20 +40,29 @@ const STUB =
 
 /**
  * Prépare une copie de l'app dans un dossier temporaire, l'ouvre dans Chrome et exécute `travail(evaluer)`.
- * `extra` : code ajouté à la fin du bloc de app.js (tout le code de l'app est dans un bloc { … } : ses variables
- * ne sont visibles que de l'intérieur).
+ * `extra` : code (module ES, chemins relatifs à src/) exécuté après le démarrage de l'app ; il peut importer
+ * n'importe quel module de l'app pour l'observer.
  */
 export async function avecApp(travail, extra = "") {
   const chrome = cheminChrome();
   if (!chrome) throw new Error("Google Chrome introuvable (variable CHROME).");
   const tmp = mkdtempSync(join(tmpdir(), "hs-app-"));
-  for (const f of [...scriptsApp(), "app.css", "theme.js", "icon.svg"]) {
+  for (const f of [...scriptsApp().filter((s) => s !== "app.js"), "app.css", "theme.js", "icon.svg"]) {
     mkdirSync(dirname(join(tmp, f)), { recursive: true });
     copyFileSync(join(RACINE, f), join(tmp, f));
   }
-  const js = readFileSync(join(RACINE, "app.js"), "utf8");
-  const fin = js.lastIndexOf("}");
-  writeFileSync(join(tmp, "app.js"), js.slice(0, fin) + "\n" + extra + "\n" + js.slice(fin));
+  // L'app construite comme en production, avec en plus le code d'observation
+  await build(
+    optionsApp({
+      entryPoints: undefined,
+      stdin: {
+        contents: `import "./main.js";\n${extra}`,
+        resolveDir: join(RACINE, "src"),
+        sourcefile: "observation.js",
+      },
+      outfile: join(tmp, "app.js"),
+    }),
+  );
   writeFileSync(join(tmp, "stub.js"), STUB);
   const html = readFileSync(join(RACINE, "app.html"), "utf8").replace(
     /<script src="https:\/\/cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@[^"]+"><\/script>/,
@@ -131,8 +142,20 @@ export async function avecApp(travail, extra = "") {
 
 /** HTML de chaque écran (clés de V), sans session puis avec une session simulée. */
 export async function rendreEcrans() {
-  const extra = `window.HS_ECRANS=()=>Object.keys(V);
-window.HS_ECRAN=(v,session)=>{SESSION=session;try{go(v);return app.innerHTML}catch(e){return "ERREUR : "+e.message}};`;
+  const extra = `import { etat } from "./etat.js";
+import { go } from "./navigation/routeur.js";
+import { V } from "./navigation/ecrans.js";
+import { app } from "./utils/dom.js";
+window.HS_ECRANS = () => Object.keys(V);
+window.HS_ECRAN = (v, session) => {
+  etat.session = session;
+  try {
+    go(v);
+    return app.innerHTML;
+  } catch (e) {
+    return "ERREUR : " + e.message;
+  }
+};`;
   return avecApp(async (evaluer, erreurs) => {
     const ecrans = await evaluer("HS_ECRANS()");
     const sortie = { erreursChargement: [...erreurs], sansSession: {}, avecSession: {} };
