@@ -1,4 +1,7 @@
 {
+  "installCommand": "cd outils && npm ci",
+  "buildCommand": "node outils/construire.mjs",
+  "outputDirectory": "public",
   "cleanUrls": true,
   "redirects": [
     {

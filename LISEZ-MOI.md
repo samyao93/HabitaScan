@@ -102,7 +102,7 @@ Tout le pas-à-pas (Google Play, App Store, textes des fiches, captures, questio
 Chaque signalement d'un utilisateur à l'identité confirmée avertit les suivants : le **lien** de l'annonce (table `signalements`), et maintenant les **numéros de téléphone**, **courriels** et **photos** de l'annonceur (table `signalements_cles`).
 - Les numéros et courriels ne sont jamais conservés en clair : seulement une empreinte SHA-256 (fonction `empreinte_contact`).
 - Les photos ne quittent pas le téléphone : seule une empreinte visuelle de 64 bits est envoyée ; deux photos sont jugées identiques à 6 bits d'écart au plus (même photo redimensionnée ou recompressée).
-- À 3 signalements (`SEUIL_ROUGE` dans `src/app/03-signalements.js`), l'avertissement passe au rouge : « Ce numéro de téléphone a déjà été signalé 3 fois ».
+- À 3 signalements (`SEUIL_ROUGE` dans `src/signalements/signalements.js`), l'avertissement passe au rouge : « Ce numéro de téléphone a déjà été signalé 3 fois ».
 - Console admin, onglet Signalements : voir et retirer ces signalements.
 - Migration : `supabase/migrations/20261119_memoire_collective.sql` (à coller dans SQL Editor si elle n'est pas encore appliquée).
 
@@ -187,7 +187,7 @@ Avant le lancement, la politique de confidentialité doit mentionner Google Visi
 
 ## Fichiers
 
-- `app.html` (servie à `/app`) et `app.js` : l'app web. **app.js est généré** à partir de `src/app/` (voir « Développement ») : ne le modifie pas directement.
+- `app.html` (servie à `/app`) et `src/` : l'app web (modules construits en `app.js` par esbuild, voir « Développement »)
 - `index.html` : la page d'accueil du site (`/`) ; `admin.html` : la console d'administration
 - `supabase/schema.sql` : structure complète de la base ; `supabase/migrations/` : historique des changements
 - `supabase/functions/_shared/commun.ts` : code commun à toutes les fonctions (CORS, réponses, quota quotidien)
@@ -208,16 +208,40 @@ Avant le lancement, la politique de confidentialité doit mentionner Google Visi
 
 ## Développement
 
-### Où est le code de l'app
-L'app est découpée en morceaux dans `src/app/`, numérotés dans l'ordre (`01-config-et-annonceur.js`, `02-lecture-annonce.js`, …, `17-demarrage.js`). `app.js` est leur assemblage, dans un seul bloc `{ … }` : un nom déclaré dans un morceau est visible dans tous les autres, et aucun ne se mélange aux variables du navigateur.
+### Organisation du code de l'app
+Le code est dans `src/`, en modules JavaScript standard (`import` / `export`), regroupés par thème. Chaque thème sépare :
+- `regles.js` : la logique (calculs, verdicts), sans affichage, testée par `tests/logique.test.mjs` ;
+- `ecrans.js` : le HTML des écrans ;
+- `liaisons.js` : les boutons et champs (ce qui se passe quand on touche).
 
-Après une modification dans `src/app/` : `cd outils && npm run assembler` (ou `npm run format`, qui met aussi le code en forme), puis ajoute `app.js` au commit.
+| Dossier | Contenu |
+|---|---|
+| `src/main.js` | point d'entrée : initialisations, puis démarrage |
+| `src/etat.js` | état partagé (vérification en cours, session, profil…) |
+| `src/navigation/` | table des écrans (`ecrans.js`) et affichage d'un écran (`routeur.js`) |
+| `src/annonce/` | vérification d'une annonce : règles, lecture, verdict |
+| `src/filtre/`, `src/memoire/`, `src/ia/`, `src/signalements/` | message-filtre, mémoire collective, analyse intelligente, signalements |
+| `src/proprietaire/`, `src/budget/`, `src/trouver/`, `src/renovation/` | les autres outils de l'app |
+| `src/compte/`, `src/identite/`, `src/historique/` | compte, pièce d'identité, historique |
+| `src/approfondie/`, `src/admin/`, `src/mesure/`, `src/legal/` | vérification complète, espace admin, mesure d'usage, pages légales |
+| `src/utils/` | outils communs (affichage, texte, liens, images, stockage) |
+| `src/config.js` | configuration (Supabase, seuils) |
+
+Règle : un module ne dépasse pas 300 lignes (un test le vérifie). Au-delà, on le découpe par responsabilité.
+
+### Construire et essayer
+`app.js` n'est pas dans le dépôt : il est construit par esbuild à partir de `src/main.js`.
+- Une fois : `cd outils && npm install`.
+- Essayer l'app en local : `cd outils && npm run dev`, puis ouvrir http://localhost:8000/app.html. L'app est reconstruite à chaque modification de `src/`.
+- Construire le site : `cd outils && npm run construire` → dossier `public/` (le site complet, tel qu'il est mis en ligne).
+- Vercel fait la même chose à chaque déploiement (`vercel.json` : `installCommand`, `buildCommand`, `outputDirectory`).
+- L'app native : `cd app-native && node preparer-www.mjs` construit l'app à partir de `src/` (installe d'abord les outils).
 
 ### Vérifier avant de pousser
-Une fois : `cd outils && npm install`. Ensuite : `cd outils && npm run verifier`. Cette commande vérifie :
-- la mise en forme (Prettier) et les erreurs courantes (ESLint : nom mal écrit, clé en double, code inatteignable…) ;
-- que `app.js` correspond bien à `src/app/` ;
-- les tests (`tests/`) : verdict, mots repérés et négations, budget (net ou brut), lecture du prix et des chambres, liens Kijiji, liens sûrs, empreintes de texte, message-filtre, sécurité du Markdown des pages légales, absence de clés secrètes, et l'affichage de chaque écran dans Chrome.
+`cd outils && npm run verifier` lance :
+- la mise en forme (Prettier) et les erreurs courantes (ESLint : nom inconnu, import inutilisé, code jamais utilisé, clé en double…) ;
+- la construction de l'app (aucune erreur ni avertissement) ;
+- les tests (`tests/`) : verdict, mots repérés et négations, budget (net ou brut), lecture du prix et des chambres, liens Kijiji, liens sûrs, empreintes de texte, message-filtre, sécurité du Markdown des pages légales, taille des modules, modules oubliés, absence de clés secrètes, et l'affichage de chaque écran dans Chrome.
 
 Les mêmes vérifications tournent sur GitHub à chaque PR (`.github/workflows/verifications.yml`), plus la vérification des types des fonctions Supabase (Deno). Ne fusionne pas une PR dont une vérification est rouge.
 
