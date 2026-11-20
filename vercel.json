@@ -43,16 +43,6 @@
       ],
       "destination": "/app",
       "permanent": false
-    },
-    {
-      "source": "/confidentialite",
-      "destination": "/app?v=confidentialite",
-      "permanent": false
-    },
-    {
-      "source": "/conditions",
-      "destination": "/app?v=conditions",
-      "permanent": false
     }
   ],
   "headers": [

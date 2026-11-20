@@ -25,7 +25,7 @@
 <!-- À COMPLÉTER : mêmes renseignements que RESPONSABLE dans app.js -->
 <p>HabitaScan est exploitée par <b>[nom légal de l'entreprise]</b>, [ville], Québec.<br>Numéro d'entreprise du Québec (NEQ) : <b>[à compléter après l'immatriculation]</b><br>Responsable de la protection des renseignements personnels : <b>[Prénom Nom]</b><br>Nous joindre : <b>[courriel]</b></p>
 <div class="encart"><h3>Prêt à vérifier une annonce ?</h3><a class="btn" href="/app" target="_blank" rel="noopener">Ouvrir l'app</a></div></article>
-<footer><div class="wrap"><span>© 2026 HabitaScan · Fait au Québec</span><span><a href="/">Accueil</a> · <a href="/a-propos">Qui sommes-nous</a> · <a href="/guides/arnaques-courantes">Arnaques courantes</a> · <a href="/guides/verifier-un-proprietaire">Vérifier un propriétaire</a> · <a href="/en">English</a></span></div></footer>
+<footer><div class="wrap"><span>© 2026 HabitaScan · Fait au Québec</span><span><a href="/">Accueil</a> · <a href="/a-propos">Qui sommes-nous</a> · <a href="/guides/arnaques-courantes">Arnaques courantes</a> · <a href="/guides/verifier-un-proprietaire">Vérifier un propriétaire</a> · <a href="/confidentialite">Confidentialité</a> · <a href="/conditions">Conditions d'utilisation</a> · <a href="/en">English</a></span></div></footer>
 <script>
 fetch("https://oyiiaqyepihkawzkkjpi.supabase.co/rest/v1/parametres?select=cle,valeur&cle=in.(prix_verif,delai_verif_heures)",{headers:{apikey:"sb_publishable_LhDVlSvpyM-bkW-QSp0lsw_wgNIsELX"}})
 .then(r=>r.ok?r.json():[]).then(L=>{const v=Object.fromEntries(L.map(x=>[x.cle,+x.valeur]));
