@@ -394,3 +394,6 @@ ul.reasons .dot.i::after,.liste .dot.i::after{inset:7px}
 
 /* Liens vers les sites d'annonces (écran Trouver) */
 .choix-accueil.sites .btn{--ic:var(--i-search)}
+
+/* Montant dans le titre d'un verdict : même taille et même couleur que le titre */
+.verdict strong .num{font-size:inherit;color:inherit}
