@@ -1,6 +1,7 @@
 <!-- Modèle Supabase n° 1 : Authentication > Emails > Templates > « Magic Link ».
      Objet : Ton code de connexion HabitaScan
      Envoyé à un compte déjà confirmé (connexion dans l'app et dans la console admin).
+     Durée de validité : doit correspondre à « Email OTP Expiration » (Authentication > Sign In / Providers > Email), 3600 s = 1 heure.
      Le modèle n° 2 (« Confirm signup », pour un nouveau compte) est dans courriel-inscription.html. -->
 <div style="margin:0;padding:32px 12px;background:#f4f6fa;font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#0e1726">
   <div style="max-width:480px;margin:0 auto">
@@ -9,7 +10,7 @@
       <p style="margin:0 0 6px;font-size:20px;font-weight:700">Ton code de connexion</p>
       <p style="margin:0 0 22px;font-size:15px;color:#5c6678">Entre ce code dans HabitaScan pour te connecter.</p>
       <p style="margin:0 0 22px;padding:18px 0;background:#ebf1fd;border-radius:12px;text-align:center;font-size:36px;font-weight:800;letter-spacing:10px;color:#0b3d91;font-family:'SFMono-Regular',Consolas,monospace">{{ .Token }}</p>
-      <p style="margin:0 0 6px;font-size:14px;color:#5c6678">Il expire bientôt. Si tu n'as pas demandé ce code, ignore ce courriel : personne ne pourra se connecter sans lui.</p>
+      <p style="margin:0 0 6px;font-size:14px;color:#5c6678"><b>Ce code est valide pendant 1 heure</b> et ne peut servir qu'une seule fois. Passé ce délai, demande un nouveau code dans l'app. Si tu n'as pas demandé ce code, ignore ce courriel : personne ne pourra se connecter sans lui.</p>
     </div>
     <div style="margin:16px 0 0;padding:14px 16px;background:#ecf7f0;border-radius:12px;font-size:13.5px;line-height:1.5;color:#18703c">
       <b>Rappel :</b> ne paie rien avant d'avoir visité le logement, confirmé le propriétaire et signé le bail. Au Québec, aucun dépôt ne peut être exigé, seulement le premier mois de loyer.
