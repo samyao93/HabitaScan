@@ -346,7 +346,7 @@ const POSTES=[["loyer","Loyer"],["elec","Électricité"],["epicerie","Épicerie"
 const gardeDefaut=B=>String(Math.round(GARDE.jour*GARDE.jours*(+B.garderie||0)));
 function budgetDefaut(F){const B=F.B||(F.B={});
  if(!B.ville)B.ville=F.ville&&LOYERS[F.ville]?F.ville:villeDefaut();
- if(!B.ch)B.ch=F.ch||"1";if(!B.unite)B.unite="an";if(!B.adultes)B.adultes="1";if(!B.enfants)B.enfants="0";if(!B.garderie)B.garderie="0";if(!B.mois)B.mois="3";
+ if(!B.ch)B.ch=F.ch||"1";if(!B.unite)B.unite="an";if(!B.netUnite)B.netUnite="mois";if(!B.adultes)B.adultes="1";if(!B.enfants)B.enfants="0";if(!B.garderie)B.garderie="0";if(!B.mois)B.mois="3";
  if(+B.garderie>+B.enfants)B.garderie=B.enfants;
  if(B.transport==null){const t=TRANSIT[B.ville];B.transport=t?String(Math.round(t.p*(+B.adultes||1)*100)/100).replace(".",","):""}
  if(B.assurance==null)B.assurance=String(ASSURANCE.p);
@@ -357,6 +357,7 @@ function budgetDefaut(F){const B=F.B||(F.B={});
 const montant=v=>{const n=parseFloat(String(v||"").replace(/\s/g,"").replace(",","."));return isNaN(n)?0:n};
 function calculerBudget(B){
  const rev=montant(B.revenu),revMois=B.unite==="an"?rev/12:rev;
+ const net=montant(B.net),netMois=B.netUnite==="an"?net/12:B.netUnite==="2sem"?net*26/12:net;
  const loyer=montant(B.loyer),elec=montant(B.elec);
  const postes=POSTES.map(([k,n])=>({k,n,v:montant(B[k])})).filter(p=>p.v>0);
  const mensuel=postes.reduce((a,p)=>a+p.v,0);
@@ -365,7 +366,7 @@ function calculerBudget(B){
  const max=revMois?Math.max(0,Math.floor(revMois*0.30-elec)):0;
  const ratio=revMois?(loyer+elec)/revMois:0;
  const l=LOYERS[B.ville],moy=l&&l[Math.min(+B.ch,3)-1];
- return {revMois,mensuel,postes,uniques,mois,total:uniques+mensuel*mois,max,ratio,moy,loyer,elec}}
+ return {revMois,netMois,reste:netMois?netMois-mensuel:0,mensuel,postes,uniques,mois,total:uniques+mensuel*mois,max,ratio,moy,loyer,elec}}
 const m0=n=>Math.round(n).toLocaleString("fr-CA")+" $";
 function comparerVilles(B,R){const ch=Math.min(+B.ch,3);
  return `<h3 class="sous">Comparer les villes</h3><p class="hint">Pour ${ch===3?"3 chambres et plus":ch+" chambre"+(ch>1?"s":"")}. Loyer moyen SCHL (octobre 2025) et laissez-passer 2026.</p>
@@ -378,7 +379,8 @@ function resultatBudget(B){const R=calculerBudget(B);if(!R.mensuel)return `<p cl
  return `<div class="tuiles"><div class="tuile fort"><span>Total pour ${R.mois} mois</span><b class="num">${m0(R.total)}</b></div>
 <div class="tuile"><span>Par mois</span><b class="num">${m0(R.mensuel)}</b></div><div class="tuile"><span>Frais uniques</span><b class="num">${m0(R.uniques)}</b></div></div>
 <p class="hint">Total : déménagement et meubles, plus ${R.mois} mois de dépenses. Le premier mois de loyer y est compris. Ne le paie qu'au moment de signer le bail, après avoir confirmé que tu parles au vrai propriétaire, et par un moyen qui laisse une trace (chèque ou virement, avec un reçu). Il ne peut rien exiger d'autre d'avance : aucun dépôt (${lienExt(L_1904,"art. 1904 C.c.Q.")}).</p>
-${R.revMois?`<div class="verdict ${c}"><strong>Loyer maximum conseillé : <span class="num">${m0(R.max)}</span></strong><span>30 % de ton revenu avant impôt, moins l'électricité (${lienExt(L_SCHL30,"règle de la SCHL")}). Ton loyer visé et l'électricité font ${Math.round(R.ratio*100)} % de ton revenu${c==="g"?" : c'est dans la norme.":c==="y"?" : le budget sera serré.":" : cherche moins cher ou une colocation."}</span></div>`:`<p class="hint">Ajoute ton revenu pour connaître le loyer maximum conseillé.</p>`}
+${R.netMois?(()=>{const cr=R.reste<0?"r":(R.reste<R.netMois*0.10||(R.loyer+R.elec)/R.netMois>0.5)?"y":"g";return `<div class="verdict ${cr}"><strong>${R.reste<0?"Il te manque":"Il te reste"} <span class="num">${m0(Math.abs(R.reste))}</span> par mois</strong><span>Salaire net de ${m0(R.netMois)} par mois, moins tes dépenses mensuelles de ${m0(R.mensuel)}${cr==="g"?" : de la marge pour l'épargne, les imprévus et les loisirs.":cr==="y"?" : c'est serré, garde une réserve pour les imprévus.":". Réduis le loyer visé ou pense à une colocation."} Le loyer et l'électricité font ${Math.round((R.loyer+R.elec)/R.netMois*100)} % de ton salaire net.</span></div>`})():""}
+${R.revMois?`<div class="verdict ${c}"><strong>Loyer maximum conseillé : <span class="num">${m0(R.max)}</span></strong><span>30 % de ton revenu avant impôt, moins l'électricité (${lienExt(L_SCHL30,"règle de la SCHL")}). Ton loyer visé et l'électricité font ${Math.round(R.ratio*100)} % de ton revenu${c==="g"?" : c'est dans la norme.":c==="y"?" : le budget sera serré.":" : cherche moins cher ou une colocation."}</span></div>`:R.netMois?"":`<p class="hint">Ajoute ton revenu pour connaître le loyer maximum conseillé.</p>`}
 <h3 class="sous">Où va ton argent chaque mois</h3>
 <div class="barres">${R.postes.sort((a,b)=>b.v-a.v).map(p=>`<div class="barre"><span>${p.n}</span><span class="num">${m0(p.v)}</span><i style="width:${Math.max(2,Math.round(p.v/R.mensuel*100))}%"></i></div>`).join("")}</div>
 ${R.moy?`<p class="hint">Loyer moyen à ${esc(B.ville)} : <b class="num">${m0(R.moy)}</b> (SCHL, Enquête sur les logements locatifs, octobre 2025).</p>`:""}
@@ -396,6 +398,8 @@ function vueBudget(F,back){const B=budgetDefaut(F);const t=TRANSIT[B.ville];
 <div class="grid2">${choix("adultes","Adultes",n([1,4]))}${choix("enfants","Enfants",n([0,5]))}</div>
 ${+B.enfants?choix("garderie","Enfants en garderie (0 à 5 ans)",n([0,+B.enfants])):""}
 <div class="grid2">${champ("revenu","Revenu du ménage avant impôt","45 000")}${choix("unite","Par",[["an","année"],["mois","mois"]])}</div>
+<div class="grid2">${champ("net","Salaire net du ménage (facultatif)","2 900")}${choix("netUnite","Par",[["mois","mois"],["2sem","2 semaines"],["an","année"]])}</div>
+<p class="hint" style="margin-top:-6px">Le montant qui arrive vraiment dans ton compte, après impôts et retenues (voir ton talon de paie). Il sert à calculer ce qui te reste chaque mois.</p>
 ${champ("loyer","Loyer visé par mois","1 200","Par défaut : loyer moyen SCHL de la ville.")}
 ${choix("mois","Prévoir l'argent pour",[["1","1 mois"],["3","3 mois"],["6","6 mois"]])}
 </div>
