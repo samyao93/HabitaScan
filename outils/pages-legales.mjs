@@ -76,6 +76,13 @@ ${NAV}
 ${adapter(ecrans[nom])}
 </article>
 ${PIED}
+<script src="/md.js"></script>
+<script>
+/* Texte modifié dans la console admin (table pages_legales) : remplace le texte d'origine ci-dessus. */
+fetch("https://oyiiaqyepihkawzkkjpi.supabase.co/rest/v1/pages_legales?select=contenu&cle=eq.${nom}",{headers:{apikey:"sb_publishable_LhDVlSvpyM-bkW-QSp0lsw_wgNIsELX"}})
+.then(r=>r.ok?r.json():[]).then(L=>{if(!L.length||!L[0].contenu||!window.hsMarkdown)return;
+ document.querySelector("article.legal").innerHTML='<p class="fil"><a href="/">Accueil</a> › ${p.titre.replace(/'/g, "\\'")}</p>'+hsMarkdown(L[0].contenu,{sections:true})}).catch(()=>{});
+</script>
 </body>
 </html>
 `;

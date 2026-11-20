@@ -871,6 +871,13 @@ const VAP={demo:false,courriel:()=>(PROFIL&&PROFIL.contact&&PROFIL.contact.inclu
  adminListe:async()=>(await rpc("admin_demandes_liste",{p_statut:""}))||[],
  adminMaj:(id,statut,verdict,note)=>rpc("admin_maj_demande",{p_id:id,p_statut:statut,p_verdict:verdict,p_note:note||""}),
  async sauverTexte(cle,valeur){const {error}=await sb.from("parametres_texte").upsert({cle,valeur,maj_le:new Date().toISOString()});if(error)throw error}};
+const PAGES_LEG={};
+async function chargerPages(){try{const {data}=await sb.from("pages_legales").select("cle,contenu");(data||[]).forEach(r=>{if(r.contenu)PAGES_LEG[r.cle]=r.contenu})}catch(e){}}
+/* Page légale rédigée dans la console (Markdown). Les liens vers l'autre page restent dans l'app. */
+function vuePageLegale(cle,titre,retour){let h=window.hsMarkdown?hsMarkdown(PAGES_LEG[cle],{sections:true}):esc(PAGES_LEG[cle]);
+ h=h.replace(/<h1>([\s\S]*?)<\/h1>/,"<h2>$1</h2>").replace(/<a href="\/(conditions|confidentialite)">([\s\S]*?)<\/a>/g,'<button type="button" class="lienbtn" data-go="$1">$2</button>');
+ if(document.documentElement.dataset.natif)h=h.replace(/href="\//g,'href="https://habitascan.vercel.app/');
+ return `${top(retour,titre)}<div class="legal-app">${h}</div>`}
 async function chargerTextes(){try{const {data}=await sb.from("parametres_texte").select("cle,valeur");(data||[]).forEach(r=>{if(r.cle==="lien_paiement")VCFG.lien=r.valeur||"";if(r.cle==="message_accueil")CFG.message=r.valeur||"";if(r.cle==="courriel_support")CFG.support=r.valeur||""})}catch(e){}}
 document.head.insertAdjacentHTML("beforeend","<style>"+CSS_PLUS4+"</style>");
 
@@ -1407,14 +1414,14 @@ attente:()=>`${top("accueil","Signaler")}<h2>Ta pièce est en vérification</h2>
 proprio:()=>vueProprio(F,"resultat"),
 budget:()=>vueBudget(F,"accueil"),
 trouver:()=>vueTrouver(F,"accueil"),
-confidentialite:()=>vueConfidentialite(SESSION?"accueil":"bienvenue"),
+confidentialite:()=>PAGES_LEG.confidentialite?vuePageLegale("confidentialite","Confidentialité",SESSION?"accueil":"bienvenue"):vueConfidentialite(SESSION?"accueil":"bienvenue"),
 supprimer:()=>vueSupprimer(),
 admin:()=>vueAdmin(),
 historique:()=>vueHistorique(),
 detailVerif:()=>vueDetailVerif(),
 compte:()=>vueCompte(),
 approfondie:()=>vueApprofondie(F,F.retourVA||"proprio"),
-conditions:()=>vueConditions(SESSION?"accueil":"bienvenue"),
+conditions:()=>PAGES_LEG.conditions?vuePageLegale("conditions","Conditions",SESSION?"accueil":"bienvenue"):vueConditions(SESSION?"accueil":"bienvenue"),
 reno:()=>vueReno(F,"accueil"),
 renoResultat:()=>vueRenoResultat(F,"accueil"),
 
@@ -1607,7 +1614,7 @@ window.recevoirPartage=t=>{if(!t)return;F={annonce:String(t).slice(0,5000),parta
 (async()=>{
  try{if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{})}catch(e){}
  go("analyse");
- try{await Promise.all([chargerLoyers(),chargerRegistre(),chargerParametres(),chargerTextes()]);
+ try{await Promise.all([chargerLoyers(),chargerRegistre(),chargerParametres(),chargerTextes(),chargerPages()]);
   await ouvrirSession();await chargerProfil();const vq=new URLSearchParams(location.search).get("v");
   go(["confidentialite","conditions"].includes(vq)?vq:SESSION?(F.partage?"verifier":"accueil"):"bienvenue")}
  catch(e){app.innerHTML=`${top()}<p class="err">Impossible de joindre le serveur. Vérifie ta connexion et recharge la page.</p>`}

@@ -87,6 +87,14 @@ td.r,th.r{text-align:right}.trunc{max-width:280px;overflow:hidden;text-overflow:
 .burger{display:none}
 @media (max-width:900px){.shell{grid-template-columns:1fr}aside{position:fixed;inset:0 auto 0 0;width:260px;z-index:30;transform:translateX(-100%);transition:transform .2s}aside.ouvert{transform:none}
  main{padding:16px}table{min-width:680px}.burger{display:inline-flex}.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.g2,.g3{grid-template-columns:1fr}.champ{grid-template-columns:1fr}.dl{grid-template-columns:1fr}}
+.edition{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px}
+@media (max-width:1100px){.edition{grid-template-columns:1fr}}
+.edition textarea{width:100%;min-height:560px;font:13.5px/1.55 ui-monospace,Consolas,monospace;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg,#fff);color:inherit;resize:vertical}
+.apercu-legal{max-height:600px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:16px;font-size:14px;line-height:1.55}
+.apercu-legal h1{font-size:22px;margin:0 0 8px}.apercu-legal h2{font-size:16px;margin:0 0 8px}
+.apercu-legal .card{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:10px 0}
+.apercu-legal table{width:100%;border-collapse:collapse;font-size:13px}.apercu-legal th,.apercu-legal td{border-bottom:1px solid var(--line);padding:6px;text-align:left;vertical-align:top}
+.aide-md code{background:rgba(127,127,127,.12);padding:1px 5px;border-radius:5px}
 </style>
 </head>
 <body>
@@ -94,6 +102,7 @@ td.r,th.r{text-align:right}.trunc{max-width:280px;overflow:hidden;text-overflow:
 <div class="voile" id="voile"></div><div class="panneau" id="panneau" role="dialog" aria-modal="true" aria-labelledby="p-titre"></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+<script src="/md.js"></script>
 <script>
 "use strict";
 const DEMO=false;
@@ -122,7 +131,7 @@ const S={vue:"tableau",moi:null,badges:{},u:{q:"",f:"tous",p:0},v:{q:"",c:"",m:"
 const VUES=[
  ["Activité",[["tableau","Tableau de bord"],["demandes","Vérifications payées","demandes"],["verifications","Vérifications"],["utilisateurs","Utilisateurs"]]],
  ["Modération",[["identites","Identités","identites"],["signalements","Signalements"],["connexions","Connexions"]]],
- ["Configuration",[["reglages","Réglages"],["loyers","Loyers de référence"],["admins","Administrateurs"]]],
+ ["Configuration",[["reglages","Réglages"],["pages","Pages légales"],["loyers","Loyers de référence"],["admins","Administrateurs"]]],
  ["Suivi",[["journal","Journal d'administration"],["erreurs","Erreurs techniques","erreurs"]]]];
 
 /* ===== Connexion ===== */
@@ -365,6 +374,21 @@ V.reglages=async m=>{const [P,T]=await Promise.all([API.table("parametres","cle,
  m.querySelectorAll("[data-num]").forEach(b=>b.onclick=async()=>{const k=b.dataset.num,v=parseFloat($("#n-"+k).value);if(!isFinite(v)||v<0)return toast("Valeur invalide.",true);if(await agir(b,()=>API.rpc("admin_maj_parametre",{p_cle:k,p_valeur:v}),"Enregistré."))afficher()});
  m.querySelectorAll("[data-txt]").forEach(b=>b.onclick=async()=>{const k=b.dataset.txt;if(await agir(b,()=>API.rpc("admin_maj_texte",{p_cle:k,p_valeur:$("#t-"+k).value.trim()}),"Enregistré."))afficher()})};
 
+V.pages=async m=>{const P={confidentialite:"Politique de confidentialité",conditions:"Conditions d'utilisation"};S.pg=S.pg||"confidentialite";
+ let rows=[],manque=false;try{rows=await API.table("pages_legales","cle,contenu,maj_le")}catch(e){manque=true}
+ const ligne=rows.find(r=>r.cle===S.pg);let txt=ligne&&ligne.contenu||"";
+ if(!txt){try{const r=await fetch("/textes/"+S.pg+".md");if(r.ok)txt=await r.text()}catch(e){}}
+ m.innerHTML=tete("Pages légales","Modifie la politique de confidentialité et les conditions d'utilisation. Une fois publiées, les modifications s'affichent tout de suite sur le site et dans l'app.")+
+ (manque?`<div class="banniere">La table des pages n'existe pas encore dans Supabase : colle la migration <b>supabase/migrations/20261120_pages_legales.sql</b> dans SQL Editor, puis Run.</div>`:"")+
+ `<div class="actions">${Object.entries(P).map(([k,l])=>`<button class="btn ${S.pg===k?"pri":""}" data-pg="${k}">${l}</button>`).join("")}</div>
+ <div class="carte"><p class="hint aide-md">${ligne?`Dernière publication : ${dt(ligne.maj_le)}.`:"Texte d'origine, pas encore modifié."} Mise en forme : <code># Titre de la page</code> · <code>## Titre de section</code> · <code>- élément de liste</code> · <code>**gras**</code> · <code>[texte du lien](https://adresse)</code> · tableau <code>| Colonne A | Colonne B |</code>. Une ligne vide sépare les paragraphes.</p>
+ <div class="edition"><textarea id="pg-txt" spellcheck="true" aria-label="Texte de la page">${esc(txt)}</textarea><div id="pg-apercu" class="apercu-legal" aria-label="Aperçu"></div></div>
+ <div class="actions" style="margin-top:12px"><button class="btn pri" id="pg-ok" ${manque?"disabled":""}>Publier</button><a class="btn" href="/${S.pg}" target="_blank" rel="noopener">Voir la page publique</a></div></div>`;
+ const ta=m.querySelector("#pg-txt"),ap=m.querySelector("#pg-apercu");
+ const maj=()=>{ap.innerHTML=window.hsMarkdown?hsMarkdown(ta.value,{sections:true}):"Aperçu indisponible"};ta.oninput=maj;maj();
+ m.querySelectorAll("[data-pg]").forEach(b=>b.onclick=()=>{S.pg=b.dataset.pg;afficher()});
+ m.querySelector("#pg-ok").onclick=async e=>{if(ta.value.trim().length<50)return toast("Le texte est trop court.",true);
+  if(await agir(e.target,()=>API.rpc("admin_maj_page",{p_cle:S.pg,p_contenu:ta.value}),"Page publiée : elle est en ligne sur le site et dans l'app."))afficher()}};
 V.loyers=async m=>{const L=await API.table("loyers_reference","ville,chambres,loyer,periode,source",["ville"]);L.sort((a,b)=>a.ville.localeCompare(b.ville,"fr")||a.chambres-b.chambres);
  const villes=[...new Set(L.map(r=>r.ville))],cell=(v,c)=>L.find(r=>r.ville===v&&r.chambres===c);
  m.innerHTML=tete("Loyers de référence","Loyers moyens utilisés pour repérer un prix anormalement bas. Mets-les à jour à chaque publication de la SCHL.")+
