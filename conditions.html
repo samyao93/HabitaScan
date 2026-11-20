@@ -29,5 +29,12 @@
 <div class="card"><h2>9. Modifications et droit applicable</h2><p>Si ces conditions changent, nous l'indiquons dans l'app. Elles sont régies par les lois du Québec. En cas de désaccord, écris-nous d'abord à [confidentialite@exemple.ca]. Pour tes renseignements personnels, consulte la <a href="/confidentialite">politique de confidentialité</a>.</p></div>
 </article>
 <footer><div class="wrap"><span>© 2026 HabitaScan · Fait au Québec</span><span><a href="/">Accueil</a> · <a href="/a-propos">Qui sommes-nous</a> · <a href="/confidentialite">Confidentialité</a> · <a href="/conditions">Conditions d'utilisation</a> · <a href="/en">English</a></span></div></footer>
+<script src="/md.js"></script>
+<script>
+/* Texte modifié dans la console admin (table pages_legales) : remplace le texte d'origine ci-dessus. */
+fetch("https://oyiiaqyepihkawzkkjpi.supabase.co/rest/v1/pages_legales?select=contenu&cle=eq.conditions",{headers:{apikey:"sb_publishable_LhDVlSvpyM-bkW-QSp0lsw_wgNIsELX"}})
+.then(r=>r.ok?r.json():[]).then(L=>{if(!L.length||!L[0].contenu||!window.hsMarkdown)return;
+ document.querySelector("article.legal").innerHTML='<p class="fil"><a href="/">Accueil</a> › Conditions d\'utilisation</p>'+hsMarkdown(L[0].contenu,{sections:true})}).catch(()=>{});
+</script>
 </body>
 </html>

@@ -14,7 +14,7 @@ const SITE = "https://habitascan.vercel.app";
 rmSync(www, { recursive: true, force: true });
 mkdirSync(join(www, "vendor"), { recursive: true });
 
-for (const f of ["app.css", "theme.js", "icon.svg", "icon-180.png", "icon-192.png", "icon-512.png"]) copyFileSync(join(web, f), join(www, f));
+for (const f of ["app.css", "theme.js", "md.js", "icon.svg", "icon-180.png", "icon-192.png", "icon-512.png"]) copyFileSync(join(web, f), join(www, f));
 copyFileSync(join(ici, "node_modules/@supabase/supabase-js/dist/umd/supabase.js"), join(www, "vendor/supabase.js"));
 
 let js = readFileSync(join(web, "app.js"), "utf8");
