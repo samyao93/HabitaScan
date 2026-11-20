@@ -2,44 +2,26 @@
 // Retrouve une annonce recopiée ailleurs même si personne ne l'a encore vérifiée dans HabitaScan.
 // Fournisseur : Tavily (secret TAVILY_API_KEY), même quota que « Trouver un logement ». 1 à 3 crédits par recherche.
 // La phrase n'est ni enregistrée ni journalisée. Seuls le titre, le lien et l'extrait publics des résultats sont renvoyés.
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { avantTraitement, json, quotaOk, propre } from "../_shared/commun.ts";
 
-async function quotaOk(req: Request): Promise<boolean> {
-  const cle = Deno.env.get("SUPABASE_ANON_KEY") ?? req.headers.get("apikey") ?? "";
-  const sb = createClient(Deno.env.get("SUPABASE_URL")!, cle, {
-    global: { headers: { Authorization: req.headers.get("Authorization") ?? "" } },
-    auth: { persistSession: false },
-  });
-  const { data, error } = await sb.rpc("consommer_quota", { p_fonction: "chercher-annonces" });
-  return !error && data === true;
-}
-
-const CORS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
 const SITES = ["kijiji.ca", "centris.ca", "realtor.ca", "duproprio.com", "rentals.ca", "louer.ca", "kangalou.com",
   "logisquebec.com", "padmapper.com", "lespac.com", "zumper.com", "craigslist.org", "liv.rent"];
-const propre = (s: unknown, n: number) => String(s || "").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim().slice(0, n);
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
-  const json = (body: unknown, status = 200) =>
-    new Response(JSON.stringify(body), { status, headers: { ...CORS, "Content-Type": "application/json" } });
-  if (req.method !== "POST") return json({ error: "methode" }, 405);
+  const refus = avantTraitement(req);
+  if (refus) return refus;
   const cle = Deno.env.get("TAVILY_API_KEY");
-  if (!cle) return json({ error: "non_configure" }, 503);
+  if (!cle) return json(req, { error: "non_configure" }, 503);
 
   let phrase = "";
   try {
     const b = await req.json();
     phrase = propre(b.phrase, 220).replace(/["“”«»]/g, "");
   } catch {
-    return json({ error: "requete" }, 400);
+    return json(req, { error: "requete" }, 400);
   }
-  if (phrase.length < 25 || phrase.split(" ").length < 6) return json({ error: "phrase" }, 400);
-  if (!(await quotaOk(req))) return json({ error: "quota" }, 429);
+  if (phrase.length < 25 || phrase.split(" ").length < 6) return json(req, { error: "phrase" }, 400);
+  if (!(await quotaOk(req, "chercher-annonces"))) return json(req, { error: "quota" }, 429);
 
   // 1) phrase exacte (recherche simple, 1 crédit) ; 2) si rien, recherche avancée sans ponctuation (2 crédits).
   //    On ne garde que les pages qui contiennent vraiment le même texte (évite les annonces simplement semblables).
@@ -64,7 +46,7 @@ Deno.serve(async (req) => {
     return suites.length > 0 && suites.filter((s) => t.includes(s)).length / suites.length >= 0.5;
   };
   let bruts = await chercher(`"${phrase}"`, "basic");
-  if (bruts === null) return json({ error: "recherche" }, 502);
+  if (bruts === null) return json(req, { error: "recherche" }, 502);
   if (!bruts.filter(proche).length) {
     const large = phrase.replace(/[^\p{L}\p{N}\s$\/-]/gu, " ").replace(/\s+/g, " ").trim();
     bruts = (await chercher(large, "advanced")) || [];
@@ -80,5 +62,5 @@ Deno.serve(async (req) => {
       vus.add(k);
       return true;
     });
-  return json({ resultats });
+  return json(req, { resultats });
 });

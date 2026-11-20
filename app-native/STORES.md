@@ -1,11 +1,11 @@
 # Publier HabitaScan sur Google Play et l'App Store
 
-L'app mobile est l'app web (`app.html`, `app.js`, `app.css`) emballée avec Capacitor 8.
+L'app mobile est l'app web (`app.html`, `app.js` assemblé à partir de `src/app/`, `app.css`) emballée avec Capacitor 8.
 Identifiant de l'app : **`ca.habitascan.app`** (ne peut plus changer après la première publication).
 
 ## 1. Avant de publier : 3 points bloquants
 
-1. **Politique de confidentialité incomplète.** Dans `app.js`, la ligne `RESPONSABLE={nom:"[Prénom Nom]", …}`
+1. **Politique de confidentialité incomplète.** Dans `src/app/07-confidentialite-compte-admin.js`, le bloc `RESPONSABLE = {nom:"[Prénom Nom]", …}`
    contient encore des crochets. Remplis-les (nom, titre, entreprise, courriel, adresse, date).
    Les deux stores exigent une politique réelle à une adresse publique : **https://habitascan.vercel.app/confidentialite**.
 2. **Accès pour les vérificateurs des stores.** Apple et Google testent l'app et doivent pouvoir se connecter.

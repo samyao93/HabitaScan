@@ -1,0 +1,20 @@
+{
+  "name": "habitascan-outils",
+  "private": true,
+  "description": "Outils de développement de HabitaScan (vérification du code, mise en forme, tests). Rien ici n'est déployé.",
+  "type": "module",
+  "scripts": {
+    "assembler": "cd .. && node outils/assembler-app.mjs",
+    "lint": "cd .. && eslint -c outils/eslint.config.mjs .",
+    "format": "cd .. && prettier --write \"src/app/*.js\" md.js \"outils/*.mjs\" \"tests/*.mjs\" && node outils/assembler-app.mjs",
+    "format:verifier": "cd .. && prettier --check \"src/app/*.js\" md.js \"outils/*.mjs\" \"tests/*.mjs\"",
+    "test": "cd .. && node --test \"tests/*.test.mjs\"",
+    "verifier": "npm run format:verifier && npm run lint && cd .. && node outils/assembler-app.mjs --verifier && node --test \"tests/*.test.mjs\""
+  },
+  "devDependencies": {
+    "eslint": "10.14.0",
+    "espree": "11.2.0",
+    "globals": "17.14.0",
+    "prettier": "3.9.10"
+  }
+}
