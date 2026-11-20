@@ -250,3 +250,13 @@ article li{margin-bottom:6px}
 .chiffres small{font-size:12.5px;color:var(--faint);margin-top:auto}.chiffres small a{color:var(--soft)}
 @media (max-width:980px){.chiffres{grid-template-columns:1fr 1fr}}
 @media (max-width:640px){.chiffres{grid-template-columns:1fr}}
+
+/* Pages juridiques (générées depuis l'app par outils/pages-legales.mjs) */
+.legal .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin:18px 0;box-shadow:0 1px 2px rgb(16 24 40/.05)}
+.legal .card h2{margin:0 0 10px;font-size:22px}
+.legal table{width:100%;border-collapse:collapse;font-size:15px;margin:6px 0}
+.legal th,.legal td{text-align:left;vertical-align:top;padding:9px 8px;border-bottom:1px solid var(--line)}
+.legal th{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--soft)}
+.legal .hint{font-size:14.5px;color:var(--soft)}.legal .liste{padding-left:20px}
+.legal .soft{color:var(--soft)}
+@media (max-width:640px){.legal table,.legal tbody,.legal tr,.legal td,.legal th{display:block}.legal thead{display:none}.legal td{border:0;padding:4px 0}.legal tr{border-bottom:1px solid var(--line);padding:8px 0}}
