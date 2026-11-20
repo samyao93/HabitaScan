@@ -1,7 +1,7 @@
 -- Lecture automatique de la pièce d'identité (IA) + validation par un admin.
 -- Minimisation : jamais le numéro de la pièce (seulement une empreinte SHA-256 salée, pour repérer une pièce réutilisée),
 -- seulement l'année de naissance ; à la décision, on ne garde que le prénom, l'initiale du nom et l'expiration.
--- À appliquer dans Supabase : SQL Editor > coller ce fichier > Run (ou laisser Claude l'appliquer).
+-- À appliquer dans Supabase : SQL Editor > coller ce fichier > Run.
 
 alter table public.profiles
   add column if not exists identite_prenom text,
