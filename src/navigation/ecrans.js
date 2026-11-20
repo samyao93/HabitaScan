@@ -132,7 +132,7 @@ ${blocHistorique()}
 ${blocChoixIA()}
 <h2>L'annonce</h2>
 <form class="card" id="f-ver" novalidate>
-<label class="drop drop-grand">${etat.fiche.vignettes && etat.fiche.vignettes.length ? `<span class="vignettes">${etat.fiche.vignettes.map((u) => `<img src="${u}" alt="Capture">`).join("")}</span>Changer les captures` : `<b>Ajoute des captures d'écran</b><span>L'annonce, et surtout la conversation avec l'annonceur : c'est là que les fraudeurs se trahissent.</span>`}<input type="file" accept="image/*" multiple data-captures="1"></label>
+<label class="drop drop-grand">${etat.fiche.vignettes && etat.fiche.vignettes.length ? `<span class="vignettes">${etat.fiche.vignettes.map((u) => `<img src="${u}" alt="Capture">`).join("")}</span>Changer les captures` : `<b>Tu doutes d'une annonce ?</b><span>Un annonceur te paraît louche, ou sa conversation te met la puce à l'oreille ? Ajoute les captures de l'annonce, ses photos ou votre conversation, ou colle le texte ci-dessous.</span>`}<input type="file" accept="image/*" multiple data-captures="1"></label>
 <label class="drop">${(etat.fiche.photosLog || []).length ? `<b>${etat.fiche.photosLog.length} photo${etat.fiche.photosLog.length > 1 ? "s" : ""} du logement</b> · toucher pour changer` : `<b>Ajoute 1 ou 2 photos du logement</b> (facultatif)<br><span class="hint">Enregistre-les depuis l'annonce (appui long sur la photo). Elles permettent de retrouver la même annonce publiée ailleurs, même avec un autre lien ou un autre numéro. Elles ne quittent pas ton téléphone.</span>`}<input type="file" accept="image/*" multiple id="photos-log"></label>
 ${blocIA()}
 ${etat.fiche.lu ? `<p class="lu" role="status">${etat.fiche.lu}</p>` : ""}
