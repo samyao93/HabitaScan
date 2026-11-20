@@ -7,23 +7,8 @@
 // le verdict reste calculé par les règles publiques de l'app.
 // Les numéros de téléphone et courriels de l'annonceur sont renvoyés à l'app seulement pour interroger la mémoire
 // collective (signalements) ; cette fonction ne conserve ni n'enregistre rien.
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { avantTraitement, json, quotaOk } from "../_shared/commun.ts";
 
-async function quotaOk(req: Request, fonction: string): Promise<boolean> {
-  const cle = Deno.env.get("SUPABASE_ANON_KEY") ?? req.headers.get("apikey") ?? "";
-  const sb = createClient(Deno.env.get("SUPABASE_URL")!, cle, {
-    global: { headers: { Authorization: req.headers.get("Authorization") ?? "" } },
-    auth: { persistSession: false },
-  });
-  const { data, error } = await sb.rpc("consommer_quota", { p_fonction: fonction });
-  return !error && data === true;
-}
-
-const CORS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
 const MAX_IMAGES = 4, MAX_B64 = 2_500_000, MAX_TEXTE = 8000;
 const TYPES = ["argent_avant_bail", "depot", "paiement_suspect", "proprietaire_absent", "refus_visite", "urgence",
   "changement_plateforme", "pieces_identite_demandees", "prix_anormal_annonce", "refus_bail", "paiement_autre_personne",
@@ -94,12 +79,10 @@ const court = (v: unknown, n: number) => (typeof v === "string" ? v.slice(0, n) 
 const liste = (v: unknown, n: number) => (Array.isArray(v) ? v.filter((x) => typeof x === "string" && x.trim()).slice(0, 5).map((x: string) => x.trim().slice(0, n)) : []);
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
-  const json = (body: unknown, status = 200) =>
-    new Response(JSON.stringify(body), { status, headers: { ...CORS, "Content-Type": "application/json" } });
-  if (req.method !== "POST") return json({ error: "methode" }, 405);
+  const refus = avantTraitement(req);
+  if (refus) return refus;
   const cle = Deno.env.get("ANTHROPIC_API_KEY");
-  if (!cle) return json({ error: "non_configure" }, 503);
+  if (!cle) return json(req, { error: "non_configure" }, 503);
 
   let images: string[] = [], texte = "", mode = "annonce";
   try {
@@ -108,11 +91,11 @@ Deno.serve(async (req) => {
     texte = typeof b.texte === "string" ? b.texte.slice(0, MAX_TEXTE) : "";
     mode = b.mode === "conversation" ? "conversation" : "annonce";
   } catch {
-    return json({ error: "requete" }, 400);
+    return json(req, { error: "requete" }, 400);
   }
-  if (!images.length && texte.trim().length < (mode === "conversation" ? 3 : 20)) return json({ error: "vide" }, 400);
-  if (images.some((i) => typeof i !== "string" || i.length > MAX_B64 || !/^[A-Za-z0-9+/=]+$/.test(i))) return json({ error: "image" }, 400);
-  if (!(await quotaOk(req, "analyser-annonce"))) return json({ error: "quota" }, 429);
+  if (!images.length && texte.trim().length < (mode === "conversation" ? 3 : 20)) return json(req, { error: "vide" }, 400);
+  if (images.some((i) => typeof i !== "string" || i.length > MAX_B64 || !/^[A-Za-z0-9+/=]+$/.test(i))) return json(req, { error: "image" }, 400);
+  if (!(await quotaOk(req, "analyser-annonce"))) return json(req, { error: "quota" }, 429);
 
   const contenu: unknown[] = images.map((data) => ({ type: "image", source: { type: "base64", media_type: "image/jpeg", data } }));
   contenu.push({
@@ -135,10 +118,10 @@ Deno.serve(async (req) => {
     }),
     signal: AbortSignal.timeout(45000),
   }).catch(() => null);
-  if (!r || !r.ok) return json({ error: "ia", status: r?.status ?? 0 }, 502);
+  if (!r || !r.ok) return json(req, { error: "ia", status: r?.status ?? 0 }, 502);
   const d = await r.json();
   const sortie = (d.content || []).find((c: { type: string }) => c.type === "tool_use")?.input;
-  if (!sortie) return json({ error: "ia_vide" }, 502);
+  if (!sortie) return json(req, { error: "ia_vide" }, 502);
 
   const signaux = (Array.isArray(sortie.signaux) ? sortie.signaux : [])
     .filter((s: Record<string, unknown>) => TYPES.includes(String(s?.type)) && typeof s.extrait === "string" && s.extrait.trim())
@@ -146,7 +129,7 @@ Deno.serve(async (req) => {
     .map((s: Record<string, unknown>) => ({ type: s.type, extrait: court(s.extrait, 160), explication: court(s.explication, 300) }));
   const prix = Number.isInteger(sortie.prix) && sortie.prix >= 100 && sortie.prix <= 20000 ? sortie.prix : null;
   const ch = Number.isInteger(sortie.chambres) && sortie.chambres >= 1 && sortie.chambres <= 6 ? sortie.chambres : null;
-  return json({
+  return json(req, {
     mode, prix, chambres: ch,
     ville: court(sortie.ville, 60), adresse: court(sortie.adresse, 160),
     cession: typeof sortie.cession === "boolean" ? sortie.cession : null,

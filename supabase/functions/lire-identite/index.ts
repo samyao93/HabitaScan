@@ -6,13 +6,8 @@
 //    pour repérer la même pièce utilisée par deux comptes ;
 //  - seule l'année de naissance est conservée (la date complète est seulement montrée à la personne) ;
 //  - les images ne sont ni enregistrées ni journalisées par cette fonction.
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { avantTraitement, clientServeur, clientUtilisateur, json } from "../_shared/commun.ts";
 
-const CORS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
 const MAX_IMAGES = 2, MAX_B64 = 2_500_000;
 const TYPES = ["permis", "passeport", "rp"];
 
@@ -59,23 +54,15 @@ async function sha256(s: string) {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
-  const json = (body: unknown, status = 200) =>
-    new Response(JSON.stringify(body), { status, headers: { ...CORS, "Content-Type": "application/json" } });
-  if (req.method !== "POST") return json({ error: "methode" }, 405);
+  const refus = avantTraitement(req);
+  if (refus) return refus;
   const cle = Deno.env.get("ANTHROPIC_API_KEY");
-  if (!cle) return json({ error: "non_configure" }, 503);
+  if (!cle) return json(req, { error: "non_configure" }, 503);
 
-  const url = Deno.env.get("SUPABASE_URL")!;
-  const anon = Deno.env.get("SUPABASE_ANON_KEY") ?? req.headers.get("apikey") ?? "";
-  const service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  const sbUser = createClient(url, anon, {
-    global: { headers: { Authorization: req.headers.get("Authorization") ?? "" } },
-    auth: { persistSession: false },
-  });
+  const sbUser = clientUtilisateur(req);
   const { data: u } = await sbUser.auth.getUser();
   const uid = u?.user?.id;
-  if (!uid) return json({ error: "session" }, 401);
+  if (!uid) return json(req, { error: "session" }, 401);
 
   let images: string[] = [], declare = "";
   try {
@@ -83,13 +70,13 @@ Deno.serve(async (req) => {
     images = Array.isArray(b.images) ? b.images.slice(0, MAX_IMAGES) : [];
     declare = String(b.doc_type || "");
   } catch {
-    return json({ error: "requete" }, 400);
+    return json(req, { error: "requete" }, 400);
   }
   if (!images.length || images.some((i) => typeof i !== "string" || i.length > MAX_B64 || !/^[A-Za-z0-9+/=]+$/.test(i))) {
-    return json({ error: "image" }, 400);
+    return json(req, { error: "image" }, 400);
   }
   const { data: q, error: qe } = await sbUser.rpc("consommer_quota", { p_fonction: "lire-identite" });
-  if (qe || q !== true) return json({ error: "quota" }, 429);
+  if (qe || q !== true) return json(req, { error: "quota" }, 429);
 
   const contenu: unknown[] = images.map((data) => ({ type: "image", source: { type: "base64", media_type: "image/jpeg", data } }));
   contenu.push({ type: "text", text: "Lis cette pièce d'identité (recto, puis verso s'il y en a un)." });
@@ -106,10 +93,10 @@ Deno.serve(async (req) => {
     }),
     signal: AbortSignal.timeout(45000),
   }).catch(() => null);
-  if (!r || !r.ok) return json({ error: "ia", status: r?.status ?? 0 }, 502);
+  if (!r || !r.ok) return json(req, { error: "ia", status: r?.status ?? 0 }, 502);
   const d = await r.json();
   const s = (d.content || []).find((c: { type: string }) => c.type === "tool_use")?.input;
-  if (!s) return json({ error: "ia_vide" }, 502);
+  if (!s) return json(req, { error: "ia_vide" }, 502);
 
   const prenom = texte(s.prenom, 60), nom = texte(s.nom, 60), emetteur = texte(s.emetteur, 60);
   const naissance = date(s.date_naissance), expiration = date(s.date_expiration);
@@ -128,11 +115,11 @@ Deno.serve(async (req) => {
     if (!majeur) alertes.push("mineur");
   } else alertes.push("naissance_inconnue");
 
-  const admin = createClient(url, service, { auth: { persistSession: false } });
+  const admin = clientServeur();
   let empreinte: string | null = null;
   const numero = typeof s.numero === "string" ? s.numero.toUpperCase().replace(/[^A-Z0-9]/g, "") : "";
   if (numero.length >= 5) {
-    const sel = Deno.env.get("IDENTITE_SEL") ?? url;
+    const sel = Deno.env.get("IDENTITE_SEL") ?? Deno.env.get("SUPABASE_URL")!;
     empreinte = await sha256(`${sel}|${type}|${numero}`);
     const { data: autres } = await admin.from("profiles").select("id").eq("identite_empreinte", empreinte).neq("id", uid).limit(1);
     if (autres && autres.length) alertes.push("deja_utilisee");
@@ -148,8 +135,8 @@ Deno.serve(async (req) => {
     identite_empreinte: empreinte,
     identite_lue_le: new Date().toISOString(),
   }).eq("id", uid);
-  if (we) return json({ error: "enregistrement" }, 500);
+  if (we) return json(req, { error: "enregistrement" }, 500);
 
   // La date de naissance complète est seulement renvoyée à la personne, pour qu'elle vérifie la lecture.
-  return json({ prenom, nom, date_naissance: naissance, date_expiration: expiration, emetteur, type, alertes });
+  return json(req, { prenom, nom, date_naissance: naissance, date_expiration: expiration, emetteur, type, alertes });
 });
