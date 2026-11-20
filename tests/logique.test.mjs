@@ -1,0 +1,187 @@
+// Tests de la logique critique de l'app : verdict, mots repérés, budget, lecture des annonces, liens, empreintes.
+// Lancement : node --test tests/   (ou, dans outils/ : npm test)
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { chargerApp } from "./charger-app.mjs";
+
+const hs = chargerApp();
+const fn = (nom) => hs(nom);
+/** Remplace la fiche de vérification en cours (F) par celle donnée, puis lance l'analyse. */
+const verdict = (fiche) => {
+  hs("nouveauF")(fiche);
+  return fn("analyser")();
+};
+
+test("trouverMot : repère un mot, ignore les négations", () => {
+  const trouverMot = fn("trouverMot"),
+    MOTS = fn("MOTS_ARGENT");
+  assert.equal(trouverMot("il faut un dépôt de 500 $", MOTS), "dépôt");
+  assert.equal(trouverMot("aucun dépôt demandé", MOTS), null);
+  assert.equal(trouverMot("pas de dépôt, premier mois à la signature", MOTS), null);
+  assert.equal(trouverMot("no deposit required", MOTS), null);
+  // Une négation plus haut dans le texte n'annule pas un mot plus loin
+  assert.equal(trouverMot("aucun frais. Plus tard : envoie le dépôt par virement", MOTS), "dépôt");
+});
+
+test("verdict : rouge si on demande de l'argent avant le bail ou un paiement typique des fraudes", () => {
+  assert.equal(verdict({ argent: "oui", visite: "oui" }).c, "r");
+  assert.equal(verdict({ annonce: "Paiement par carte-cadeau seulement", visite: "oui" }).c, "r");
+  assert.equal(verdict({ annonce: "payable en bitcoin", visite: "oui" }).c, "r");
+});
+
+test("verdict : un mot seul donne au plus du jaune, jamais du rouge", () => {
+  const r = verdict({ annonce: "Un dépôt est demandé pour réserver", visite: "oui" });
+  assert.equal(r.c, "y");
+});
+
+test("verdict : vert quand rien n'est suspect et que la personne a visité", () => {
+  const r = verdict({
+    annonce: "Beau 4 1/2 lumineux, premier mois à la signature du bail. Aucun dépôt.",
+    visite: "oui",
+  });
+  assert.equal(r.c, "g");
+});
+
+test("verdict : pas de visite = prudence", () => {
+  assert.equal(verdict({ annonce: "Beau 4 1/2", visite: "non" }).c, "y");
+});
+
+test("verdict : cession de bail avec argent demandé = rouge", () => {
+  assert.equal(verdict({ cession: "oui", argent: "oui", visite: "oui" }).c, "r");
+});
+
+test("lirePrix : lit le loyer sous ses formes courantes et ignore les montants absurdes", () => {
+  const lirePrix = fn("lirePrix");
+  assert.equal(lirePrix("4 1/2 à 1 250 $ par mois"), 1250);
+  assert.equal(lirePrix("Loyer : $1,450/mois"), 1450);
+  assert.equal(lirePrix("1450$"), 1450);
+  assert.equal(lirePrix("950 $"), 950);
+  assert.equal(lirePrix("frais de 50 $"), null);
+  assert.equal(lirePrix("aucun prix"), null);
+});
+
+test("lireChambres : convertit les tailles québécoises (4 1/2 = 2 chambres)", () => {
+  const lireChambres = fn("lireChambres");
+  assert.equal(lireChambres("Beau 4 1/2 à louer"), 2);
+  assert.equal(lireChambres("3 1/2 rénové"), 1);
+  assert.equal(lireChambres("grand 6 1/2"), 3);
+  assert.equal(lireChambres("2 chambres fermées"), 2);
+  assert.equal(lireChambres("2 bedrooms"), 2);
+  assert.equal(lireChambres("studio meublé"), 1);
+  assert.equal(lireChambres("logement à louer"), null);
+});
+
+test("calculerBudget : le reste sur la période utilise le salaire net s'il est donné, sinon le brut", () => {
+  const calculerBudget = fn("calculerBudget");
+  const brut = calculerBudget({ revenu: "4000", unite: "mois", loyer: "1200", mois: 3 });
+  assert.equal(brut.baseNet, false);
+  assert.equal(brut.base, 4000);
+  assert.equal(brut.revPeriode, 12000);
+  const net = calculerBudget({ revenu: "4000", unite: "mois", net: "3000", netUnite: "mois", loyer: "1200", mois: 3 });
+  assert.equal(net.baseNet, true);
+  assert.equal(net.base, 3000);
+  assert.equal(net.revPeriode, 9000);
+  assert.equal(net.restePeriode, 9000 - net.total);
+});
+
+test("calculerBudget : conversions annuelle et aux deux semaines, et loyer maximal à 30 %", () => {
+  const calculerBudget = fn("calculerBudget");
+  const r = calculerBudget({ revenu: "60000", unite: "an", net: "1500", netUnite: "2sem", elec: "50" });
+  assert.equal(r.revMois, 5000);
+  assert.equal(r.netMois, (1500 * 26) / 12);
+  assert.equal(r.max, Math.floor(5000 * 0.3 - 50));
+});
+
+test("lienKijiji : applique la ville, les chambres et le prix maximal", () => {
+  const lienKijiji = fn("lienKijiji");
+  assert.equal(
+    lienKijiji({ ville: "Montréal", ch: "2", max: "1500" }),
+    "https://www.kijiji.ca/b-appartement-condo/ville-de-montreal/c37l1700281?numberbedrooms=2&price=__1500",
+  );
+  // « 3 et plus » = 3 ou 4 chambres
+  assert.match(lienKijiji({ ville: "Québec", ch: "3" }), /c37l1700124\?numberbedrooms=3%2C4$/);
+  assert.equal(lienKijiji({ ville: "Gatineau" }), "https://www.kijiji.ca/b-appartement-condo/gatineau/c37l1700186");
+  assert.equal(lienKijiji({ ville: "Ville inconnue" }), null);
+});
+
+test("urlWeb et lienExt : seuls les liens http(s) deviennent cliquables", () => {
+  const urlWeb = fn("urlWeb"),
+    lienExt = fn("lienExt");
+  assert.equal(urlWeb("https://www.kijiji.ca/v-annonce/123"), true);
+  assert.equal(urlWeb("  HTTP://exemple.ca"), true);
+  assert.equal(urlWeb("javascript:alert(1)"), false);
+  assert.equal(urlWeb("data:text/html,<script>"), false);
+  assert.equal(urlWeb(""), false);
+  assert.equal(urlWeb(null), false);
+  assert.equal(lienExt("javascript:alert(1)", "Annonce"), "Annonce");
+  assert.match(lienExt("https://exemple.ca", "Annonce"), /^<a href="https:\/\/exemple\.ca"/);
+});
+
+test("esc : neutralise le HTML", () => {
+  assert.equal(fn("esc")('<img src=x onerror="a">&'), "&lt;img src=x onerror=&quot;a&quot;&gt;&amp;");
+});
+
+test("memeEntreprise (rénovation) : compare des noms d'entreprise sans « inc. », « ltée », accents", () => {
+  const memeEntreprise = fn("memeEntreprise");
+  assert.equal(memeEntreprise("Rénovations Tremblay inc.", "RENOVATIONS TREMBLAY"), true);
+  assert.equal(memeEntreprise("Construction Gagnon ltée", "Toitures Roy"), false);
+  assert.equal(memeEntreprise("", "Toitures Roy"), false);
+});
+
+test("memeNom (propriétaire) : oui, partiel ou non", () => {
+  const memeNom = fn("memeNom");
+  assert.equal(memeNom("Jean Tremblay", "TREMBLAY JEAN"), "oui");
+  assert.equal(memeNom("Jean Tremblay", "Marie Tremblay"), "partiel");
+  assert.equal(memeNom("Jean Tremblay", "Paul Roy"), "non");
+  assert.equal(memeNom("", "Paul Roy"), null);
+});
+
+test("dateLimite : 10 jours, reportés si l'échéance tombe un samedi ou un dimanche", () => {
+  const jour = (d) =>
+    d && `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const dateLimite = (iso) => jour(fn("dateLimite")(iso));
+  assert.equal(dateLimite("2026-11-02"), "2026-11-12"); // lundi + 10 = jeudi
+  assert.equal(dateLimite("2026-11-04"), "2026-11-16"); // + 10 = samedi 14 → lundi 16
+  assert.equal(dateLimite("pas une date"), null);
+});
+
+test("extraireContacts : numéros et courriels de l'annonceur, sans doublons", () => {
+  const { tels, courriels } = fn("extraireContacts")(
+    "Appelle-moi au (514) 555-1234 ou au 514.555.1234, écris à Proprio@Exemple.ca",
+  );
+  // Tableaux venus du contexte de l'app : comparés par leur contenu
+  assert.deepEqual([...tels], ["5145551234"]);
+  assert.deepEqual([...courriels], ["proprio@exemple.ca"]);
+});
+
+test("empreinteTexte : une annonce recopiée garde presque la même empreinte, une autre annonce non", () => {
+  const empreinteTexte = fn("empreinteTexte");
+  const distance = (a, b) => {
+    let d = 0;
+    for (let i = 0; i < 16; i++)
+      d += [...(parseInt(a[i], 16) ^ parseInt(b[i], 16)).toString(2)].filter((x) => x === "1").length;
+    return d;
+  };
+  const annonce =
+    "Magnifique quatre et demi entièrement rénové situé au coeur du Plateau Mont-Royal près du métro, cuisine moderne avec comptoirs de quartz, grande chambre fermée, balcon arrière, chauffage inclus, disponible dès le premier juillet, animaux acceptés.";
+  const copie = annonce.replace("Magnifique", "Superbe").replace("animaux acceptés", "petits animaux acceptés");
+  const autre =
+    "Chambre à louer dans une maison de banlieue tranquille à Laval, accès à la cuisine et à la buanderie, stationnement inclus, idéal pour étudiant, non fumeur, internet compris, libre immédiatement pour une durée minimale de six mois.";
+  const a = empreinteTexte(annonce),
+    b = empreinteTexte(copie),
+    c = empreinteTexte(autre);
+  assert.match(a, /^[0-9a-f]{16}$/);
+  assert.equal(empreinteTexte(annonce), a, "même texte, même empreinte");
+  assert.ok(distance(a, b) <= 8, `copie trop éloignée : ${distance(a, b)} bits`);
+  assert.ok(distance(a, c) > 8, `annonces différentes trop proches : ${distance(a, c)} bits`);
+  assert.equal(empreinteTexte("trop court pour une empreinte"), null);
+});
+
+test("analyserReponse (message-filtre) : refus de visite ou dépôt exigé = rouge, accord = vert", () => {
+  const analyserReponse = fn("analyserReponse");
+  assert.equal(analyserReponse("Oui, aucun problème, on signe le bail à la visite jeudi.").c, "g");
+  assert.notEqual(
+    analyserReponse("Je suis à l'étranger, envoie le dépôt par Western Union et je t'envoie les clés.").c,
+    "g",
+  );
+});

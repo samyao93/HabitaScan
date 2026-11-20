@@ -1,0 +1,46 @@
+# Vérifications automatiques à chaque PR et à chaque envoi sur main.
+# Une PR dont une vérification échoue ne devrait pas être fusionnée.
+name: Vérifications
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  app:
+    name: App et site (mise en forme, ESLint, tests)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: outils/package-lock.json
+      - name: Installer les outils
+        run: npm ci
+        working-directory: outils
+      # Mise en forme (Prettier), ESLint, app.js à jour par rapport à src/app/, tests (logique, structure,
+      # Markdown, écrans dans Chrome, qui est installé sur les machines de GitHub).
+      - name: Vérifier
+        run: npm run verifier
+        working-directory: outils
+
+  fonctions:
+    name: Fonctions Supabase (types et analyse Deno)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.5.x
+      - name: Vérifier les types
+        run: deno check supabase/functions/*/index.ts
+      - name: Analyser le code
+        run: deno lint supabase/functions

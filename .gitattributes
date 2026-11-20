@@ -1,0 +1,6 @@
+# Fins de ligne LF partout (Prettier et les tests les vérifient, y compris sous Windows)
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.jks binary
+*.keystore binary
