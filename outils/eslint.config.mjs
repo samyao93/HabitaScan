@@ -1,39 +1,5 @@
 // Vérification automatique du code JavaScript (ESLint). Lancement : cd outils && npm run lint
-// Les morceaux de src/app/ partagent un même bloc (voir assembler-app.mjs) : un nom déclaré dans un morceau
-// est connu de tous les autres. La liste de ces noms est calculée ici, à partir du code lui-même.
-import { readFileSync, readdirSync } from "node:fs";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
-import * as espree from "espree";
 import globals from "globals";
-
-const RACINE = join(dirname(fileURLToPath(import.meta.url)), "..");
-const DOSSIER_APP = join(RACINE, "src", "app");
-
-/** Noms déclarés au premier niveau d'un morceau (const, let, function, class). */
-function nomsDeclares(code) {
-  const noms = [];
-  const ajouter = (motif) => {
-    if (!motif) return;
-    if (motif.type === "Identifier") noms.push(motif.name);
-    else if (motif.type === "ObjectPattern") motif.properties.forEach((p) => ajouter(p.value || p.argument));
-    else if (motif.type === "ArrayPattern") motif.elements.forEach(ajouter);
-    else if (motif.type === "RestElement") ajouter(motif.argument);
-    else if (motif.type === "AssignmentPattern") ajouter(motif.left);
-  };
-  for (const n of espree.parse(code, { ecmaVersion: "latest", sourceType: "script" }).body) {
-    if (n.type === "VariableDeclaration") n.declarations.forEach((d) => ajouter(d.id));
-    else if ((n.type === "FunctionDeclaration" || n.type === "ClassDeclaration") && n.id) noms.push(n.id.name);
-  }
-  return noms;
-}
-
-const nomsApp = Object.fromEntries(
-  readdirSync(DOSSIER_APP)
-    .filter((f) => f.endsWith(".js"))
-    .flatMap((f) => nomsDeclares(readFileSync(join(DOSSIER_APP, f), "utf8")))
-    .map((n) => [n, "writable"]),
-);
 
 // Règles recommandées d'ESLint qui repèrent de vraies erreurs (et non une question de style).
 const REGLES = {
@@ -91,16 +57,15 @@ const REGLES = {
 };
 
 export default [
-  { ignores: ["**/node_modules/**", "app-native/**", "supabase/**", "app.js"] },
+  { ignores: ["**/node_modules/**", "app-native/**", "supabase/**", "app.js", "public/**"] },
   {
-    // Code de l'app (navigateur), assemblé dans un bloc
-    files: ["src/app/*.js"],
+    // Code de l'app (modules ES, navigateur). Un import manquant ou inutilisé est une erreur.
+    files: ["src/**/*.js"],
     languageOptions: {
       ecmaVersion: "latest",
-      sourceType: "script",
+      sourceType: "module",
       globals: {
         ...globals.browser,
-        ...nomsApp,
         supabase: "readonly",
         hsMarkdown: "readonly",
         // Chargés à part : theme.js (hsTheme), la lecture de texte sur les captures (Tesseract), l'app native (Capacitor)
@@ -109,8 +74,7 @@ export default [
         Capacitor: "readonly",
       },
     },
-    // Un nom déclaré dans un morceau et utilisé seulement dans un autre n'est pas « inutilisé ».
-    rules: { ...REGLES, "no-redeclare": ["error", { builtinGlobals: false }] },
+    rules: { ...REGLES, "no-unused-vars": ["error", { vars: "all", args: "none", caughtErrors: "none" }] },
   },
   {
     files: ["md.js", "theme.js"],

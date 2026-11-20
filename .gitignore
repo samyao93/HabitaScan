@@ -4,3 +4,6 @@ app-native/android/app/build/
 .vercel
 .env*
 licences_rbq.csv
+# Construits par outils/construire.mjs (Vercel les reconstruit à chaque déploiement)
+public/
+/app.js
