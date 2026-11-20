@@ -126,6 +126,8 @@ Chaque signalement d'un utilisateur à l'identité confirmée avertit les suivan
 
 **Suppression du compte** : chaque utilisateur peut supprimer son compte depuis l'accueil. Déploie la fonction : `supabase functions deploy supprimer-compte`. Elle efface les photos, l'historique, les signalements, puis le compte.
 
+**Pages du site /confidentialite et /conditions** : générées à partir des écrans de l'app par `node outils/pages-legales.mjs` (Chrome requis), pour que le texte soit identique. À relancer après toute modification de ces textes dans `app.js`.
+
 **Politique de confidentialité** : elle s'affiche dans l'app (lien sur l'accueil, l'inscription et la page de la pièce d'identité). Avant la mise en ligne, remplis les crochets de `RESPONSABLE` au début de la section « Politique de confidentialité » dans `app.js` (nom, titre, entreprise, courriel, adresse, date), et les durées de conservation entre crochets.
 
 ## 7c. Vérification approfondie payante (Stripe)
