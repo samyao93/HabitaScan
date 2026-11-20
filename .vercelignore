@@ -4,3 +4,9 @@ supabase/
 *.mjs
 LISEZ-MOI.md
 courriel-*.html
+src/
+tests/
+outils/
+.github/
+.prettierrc.json
+.gitattributes
