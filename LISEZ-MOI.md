@@ -21,15 +21,13 @@ Nouveautés de la version 3 :
 
 Le projet `verif-logement` est en pause : ton compte a atteint la limite de 2 projets gratuits actifs. Mets en pause ou supprime un autre projet, puis clique « Restore » sur `verif-logement`.
 
-## 1. Mettre la base à jour (une fois, dans l'ordre)
+## 1. La base de données
 
-(La migration v3 rend le contact facultatif pour les anciens essais de sessions anonymes ; sans effet si elles restent désactivées.)
+- **`supabase/schema.sql`** : la structure complète et actuelle de la base (tables, sécurité RLS, fonctions, droits, stockage), sans aucune donnée. Pour recréer une base vide (test, reprise après incident) : SQL Editor d'un projet vide > coller > Run.
+- **`supabase/migrations/`** : l'historique des changements depuis novembre 2026. Chaque nouveau changement de la base = un nouveau fichier ici, appliqué dans SQL Editor.
+- Après tout changement de la base, régénère `supabase/schema.sql` : colle `outils/exporter-schema.sql` dans SQL Editor, Run, et remplace le contenu du fichier par le résultat.
 
-SQL Editor > New query, colle puis « Run » :
-1. `migration-reno.sql`
-2. `migration-v3-compte-facultatif-signalements.sql`
-3. `migration-v4-admin-confidentialite.sql`
-4. Donne-toi le rôle admin (remplace le courriel par celui de ton compte, après t'être connecté une première fois dans l'app) :
+Donne-toi le rôle admin (remplace le courriel par celui de ton compte, après t'être connecté une première fois dans l'app) :
    `insert into public.admins (user_id) select id from auth.users where email = 'toi@exemple.ca';`
 
 ## 2. Réglages Supabase (une fois)
@@ -104,7 +102,7 @@ Tout le pas-à-pas (Google Play, App Store, textes des fiches, captures, questio
 Chaque signalement d'un utilisateur à l'identité confirmée avertit les suivants : le **lien** de l'annonce (table `signalements`), et maintenant les **numéros de téléphone**, **courriels** et **photos** de l'annonceur (table `signalements_cles`).
 - Les numéros et courriels ne sont jamais conservés en clair : seulement une empreinte SHA-256 (fonction `empreinte_contact`).
 - Les photos ne quittent pas le téléphone : seule une empreinte visuelle de 64 bits est envoyée ; deux photos sont jugées identiques à 6 bits d'écart au plus (même photo redimensionnée ou recompressée).
-- À 3 signalements (`SEUIL_ROUGE` dans `app.js`), l'avertissement passe au rouge : « Ce numéro de téléphone a déjà été signalé 3 fois ».
+- À 3 signalements (`SEUIL_ROUGE` dans `src/app/03-signalements.js`), l'avertissement passe au rouge : « Ce numéro de téléphone a déjà été signalé 3 fois ».
 - Console admin, onglet Signalements : voir et retirer ces signalements.
 - Migration : `supabase/migrations/20261119_memoire_collective.sql` (à coller dans SQL Editor si elle n'est pas encore appliquée).
 
@@ -189,10 +187,15 @@ Avant le lancement, la politique de confidentialité doit mentionner Google Visi
 
 ## Fichiers
 
-- `app.html` (servie à `/app`), `app.js` : l'app web ; `index.html` : la page d'accueil du site (`/`)
-- `migration-reno.sql`, `migration-v3-compte-facultatif-signalements.sql`, `migration-v4-admin-confidentialite.sql`, `migration-v5-verification-approfondie.sql`, `migration-v6-mesure-quotas.sql` : mises à jour de la base
+- `app.html` (servie à `/app`) et `app.js` : l'app web. **app.js est généré** à partir de `src/app/` (voir « Développement ») : ne le modifie pas directement.
+- `index.html` : la page d'accueil du site (`/`) ; `admin.html` : la console d'administration
+- `supabase/schema.sql` : structure complète de la base ; `supabase/migrations/` : historique des changements
+- `supabase/functions/_shared/commun.ts` : code commun à toutes les fonctions (CORS, réponses, quota quotidien)
 - `supabase/functions/recherche-image/index.ts` : recherche des photos (Google Vision)
-- `supabase/functions/chercher-annonces/index.ts` : recherche d'annonces (Brave Search)
+- `supabase/functions/chercher-annonces/index.ts` : recherche d'annonces (Tavily, ou Brave Search)
+- `supabase/functions/chercher-copies/index.ts` : la même annonce publiée ailleurs (Tavily)
+- `supabase/functions/lire-identite/index.ts` : lecture automatique de la pièce d'identité (IA)
+- `supabase/functions/admin-supprimer-compte/index.ts` : suppression d'un compte depuis la console
 - `supabase/functions/supprimer-compte/index.ts` : suppression du compte par l'utilisateur
 - `courriel-code.html` et `courriel-inscription.html` : modèles des courriels de code (Magic Link et Confirm signup)
 - `icon.svg`, `icon-180.png`, `icon-192.png`, `icon-512.png` : logo et icônes
@@ -202,6 +205,27 @@ Avant le lancement, la politique de confidentialité doit mentionner Google Visi
 - `preparer-licences.mjs` : prépare la liste des licences RBQ
 - `app-native/` : app iPhone et Android (Capacitor)
 - `sw.js`, `manifest.webmanifest`, `icon.svg` : installation sur le téléphone
+
+## Développement
+
+### Où est le code de l'app
+L'app est découpée en morceaux dans `src/app/`, numérotés dans l'ordre (`01-config-et-annonceur.js`, `02-lecture-annonce.js`, …, `17-demarrage.js`). `app.js` est leur assemblage, dans un seul bloc `{ … }` : un nom déclaré dans un morceau est visible dans tous les autres, et aucun ne se mélange aux variables du navigateur.
+
+Après une modification dans `src/app/` : `cd outils && npm run assembler` (ou `npm run format`, qui met aussi le code en forme), puis ajoute `app.js` au commit.
+
+### Vérifier avant de pousser
+Une fois : `cd outils && npm install`. Ensuite : `cd outils && npm run verifier`. Cette commande vérifie :
+- la mise en forme (Prettier) et les erreurs courantes (ESLint : nom mal écrit, clé en double, code inatteignable…) ;
+- que `app.js` correspond bien à `src/app/` ;
+- les tests (`tests/`) : verdict, mots repérés et négations, budget (net ou brut), lecture du prix et des chambres, liens Kijiji, liens sûrs, empreintes de texte, message-filtre, sécurité du Markdown des pages légales, absence de clés secrètes, et l'affichage de chaque écran dans Chrome.
+
+Les mêmes vérifications tournent sur GitHub à chaque PR (`.github/workflows/verifications.yml`), plus la vérification des types des fonctions Supabase (Deno). Ne fusionne pas une PR dont une vérification est rouge.
+
+### Fonctions Supabase
+Chaque fonction importe `../_shared/commun.ts`. Au déploiement, envoie les deux fichiers (`index.ts` et `../_shared/commun.ts`). Avec la CLI Supabase : `supabase functions deploy <nom>` les inclut tout seul. Les appels depuis un navigateur ne sont acceptés que depuis le site, ses aperçus Vercel et l'app native (liste `ORIGINES` dans `commun.ts`).
+
+### Comparer l'affichage avant et après une réorganisation
+`node outils/ecrans.mjs avant.json` sur l'ancienne version, puis `node outils/ecrans.mjs apres.json` sur la nouvelle : le HTML de chaque écran est enregistré, et les deux fichiers doivent être identiques.
 
 ## 7f. Historique détaillé, Mon compte, lieu de connexion (v7)
 

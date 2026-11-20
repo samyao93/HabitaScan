@@ -5,30 +5,13 @@
 // L'app reçoit seulement le titre, le lien et l'extrait publics de chaque résultat ; elle fait le tri elle-même.
 // Les pages des sites ne sont jamais téléchargées : seuls les résultats du moteur de recherche sont utilisés.
 
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { avantTraitement, json, quotaOk, propre } from "../_shared/commun.ts";
 
-// Quota anti-abus par utilisateur et par jour (table quotas, fonction consommer_quota).
-async function quotaOk(req: Request, fonction: string): Promise<boolean> {
-  const cle = Deno.env.get("SUPABASE_ANON_KEY") ?? req.headers.get("apikey") ?? "";
-  const sb = createClient(Deno.env.get("SUPABASE_URL")!, cle, {
-    global: { headers: { Authorization: req.headers.get("Authorization") ?? "" } },
-    auth: { persistSession: false },
-  });
-  const { data, error } = await sb.rpc("consommer_quota", { p_fonction: fonction });
-  return !error && data === true;
-}
-
-const CORS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
 const SITES = ["kijiji.ca", "centris.ca", "realtor.ca", "duproprio.com", "rentals.ca", "louer.ca", "kangalou.com",
   "logisquebec.com", "padmapper.com", "lespac.com", "zumper.com", "craigslist.org"];
 const VILLE = /^[\p{L} .'-]{2,40}$/u;
 
 type Resultat = { titre: string; url: string; extrait: string; age: string };
-const propre = (s: unknown, n: number) => String(s || "").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim().slice(0, n);
 
 async function tavily(q: string, cle: string): Promise<Resultat[]> {
   const r = await fetch("https://api.tavily.com/search", {
@@ -72,15 +55,13 @@ async function brave(q: string, cle: string): Promise<Resultat[]> {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
-  const json = (body: unknown, status = 200) =>
-    new Response(JSON.stringify(body), { status, headers: { ...CORS, "Content-Type": "application/json" } });
-  if (req.method !== "POST") return json({ error: "methode" }, 405);
+  const refus = avantTraitement(req);
+  if (refus) return refus;
 
   const cleTavily = Deno.env.get("TAVILY_API_KEY");
   const cleBrave = Deno.env.get("BRAVE_API_KEY");
-  if (!cleTavily && !cleBrave) return json({ error: "non_configure" }, 503);
-  if (!(await quotaOk(req, "chercher-annonces"))) return json({ error: "quota" }, 429);
+  if (!cleTavily && !cleBrave) return json(req, { error: "non_configure" }, 503);
+  if (!(await quotaOk(req, "chercher-annonces"))) return json(req, { error: "quota" }, 429);
 
   let ville = "", ch = "";
   try {
@@ -88,9 +69,9 @@ Deno.serve(async (req) => {
     ville = String(b.ville || "");
     ch = String(b.ch || "");
   } catch {
-    return json({ error: "requete" }, 400);
+    return json(req, { error: "requete" }, 400);
   }
-  if (!VILLE.test(ville) || !["", "1", "2", "3"].includes(ch)) return json({ error: "parametres" }, 400);
+  if (!VILLE.test(ville) || !["", "1", "2", "3"].includes(ch)) return json(req, { error: "parametres" }, 400);
 
   const taille = ch ? `${Number(ch) + 2} 1/2` : "";
   const requetes = [
@@ -103,7 +84,7 @@ Deno.serve(async (req) => {
     const ok = lots.filter((l): l is PromiseFulfilledResult<Resultat[]> => l.status === "fulfilled");
     if (!ok.length) {
       console.error("recherche échouée :", lots.map((l) => l.status === "rejected" ? String(l.reason) : "").join(" | "));
-      return json({ error: "recherche" }, 502);
+      return json(req, { error: "recherche" }, 502);
     }
     const vus = new Set<string>();
     const resultats = ok.flatMap((l) => l.value).filter((r) => {
@@ -115,9 +96,9 @@ Deno.serve(async (req) => {
       vus.add(k);
       return true;
     });
-    return json({ resultats, fournisseur: cleTavily ? "tavily" : "brave" });
+    return json(req, { resultats, fournisseur: cleTavily ? "tavily" : "brave" });
   } catch (e) {
     console.error("recherche :", String(e));
-    return json({ error: "recherche" }, 502);
+    return json(req, { error: "recherche" }, 502);
   }
 });
