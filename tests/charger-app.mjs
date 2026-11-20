@@ -1,10 +1,14 @@
-// Charge app.js dans Node, avec un navigateur et un Supabase simulés, pour tester ses fonctions une par une.
-// Tout le code de l'app est dans un bloc { … } : on y ajoute à la fin une petite fonction `__HS(nom)` qui
-// renvoie n'importe quelle variable ou fonction de l'app (par exemple __HS("calculerBudget")).
-import { readFileSync } from "node:fs";
+// Charge les modules de l'app dans Node, avec un navigateur et un Supabase simulés, pour tester leurs fonctions.
+// Renvoie `hs(nom)` : n'importe quel export d'un module de src/ (par exemple hs("calculerBudget")).
+import { readdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
 import vm from "node:vm";
+import { optionsApp } from "../outils/construire.mjs";
+
+// esbuild est installé avec les outils (outils/node_modules)
+const { buildSync } = createRequire(new URL("../outils/package.json", import.meta.url))("esbuild");
 
 const RACINE = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -89,10 +93,32 @@ export function chargerApp() {
   window.window = window;
   window.self = window;
   const contexte = vm.createContext(window);
-  const js = readFileSync(join(RACINE, "app.js"), "utf8");
-  const fin = js.lastIndexOf("}");
-  // eval direct : voit les variables du bloc de l'app.
-  const code = js.slice(0, fin) + "\nglobalThis.__HS = (nom) => eval(nom);\n" + js.slice(fin);
-  vm.runInContext(code, contexte, { filename: "app.js" });
-  return contexte.__HS;
+  vm.runInContext(paquetDeTest(), contexte, { filename: "modules-app.js" });
+  const modules = contexte.__HS_MODULES;
+  return (nom) => {
+    if (!(nom in modules)) throw new Error(`« ${nom} » n'est exporté par aucun module de src/`);
+    return modules[nom];
+  };
+}
+
+/** Tous les exports des modules de src/ (sauf main.js, qui démarre l'app), en un seul script. */
+function paquetDeTest() {
+  const src = join(RACINE, "src");
+  const modules = readdirSync(src, { recursive: true })
+    .map((f) => String(f).replace(/\\/g, "/"))
+    .filter((f) => f.endsWith(".js") && f !== "main.js")
+    .sort();
+  const r = buildSync(
+    optionsApp({
+      entryPoints: undefined,
+      stdin: {
+        contents: modules.map((f) => `export * from "./${f}";`).join("\n"),
+        resolveDir: src,
+        sourcefile: "tests.js",
+      },
+      globalName: "__HS_MODULES",
+      write: false,
+    }),
+  );
+  return r.outputFiles[0].text;
 }

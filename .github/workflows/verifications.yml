@@ -25,7 +25,7 @@ jobs:
       - name: Installer les outils
         run: npm ci
         working-directory: outils
-      # Mise en forme (Prettier), ESLint, app.js à jour par rapport à src/app/, tests (logique, structure,
+      # Mise en forme (Prettier), ESLint, construction de l'app (esbuild), tests (logique, structure,
       # Markdown, écrans dans Chrome, qui est installé sur les machines de GitHub).
       - name: Vérifier
         run: npm run verifier

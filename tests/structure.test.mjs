@@ -5,37 +5,52 @@ import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
+import { execFileSync } from "node:child_process";
+import { optionsApp, FICHIERS_SITE } from "../outils/construire.mjs";
 
 const RACINE = join(dirname(fileURLToPath(import.meta.url)), "..");
 const lire = (f) => readFileSync(join(RACINE, f), "utf8").replace(/\r/g, "");
-// espree est installé avec les outils (outils/node_modules)
-const espree = createRequire(join(RACINE, "outils", "package.json"))("espree");
+const { buildSync } = createRequire(new URL("../outils/package.json", import.meta.url))("esbuild");
+const modulesApp = readdirSync(join(RACINE, "src"), { recursive: true })
+  .map((f) => String(f).replace(/\\/g, "/"))
+  .filter((f) => f.endsWith(".js"));
+const LIGNES_MAX = 300;
 
-test("app.js est bien l'assemblage à jour de src/app/", async () => {
-  const { assembler } = await import(new URL("../outils/assembler-app.mjs", import.meta.url));
-  assert.equal(lire("app.js"), assembler(), "lance « node outils/assembler-app.mjs » et ajoute app.js au commit");
+test("l'app se construit sans erreur ni avertissement", () => {
+  const r = buildSync(optionsApp({ write: false, outfile: "app.js", logLevel: "silent" }));
+  assert.deepEqual(r.errors, []);
+  assert.deepEqual(
+    r.warnings.map((w) => w.text),
+    [],
+  );
+  assert.ok(r.outputFiles[0].text.length > 50000);
 });
 
-test("aucun nom n'est déclaré deux fois dans les morceaux de l'app", () => {
-  // Dans le bloc commun, une seconde fonction du même nom remplace la première sans prévenir
-  // (c'est arrivé : memeNom de la rénovation était remplacé par celui du module propriétaire).
-  const vus = new Map();
-  for (const f of readdirSync(join(RACINE, "src", "app")).sort()) {
-    const arbre = espree.parse(lire(`src/app/${f}`), { ecmaVersion: "latest", loc: true });
-    for (const n of arbre.body) {
-      const noms =
-        n.type === "FunctionDeclaration" || n.type === "ClassDeclaration"
-          ? [n.id.name]
-          : n.type === "VariableDeclaration"
-            ? n.declarations.filter((d) => d.id.type === "Identifier").map((d) => d.id.name)
-            : [];
-      for (const nom of noms) {
-        const ici = `${f}:${n.loc.start.line}`;
-        assert.ok(!vus.has(nom), `« ${nom} » est déclaré deux fois : ${vus.get(nom)} et ${ici}`);
-        vus.set(nom, ici);
-      }
-    }
+test(`aucun module de l'app ne dépasse ${LIGNES_MAX} lignes`, () => {
+  for (const f of modulesApp) {
+    const n = lire(`src/${f}`).split("\n").length;
+    assert.ok(n <= LIGNES_MAX, `src/${f} fait ${n} lignes : à découper par responsabilité`);
   }
+});
+
+test("chaque module est importé (pas de fichier oublié)", () => {
+  const r = buildSync(optionsApp({ write: false, outfile: "app.js", metafile: true, logLevel: "silent" }));
+  const inclus = new Set(Object.keys(r.metafile.inputs).map((f) => f.replace(/\\/g, "/").replace(/^.*?src\//, "")));
+  for (const f of modulesApp) assert.ok(inclus.has(f), `src/${f} n'est importé par aucun module`);
+});
+
+test("les fichiers construits ne sont pas dans le dépôt", () => {
+  let suivis = "";
+  try {
+    suivis = execFileSync("git", ["ls-files", "app.js", "public"], { cwd: RACINE, encoding: "utf8" });
+  } catch {
+    return; // pas de dépôt git (copie du projet) : rien à vérifier
+  }
+  assert.equal(suivis.trim(), "", "app.js et public/ sont construits par outils/construire.mjs, pas ajoutés au dépôt");
+});
+
+test("chaque fichier du site à publier existe", () => {
+  for (const f of FICHIERS_SITE) assert.ok(existsSync(join(RACINE, f)), `${f} manque`);
 });
 
 test("le cache hors ligne (sw.js) contient chaque script de l'app", () => {
@@ -68,12 +83,12 @@ test("chaque fonction serveur de Supabase est dans le dépôt et utilise le modu
 
 test("aucune clé secrète dans le code", () => {
   const fichiers = [
-    "app.js",
     "admin.html",
     "index.html",
     "md.js",
     "theme.js",
     "supabase/schema.sql",
+    ...modulesApp.map((f) => `src/${f}`),
     ...readdirSync(join(RACINE, "supabase", "functions"), { recursive: true })
       .filter((f) => String(f).endsWith(".ts"))
       .map((f) => `supabase/functions/${f}`.replace(/\\/g, "/")),
