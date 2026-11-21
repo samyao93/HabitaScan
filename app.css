@@ -412,3 +412,4 @@ ol.fil-msgs{list-style:none;margin:8px 0 0;padding:0}ol.fil-msgs li{display:grid
 .legal-app th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--soft)}
 .legal-app .liste{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
 @media (max-width:520px){.legal-app table,.legal-app tbody,.legal-app tr,.legal-app td{display:block}.legal-app thead{display:none}.legal-app td{border:0;padding:3px 0}.legal-app tr{border-bottom:1px solid var(--line);padding:8px 0}}
+.badge-code{font-size:24px;font-weight:800;letter-spacing:.08em;margin:6px 0}

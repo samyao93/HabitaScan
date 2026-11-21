@@ -3,6 +3,7 @@ import { ADM } from "../admin/api.js";
 import { lierAdmin } from "../admin/ecran.js";
 import { lierCapturesVerifier, lierFormulaireVerifier, lierResultat } from "../annonce/liaisons.js";
 import { lierApprofondies } from "../approfondie/liaisons.js";
+import { lierBadges } from "../badge/liaisons.js";
 import { lierBudget } from "../budget/liaisons.js";
 import { lierCode, lierDeconnexion, lierInscription } from "../compte/liaisons.js";
 import { lierSupprimer } from "../compte/suppression.js";
@@ -123,7 +124,14 @@ const LIAISONS = {
   renoResultat: [lierEcranRenoResultat],
 };
 /* Liaisons par thème : chacune vérifie elle-même l'écran affiché. */
-const LIAISONS_THEMES = [lierApprofondies, mesurerVue, lierAnalyseIA, lierHistoriqueCompteLieu, lierMessageFiltre];
+const LIAISONS_THEMES = [
+  lierApprofondies,
+  mesurerVue,
+  lierAnalyseIA,
+  lierHistoriqueCompteLieu,
+  lierMessageFiltre,
+  lierBadges,
+];
 
 /* Lie les boutons et champs de l'écran qui vient d'être affiché. */
 export function lierEcran(v) {

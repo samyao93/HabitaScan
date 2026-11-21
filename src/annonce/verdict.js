@@ -1,6 +1,7 @@
 /* Verdict de la vérification d'une annonce (rouge, jaune, vert) et ses raisons. */
 import { itemsProfil } from "./profil.js";
 import { MOTS_ARGENT, MOTS_SCENARIO, MOYENS_FRAUDE, SITES, trouverMot } from "./regles.js";
+import { itemsBadge } from "../badge/regles.js";
 import { BAS, HAUT } from "../config.js";
 import { etat } from "../etat.js";
 import { itemsIA } from "../ia/analyse.js";
@@ -85,6 +86,7 @@ export function analyser() {
     const sg = itemSignalements(etat.fiche.nbSig);
     if (sg) it.push(sg);
   }
+  itemsBadge(etat.fiche).forEach((x) => it.push(x));
   itemsMemoire(etat.fiche.mem).forEach((x) => it.push(x));
   itemsRecopie(etat.fiche.copie).forEach((x) => it.push(x));
   itemsCopiesWeb(etat.fiche).forEach((x) => it.push(x));
