@@ -185,3 +185,81 @@ test("analyserReponse (message-filtre) : refus de visite ou dépôt exigé = rou
     "g",
   );
 });
+
+test("analyserReponse (message-filtre) : « aucun dépôt » est un bon signe, pas un signal", () => {
+  const analyserReponse = fn("analyserReponse");
+  assert.equal(analyserReponse("Oui, visite samedi. Pas de dépôt, premier mois à la signature du bail.").c, "g");
+  assert.equal(analyserReponse("Sure, visit tomorrow, no deposit needed.").c, "g");
+  assert.equal(analyserReponse("Il faut un dépôt de 300 $ pour réserver.").c, "r");
+});
+
+test("decouperConversation : un message par ligne, « Moi : » pour le locataire", () => {
+  const msgs = fn("decouperConversation")(
+    [
+      "Moi : Bonjour, votre logement m'intéresse beaucoup.",
+      "Marc : Oui, il est disponible.",
+      "Vous : Je peux visiter samedi ?",
+      "Marc : Je suis à l'étranger.",
+      "Rendez-vous à 14:30",
+    ].join("\n"),
+  );
+  assert.equal(
+    msgs.map((m) => m.auteur).join(","),
+    ["locataire", "annonceur", "locataire", "annonceur", "annonceur"].join(","),
+  );
+  assert.equal(msgs[1].texte, "Oui, il est disponible.");
+  assert.equal(msgs[4].texte, "Rendez-vous à 14:30", "une heure n'est pas un nom d'auteur");
+});
+
+test("analyserFil : la pression qui monte, l'autre messagerie puis l'argent, la pièce d'identité", () => {
+  const analyserFil = fn("analyserFil"),
+    decouper = fn("decouperConversation");
+  const fil = analyserFil(
+    decouper(
+      [
+        "Marc : Bonjour, oui il est toujours disponible.",
+        "Moi : Je peux visiter cette semaine ?",
+        "Marc : Il y a beaucoup de gens intéressés, il faut faire vite.",
+        "Marc : Écris-moi plutôt sur WhatsApp au 514 555 0101.",
+        "Marc : C'est urgent, envoie le dépôt par Interac pour réserver.",
+        "Marc : Envoie aussi une photo de ton passeport.",
+      ].join("\n"),
+    ),
+  );
+  assert.equal(fil.nb, 5, "les messages du locataire ne comptent pas");
+  assert.equal(fil.etapes.map((e) => e.niveau).join(","), ["i", "y", "y", "r", "r"].join(","));
+  const cles = fil.tendances.map((t) => t.cle);
+  assert.ok(cles.includes("pression"));
+  assert.ok(cles.includes("escalade"));
+  assert.ok(cles.includes("identite"));
+  const p = fil.tendances.find((t) => t.cle === "plateforme");
+  assert.equal(p.c, "r", "autre messagerie suivie d'une demande d'argent = rouge");
+  assert.match(p.m, /WhatsApp \(message 3\).*message 4/);
+});
+
+test("analyserFil : une conversation saine ne donne aucune tendance, et un seul message ne donne pas de fil", () => {
+  const analyserFil = fn("analyserFil");
+  const fil = analyserFil([
+    { auteur: "annonceur", texte: "Bonjour, oui c'est libre." },
+    { auteur: "locataire", texte: "Super, est-ce qu'il faut un dépôt ?" },
+    { auteur: "annonceur", texte: "Non, aucun dépôt. Visite samedi à 10 h, on signe le bail sur place." },
+  ]);
+  assert.equal(fil.nb, 2);
+  assert.equal(fil.tendances.length, 0);
+  assert.equal(fil.etapes[1].niveau, "g");
+  assert.equal(analyserFil([{ auteur: "annonceur", texte: "Oui, visite samedi." }]), null);
+});
+
+test("analyserFil : les messages lus par l'IA gardent leurs types, et l'autre messagerie seule reste jaune", () => {
+  const fil = fn("analyserFil")(
+    fn("messagesIA")([
+      { auteur: "annonceur", extrait: "Bonjour !", types: [] },
+      { auteur: "annonceur", extrait: "Add me on Telegram", types: ["changement_plateforme"] },
+    ]),
+  );
+  assert.equal(fil.tendances.length, 1);
+  assert.equal(fil.tendances[0].c, "y");
+  assert.match(fil.tendances[0].m, /Telegram \(message 2\)/);
+  const A = fn("appliquerFil")({ c: "g", t: "", s: "", signaux: [] }, fil, fn("TEXTES_FILTRE"));
+  assert.equal(A.c, "y", "une tendance jaune retire le vert");
+});

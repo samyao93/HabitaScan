@@ -281,6 +281,11 @@ ul.reasons .dot.i::after,.liste .dot.i::after{inset:7px}
 .seal{width:min(200px,52vw);aspect-ratio:1;margin:16px auto 0;display:block}
 .filtre .msg,.msg{margin:12px 0;padding:14px 16px;border-left:3px solid var(--blue);background:var(--raise);border-radius:0 var(--r) var(--r) 0;font-size:15px;line-height:1.55}
 .filtre textarea{width:100%}.filtre .verdict{margin-top:12px}
+.fil{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}.fil h3{margin:0 0 2px;font-size:16px}
+.fil-barre{display:flex;gap:4px;margin:10px 0 12px}.fil-barre span{flex:1;height:10px;border-radius:5px;background:var(--line)}
+.fil-barre .r{background:var(--red)}.fil-barre .y{background:var(--amber)}.fil-barre .g{background:var(--ok)}
+.fil details{margin-top:12px}.fil summary{cursor:pointer;font-size:14.5px;color:var(--blue)}
+ol.fil-msgs{list-style:none;margin:8px 0 0;padding:0}ol.fil-msgs li{display:grid;grid-template-columns:22px 1fr;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:14.5px;line-height:1.45;overflow-wrap:anywhere}
 
 /* ---------- Listes et historique ---------- */
 .hist{display:flex;flex-direction:column}
