@@ -338,3 +338,58 @@ test("badge : un badge valide ne cache pas un signal rouge", () => {
   assert.equal(r.c, "r");
   assert.ok(r.items.some((i) => i.c === "g" && i.t.includes("Annonce vérifiée")));
 });
+
+test("faits sourcés : chaque fait a un texte et une source, et le verdict les attache aux bons signaux", () => {
+  for (const [k, f] of Object.entries(fn("FAITS"))) {
+    assert.ok(f.t && f.t.length > 40, `fait ${k} sans texte`);
+    assert.match(f.src, /<a href="https:\/\//, `fait ${k} sans lien vers sa source`);
+  }
+  const R = verdict({ argent: "oui", visite: "non", annonce: "Je suis à l'étranger, écris-moi sur WhatsApp" });
+  assert.ok(R.items.some((i) => i.fait === fn("FAITS").depot));
+  assert.ok(R.items.some((i) => i.fait === fn("FAITS").visite));
+  assert.equal(fn("faitScenario")("whatsapp"), fn("FAITS").messagerie);
+  assert.equal(fn("faitScenario")("à l'étranger"), fn("FAITS").etranger);
+  assert.equal(fn("faitScenario")("beaucoup de demandes"), null);
+});
+
+test("carte du verdict : titre court, compte des signaux, aucune adresse ni coordonnée", () => {
+  const titreSignal = fn("titreSignal"),
+    contenuCarte = fn("contenuCarte");
+  assert.equal(titreSignal("<b>Tu n'as pas visité.</b> Ne paie rien."), "Tu n'as pas visité");
+  assert.equal(titreSignal("Profil d'apparence normale. Attention : piraté."), "Profil d'apparence normale");
+  const R = verdict({ argent: "oui", visite: "non", annonce: "western union" });
+  const F = { res: R, ville: "Montréal", ch: "2", prixN: 900, adr: "1234 rue Secrète", contact: "514 555-0123" };
+  const k = contenuCarte(F);
+  assert.equal(k.c, "r");
+  assert.match(k.titre, /^Ne paie pas : \d+ signaux$/);
+  const tout = JSON.stringify(k);
+  assert.ok(
+    !tout.includes("Secrète") && !tout.includes("555-0123"),
+    "la carte ne doit jamais montrer l'adresse ni le contact",
+  );
+  assert.equal(contenuCarte({ res: { c: "g", items: [] } }).titre, "Aucun signal d'arnaque");
+});
+
+test("partage natif reçu : texte et lien remplissent la vérification", () => {
+  const recevoir = fn("recevoirPartage"),
+    etat = fn("etat");
+  assert.equal(recevoir({}), false);
+  assert.equal(recevoir({ texte: "4 1/2 à louer https://www.kijiji.ca/v-appartement/123?utm=x" }), true);
+  assert.equal(etat.fiche.partage, true);
+  assert.equal(etat.fiche.lien, "https://kijiji.ca/v-appartement/123");
+});
+
+test("traduction anglaise : format du fichier et paires lues", async () => {
+  const { lireTraductions } = await import("../outils/construire.mjs");
+  const t = lireTraductions('# note\n== src/a.js\nBonjour\nHello\n\n« Oui »\n"Yes"\n');
+  assert.deepEqual(t, {
+    "src/a.js": [
+      ["Bonjour", "Hello"],
+      ["« Oui »", '"Yes"'],
+    ],
+  });
+  assert.throws(() => lireTraductions("== src/a.js\nseule\n"), /incomplète/);
+  const { readFileSync } = await import("node:fs");
+  const table = lireTraductions(readFileSync(new URL("../traductions/en.txt", import.meta.url), "utf8"));
+  assert.ok(Object.keys(table).length >= 30, "traductions/en.txt couvre les modules de l'app");
+});

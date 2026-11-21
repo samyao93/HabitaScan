@@ -1,4 +1,5 @@
 /* Liaisons des écrans « Vérifier une annonce » et « Résultat ». */
+import { partagerCarte } from "./carte-verdict.js";
 import { appliquerLecture, extraireAnnonce, lireCapture, rechercheImages } from "./lecture.js";
 import { normaliser } from "./regles.js";
 import { analyser } from "./verdict.js";
@@ -156,4 +157,16 @@ export function lierResultat(v) {
     etat.fiche = {};
     go("verifier");
   };
+  const bc = $("#b-carte");
+  if (bc)
+    bc.onclick = async () => {
+      bc.disabled = true;
+      try {
+        const r = await partagerCarte(etat.fiche);
+        if (r === "telecharge") $("#carte-info").textContent = "Image enregistrée dans tes téléchargements.";
+      } catch (e) {
+        $("#carte-info").textContent = "L'image n'a pas pu être créée sur cet appareil.";
+      }
+      bc.disabled = false;
+    };
 }

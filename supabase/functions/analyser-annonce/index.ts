@@ -9,10 +9,26 @@
 // collective (signalements) ; cette fonction ne conserve ni n'enregistre rien.
 import { avantTraitement, json, quotaOk } from "../_shared/commun.ts";
 
-const MAX_IMAGES = 4, MAX_IMAGES_CONVERSATION = 8, MAX_B64 = 2_500_000, MAX_TEXTE = 8000, MAX_MESSAGES = 40;
-const TYPES = ["argent_avant_bail", "depot", "paiement_suspect", "proprietaire_absent", "refus_visite", "urgence",
-  "changement_plateforme", "pieces_identite_demandees", "prix_anormal_annonce", "refus_bail", "paiement_autre_personne",
-  "histoire_incoherente", "autre"];
+const MAX_IMAGES = 4,
+  MAX_IMAGES_CONVERSATION = 8,
+  MAX_B64 = 2_500_000,
+  MAX_TEXTE = 8000,
+  MAX_MESSAGES = 40;
+const TYPES = [
+  "argent_avant_bail",
+  "depot",
+  "paiement_suspect",
+  "proprietaire_absent",
+  "refus_visite",
+  "urgence",
+  "changement_plateforme",
+  "pieces_identite_demandees",
+  "prix_anormal_annonce",
+  "refus_bail",
+  "paiement_autre_personne",
+  "histoire_incoherente",
+  "autre",
+];
 // Types propres à chaque message de la conversation : les signaux, plus les bons signes.
 const TYPES_MESSAGE = [...TYPES, "visite_proposee", "visite_acceptee", "bail_accepte"];
 
@@ -65,7 +81,8 @@ const OUTIL = {
       telephones: { type: "array", maxItems: 5, items: { type: "string" } },
       courriels: { type: "array", maxItems: 5, items: { type: "string" } },
       signaux: {
-        type: "array", maxItems: 8,
+        type: "array",
+        maxItems: 8,
         items: {
           type: "object",
           properties: {
@@ -78,7 +95,18 @@ const OUTIL = {
       },
       resume: { type: "string" },
     },
-    required: ["prix", "ville", "adresse", "chambres", "cession", "reponse_filtre", "telephones", "courriels", "signaux", "resume"],
+    required: [
+      "prix",
+      "ville",
+      "adresse",
+      "chambres",
+      "cession",
+      "reponse_filtre",
+      "telephones",
+      "courriels",
+      "signaux",
+      "resume",
+    ],
   },
 };
 
@@ -90,7 +118,8 @@ const OUTIL_CONVERSATION = {
     properties: {
       ...OUTIL.input_schema.properties,
       messages: {
-        type: "array", maxItems: MAX_MESSAGES,
+        type: "array",
+        maxItems: MAX_MESSAGES,
         items: {
           type: "object",
           properties: {
@@ -107,7 +136,13 @@ const OUTIL_CONVERSATION = {
 };
 
 const court = (v: unknown, n: number) => (typeof v === "string" ? v.slice(0, n) : null);
-const liste = (v: unknown, n: number) => (Array.isArray(v) ? v.filter((x) => typeof x === "string" && x.trim()).slice(0, 5).map((x: string) => x.trim().slice(0, n)) : []);
+const liste = (v: unknown, n: number) =>
+  Array.isArray(v)
+    ? v
+        .filter((x) => typeof x === "string" && x.trim())
+        .slice(0, 5)
+        .map((x: string) => x.trim().slice(0, n))
+    : [];
 
 Deno.serve(async (req) => {
   const refus = avantTraitement(req);
@@ -115,25 +150,37 @@ Deno.serve(async (req) => {
   const cle = Deno.env.get("ANTHROPIC_API_KEY");
   if (!cle) return json(req, { error: "non_configure" }, 503);
 
-  let images: string[] = [], texte = "", mode = "annonce";
+  let images: string[] = [],
+    texte = "",
+    mode = "annonce",
+    anglais = false;
   try {
     const b = await req.json();
     mode = b.mode === "conversation" ? "conversation" : "annonce";
-    images = Array.isArray(b.images) ? b.images.slice(0, mode === "conversation" ? MAX_IMAGES_CONVERSATION : MAX_IMAGES) : [];
+    images = Array.isArray(b.images)
+      ? b.images.slice(0, mode === "conversation" ? MAX_IMAGES_CONVERSATION : MAX_IMAGES)
+      : [];
     texte = typeof b.texte === "string" ? b.texte.slice(0, MAX_TEXTE) : "";
+    anglais = b.langue === "en"; // app en anglais : résumé et explications en anglais
   } catch {
     return json(req, { error: "requete" }, 400);
   }
-  if (!images.length && texte.trim().length < (mode === "conversation" ? 3 : 20)) return json(req, { error: "vide" }, 400);
-  if (images.some((i) => typeof i !== "string" || i.length > MAX_B64 || !/^[A-Za-z0-9+/=]+$/.test(i))) return json(req, { error: "image" }, 400);
+  if (!images.length && texte.trim().length < (mode === "conversation" ? 3 : 20))
+    return json(req, { error: "vide" }, 400);
+  if (images.some((i) => typeof i !== "string" || i.length > MAX_B64 || !/^[A-Za-z0-9+/=]+$/.test(i)))
+    return json(req, { error: "image" }, 400);
   if (!(await quotaOk(req, "analyser-annonce"))) return json(req, { error: "quota" }, 429);
 
-  const contenu: unknown[] = images.map((data) => ({ type: "image", source: { type: "base64", media_type: "image/jpeg", data } }));
+  const contenu: unknown[] = images.map((data) => ({
+    type: "image",
+    source: { type: "base64", media_type: "image/jpeg", data },
+  }));
   contenu.push({
     type: "text",
-    text: mode === "conversation"
-      ? `${images.length > 1 ? `Les ${images.length} captures ci-dessus sont dans l'ordre chronologique.\n` : ""}Réponse de l'annonceur ou conversation collée par l'utilisateur (peut être vide si seules des captures sont fournies) :\n<<<\n${texte}\n>>>\nAnalyse la conversation, message par message.`
-      : `Texte collé par l'utilisateur (peut être vide) :\n<<<\n${texte}\n>>>\nAnalyse l'annonce et la conversation.`,
+    text:
+      mode === "conversation"
+        ? `${images.length > 1 ? `Les ${images.length} captures ci-dessus sont dans l'ordre chronologique.\n` : ""}Réponse de l'annonceur ou conversation collée par l'utilisateur (peut être vide si seules des captures sont fournies) :\n<<<\n${texte}\n>>>\nAnalyse la conversation, message par message.`
+        : `Texte collé par l'utilisateur (peut être vide) :\n<<<\n${texte}\n>>>\nAnalyse l'annonce et la conversation.`,
   });
 
   const r = await fetch("https://api.anthropic.com/v1/messages", {
@@ -142,7 +189,9 @@ Deno.serve(async (req) => {
     body: JSON.stringify({
       model: "claude-haiku-5-5",
       max_tokens: mode === "conversation" ? 4000 : 1500,
-      system: mode === "conversation" ? SYSTEME_CONVERSATION : SYSTEME_ANNONCE,
+      system:
+        (mode === "conversation" ? SYSTEME_CONVERSATION : SYSTEME_ANNONCE) +
+        (anglais ? "\nÉcris le résumé et chaque explication en anglais, pas en français." : ""),
       tools: [mode === "conversation" ? OUTIL_CONVERSATION : OUTIL],
       tool_choice: { type: "tool", name: "rapport" },
       messages: [{ role: "user", content: contenu }],
@@ -155,26 +204,45 @@ Deno.serve(async (req) => {
   if (!sortie) return json(req, { error: "ia_vide" }, 502);
 
   const signaux = (Array.isArray(sortie.signaux) ? sortie.signaux : [])
-    .filter((s: Record<string, unknown>) => TYPES.includes(String(s?.type)) && typeof s.extrait === "string" && s.extrait.trim())
+    .filter(
+      (s: Record<string, unknown>) =>
+        TYPES.includes(String(s?.type)) && typeof s.extrait === "string" && s.extrait.trim(),
+    )
     .slice(0, 8)
-    .map((s: Record<string, unknown>) => ({ type: s.type, extrait: court(s.extrait, 160), explication: court(s.explication, 300) }));
-  const messages = mode !== "conversation" || !Array.isArray(sortie.messages) ? [] : sortie.messages
-    .filter((m: Record<string, unknown>) => typeof m?.extrait === "string" && m.extrait.trim())
-    .slice(0, MAX_MESSAGES)
-    .map((m: Record<string, unknown>) => ({
-      auteur: m.auteur === "locataire" ? "locataire" : "annonceur",
-      extrait: court(m.extrait, 200),
-      types: (Array.isArray(m.types) ? m.types : []).filter((t: unknown) => TYPES_MESSAGE.includes(String(t))).slice(0, 4),
+    .map((s: Record<string, unknown>) => ({
+      type: s.type,
+      extrait: court(s.extrait, 160),
+      explication: court(s.explication, 300),
     }));
+  const messages =
+    mode !== "conversation" || !Array.isArray(sortie.messages)
+      ? []
+      : sortie.messages
+          .filter((m: Record<string, unknown>) => typeof m?.extrait === "string" && m.extrait.trim())
+          .slice(0, MAX_MESSAGES)
+          .map((m: Record<string, unknown>) => ({
+            auteur: m.auteur === "locataire" ? "locataire" : "annonceur",
+            extrait: court(m.extrait, 200),
+            types: (Array.isArray(m.types) ? m.types : [])
+              .filter((t: unknown) => TYPES_MESSAGE.includes(String(t)))
+              .slice(0, 4),
+          }));
   const prix = Number.isInteger(sortie.prix) && sortie.prix >= 100 && sortie.prix <= 20000 ? sortie.prix : null;
   const ch = Number.isInteger(sortie.chambres) && sortie.chambres >= 1 && sortie.chambres <= 6 ? sortie.chambres : null;
   return json(req, {
-    mode, prix, chambres: ch,
-    ville: court(sortie.ville, 60), adresse: court(sortie.adresse, 160),
+    mode,
+    prix,
+    chambres: ch,
+    ville: court(sortie.ville, 60),
+    adresse: court(sortie.adresse, 160),
     cession: typeof sortie.cession === "boolean" ? sortie.cession : null,
-    disponible: court(sortie.disponible, 60), langue: court(sortie.langue, 10),
+    disponible: court(sortie.disponible, 60),
+    langue: court(sortie.langue, 10),
     reponse_filtre: ["accepte", "refuse", "esquive"].includes(sortie.reponse_filtre) ? sortie.reponse_filtre : null,
-    telephones: liste(sortie.telephones, 30), courriels: liste(sortie.courriels, 80),
-    signaux, messages, resume: court(sortie.resume, 400) ?? "",
+    telephones: liste(sortie.telephones, 30),
+    courriels: liste(sortie.courriels, 80),
+    signaux,
+    messages,
+    resume: court(sortie.resume, 400) ?? "",
   });
 });

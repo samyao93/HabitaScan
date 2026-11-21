@@ -11,7 +11,7 @@ export const esc = (t) =>
 export const money = (n) => Number(n).toLocaleString("fr-CA") + " $";
 
 export const top = (back, title) =>
-  `<div class="top">${back ? `<button class="back" data-go="${back}">‹ Retour</button>` : ""}${title ? "" : `<svg class="logo-mini" aria-hidden="true"><use href="#logo"/></svg>`}<b>${title || "HabitaScan"}</b><span class="sp"></span><button type="button" class="theme-btn" data-theme-toggle aria-label="Changer de thème"></button></div>`;
+  `<div class="top">${back ? `<button class="back" data-go="${back}">‹ Retour</button>` : ""}${title ? "" : `<svg class="logo-mini" aria-hidden="true"><use href="#logo"/></svg>`}<b>${title || "HabitaScan"}</b><span class="sp"></span>${back ? "" : `<button type="button" class="lang-btn" data-langue="en" lang="en" aria-label="English version">EN</button>`}<button type="button" class="theme-btn" data-theme-toggle aria-label="Changer de thème"></button></div>`;
 
 export function yn(k, q) {
   return `<div class="q">${q}<div class="yn" role="group" aria-label="${esc(q)}"><button type="button" data-yn="${k}" data-v="oui" aria-pressed="${etat.fiche[k] === "oui"}">Oui</button><button type="button" data-yn="${k}" data-v="non" aria-pressed="${etat.fiche[k] === "non"}">Non</button></div></div>`;

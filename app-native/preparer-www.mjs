@@ -6,7 +6,7 @@
 import { mkdirSync, rmSync, readFileSync, writeFileSync, copyFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { texteApp } from "../outils/construire.mjs";
+import { LANGUES, fichierApp, texteApp } from "../outils/construire.mjs";
 
 const ici = dirname(fileURLToPath(import.meta.url));
 const web = join(ici, "..");
@@ -16,14 +16,16 @@ const SITE = "https://habitascan.vercel.app";
 rmSync(www, { recursive: true, force: true });
 mkdirSync(join(www, "vendor"), { recursive: true });
 
-for (const f of ["app.css", "theme.js", "md.js", "icon.svg", "icon-180.png", "icon-192.png", "icon-512.png"]) copyFileSync(join(web, f), join(www, f));
+for (const f of ["app.css", "theme.js", "langue.js", "md.js", "icon.svg", "icon-180.png", "icon-192.png", "icon-512.png"]) copyFileSync(join(web, f), join(www, f));
 copyFileSync(join(ici, "node_modules/@supabase/supabase-js/dist/umd/supabase.js"), join(www, "vendor/supabase.js"));
 
-let js = await texteApp();
-const avant = js;
-js = js.replace(/href="\/(?!\/)/g, `href="${SITE}/`);
-if (js === avant) console.warn("Aucun lien relatif trouvé dans app.js (vérifier).");
-writeFileSync(join(www, "app.js"), js);
+for (const langue of LANGUES) {
+  let js = await texteApp(langue);
+  const avant = js;
+  js = js.replace(/href="\/(?!\/)/g, `href="${SITE}/`);
+  if (js === avant) console.warn(`Aucun lien relatif trouvé dans ${fichierApp(langue)} (vérifier).`);
+  writeFileSync(join(www, fichierApp(langue)), js);
+}
 
 let html = readFileSync(join(web, "app.html"), "utf8");
 const remplacements = [

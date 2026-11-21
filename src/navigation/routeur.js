@@ -47,6 +47,15 @@ function lierCommun(v) {
         go(b.dataset.go);
       }),
   );
+  app.querySelectorAll("[data-langue]").forEach(
+    (b) =>
+      (b.onclick = () => {
+        try {
+          localStorage.setItem("hs_langue", b.dataset.langue); // lu par langue.js, avant le chargement de l'app
+        } catch (e) {}
+        location.reload();
+      }),
+  );
   app.querySelectorAll("[data-canal]").forEach(
     (b) =>
       (b.onclick = () => {

@@ -83,6 +83,9 @@ a:hover{color:var(--blue-strong)}
 .hint a{font-weight:600}
 .law{font-size:12.5px;line-height:1.45;color:var(--faint);margin-top:4px}
 .law a{color:var(--soft)}
+.fait{font-size:13px;line-height:1.45;color:var(--soft);margin-top:8px;padding:8px 10px;border-left:3px solid var(--blue);background:var(--bg);border-radius:6px}
+.fait span{color:var(--faint);font-size:12px}
+.fait a{color:var(--soft)}
 .err{color:var(--red);font-weight:600;font-size:14.5px;background:var(--redbg);border:1px solid var(--redline);border-radius:var(--r-sm);padding:10px 12px}
 .err[hidden]{display:none}
 .pied{display:flex;flex-wrap:wrap;gap:4px 18px;justify-content:center;margin-top:4px}
@@ -384,6 +387,8 @@ ol.fil-msgs{list-style:none;margin:8px 0 0;padding:0}ol.fil-msgs li{display:grid
 :root{--i-lune:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z'/%3E%3C/svg%3E");
 --i-soleil:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='4'/%3E%3Cpath d='M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4'/%3E%3C/svg%3E")}
 .theme-btn{width:38px;height:38px;flex-shrink:0;border-radius:999px;border:1px solid var(--line);background:var(--card);display:grid;place-items:center;cursor:pointer;color:var(--soft);padding:0;box-shadow:var(--sh-xs);transition:color .15s,border-color .15s}
+.lang-btn{height:38px;min-width:38px;flex-shrink:0;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--soft);font:700 13px/1 inherit;font-family:inherit;padding:0 10px;margin-right:8px;cursor:pointer;box-shadow:var(--sh-xs)}
+.lang-btn:hover{color:var(--ink);border-color:var(--line2)}
 .theme-btn:hover{color:var(--ink);border-color:var(--line2)}
 .theme-btn::before{content:"";width:18px;height:18px;background:currentColor;-webkit-mask:var(--i-lune) center/contain no-repeat;mask:var(--i-lune) center/contain no-repeat}
 :root[data-theme=dark] .theme-btn::before{-webkit-mask-image:var(--i-soleil);mask-image:var(--i-soleil)}
