@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="fr-CA">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Carte des arnaques par quartier · HabitaScan</title>
+<meta name="description" content="Carte anonyme des arnaques au logement signalées par quartier au Québec, à partir des signalements de la communauté HabitaScan. Pour le public, les médias et les associations de locataires.">
+<link rel="canonical" href="https://habitascan.vercel.app/carte">
+<meta property="og:title" content="Carte des arnaques au logement par quartier · HabitaScan"><meta property="og:description" content="Carte anonyme des arnaques au logement signalées par quartier au Québec, à partir des signalements de la communauté HabitaScan. Pour le public, les médias et les associations de locataires."><meta property="og:type" content="website">
+<link rel="icon" href="/icon.svg" type="image/svg+xml"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet"><script src="/theme.js"></script><link rel="stylesheet" href="/site.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+</head>
+<body>
+<header class="nav"><div class="wrap"><a class="marque" href="/"><img src="/icon.svg" alt="">HabitaScan</a><nav><a class="cacher" href="/guides/arnaques-courantes">Arnaques courantes</a><a class="cacher" href="/guides/verifier-un-proprietaire">Vérifier un propriétaire</a><a class="cacher" href="/carte">Carte des arnaques</a><a class="cacher" href="/a-propos">Qui sommes-nous</a><a href="/en" lang="en" hreflang="en">English</a><button type="button" class="theme-btn" data-theme-toggle aria-label="Changer de thème"></button><a class="btn sm" href="/app" target="_blank" rel="noopener">Ouvrir l'app</a></nav></div></header>
+<article class="carte-page"><p class="fil"><a href="/">Accueil</a> › Carte des arnaques</p>
+<h1>Carte des arnaques au logement par quartier</h1>
+<p class="lead">Où les fausses annonces de logement frappent-elles au Québec ? Cette carte regroupe, par secteur postal, les arnaques signalées par la communauté HabitaScan. Elle est anonyme : aucune adresse, aucune annonce, aucune personne.</p>
+<p class="carte-etat" id="etat" role="status">Chargement des données…</p>
+<div id="carte" class="carte" hidden aria-label="Carte des secteurs signalés"></div>
+<p class="source" id="sans-carte" hidden>Les secteurs ne sont pas encore placés sur la carte : le tableau ci-dessous donne tous les chiffres.</p>
+<div class="carte-outils" id="outils" hidden><label>Ville <select id="ville"><option value="">Toutes</option></select></label><button type="button" class="btn ghost sm" id="csv">Télécharger les données (CSV)</button></div>
+<div class="legal"><table id="tableau" hidden><thead><tr><th>Secteur</th><th>Ville</th><th>Personnes</th><th>Motifs les plus signalés</th></tr></thead><tbody></tbody></table></div>
+<h2>Comment lire cette carte</h2>
+<ul><li><b>Un secteur</b> correspond aux 3 premiers caractères du code postal (par exemple H2X). Il couvre généralement plusieurs milliers de logements.</li>
+<li><b>Personnes</b> : le nombre de personnes différentes qui ont signalé une arnaque dans ce secteur depuis <span data-mois>12</span> mois. Une même personne n'est comptée qu'une fois.</li>
+<li><b>Seuil de confidentialité</b> : un secteur n'apparaît qu'à partir de <span data-seuil>3</span> personnes différentes. En dessous, ses signalements sont regroupés dans « Autres secteurs » de la ville, qui obéit au même seuil. Un motif n'est détaillé que s'il atteint aussi ce seuil.</li>
+<li><b>Un secteur absent n'est pas un secteur sans arnaque.</b> Les chiffres reflètent aussi l'endroit où HabitaScan est utilisé : un quartier étudiant ou très recherché aura plus de signalements.</li></ul>
+<h2>D'où viennent les chiffres</h2>
+<p>Des signalements envoyés dans l'app HabitaScan par des personnes dont l'identité a été confirmée, ce qui limite les faux signalements. La personne indique, si elle le veut, le code postal du logement annoncé ; seuls les 3 premiers caractères sont conservés. Les comptes suspendus ne sont pas comptés, et un signalement disparaît avec le compte qui l'a envoyé.</p>
+<p>Médias, chercheurs et associations de locataires : vous pouvez reprendre ces chiffres en citant « HabitaScan » et la période. Le fichier CSV contient exactement ce que montre la page.</p>
+<p class="source">Position approximative des secteurs : <a href="https://www.geonames.org" target="_blank" rel="noopener">GeoNames</a> (CC BY 4.0). Fond de carte : © contributeurs <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>.</p>
+<div class="encart"><h3>Une annonce vous semble louche ?</h3><p>Vérifiez-la avant de payer, et signalez-la si c'est une arnaque : votre signalement protège les prochaines personnes.</p><a class="btn" href="/app" target="_blank" rel="noopener">Ouvrir l'app</a></div></article>
+<footer><div class="wrap"><span>© 2026 HabitaScan · Fait au Québec</span><span><a href="/">Accueil</a> · <a href="/a-propos">Qui sommes-nous</a> · <a href="/guides/arnaques-courantes">Arnaques courantes</a> · <a href="/carte">Carte des arnaques</a> · <a href="/guides/verifier-un-proprietaire">Vérifier un propriétaire</a> · <a href="/confidentialite">Confidentialité</a> · <a href="/conditions">Conditions d'utilisation</a> · <a href="/en">English</a></span></div></footer>
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="/carte.js"></script>
+</body>
+</html>

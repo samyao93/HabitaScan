@@ -262,4 +262,13 @@ test("analyserFil : les messages lus par l'IA gardent leurs types, et l'autre me
   assert.match(fil.tendances[0].m, /Telegram \(message 2\)/);
   const A = fn("appliquerFil")({ c: "g", t: "", s: "", signaux: [] }, fil, fn("TEXTES_FILTRE"));
   assert.equal(A.c, "y", "une tendance jaune retire le vert");
+test("rtaDe : garde seulement les 3 premiers caractères d'un code postal du Québec", () => {
+  const rtaDe = fn("rtaDe");
+  assert.equal(rtaDe("h2x 1y4"), "H2X");
+  assert.equal(rtaDe(" G1R2J6 "), "G1R");
+  assert.equal(rtaDe("J4K"), "J4K");
+  assert.equal(rtaDe("K1A 0B1"), ""); // Ontario : hors carte
+  assert.equal(rtaDe("123 rue Principale"), "");
+  assert.equal(rtaDe(""), "");
+  assert.equal(rtaDe(null), "");
 });

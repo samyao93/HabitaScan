@@ -32,6 +32,8 @@ export const vueSignaler = (F, retour) => `${top(retour, "Signaler")}
 )
   .map(([k, l]) => `<button type="button" data-motif="${k}" aria-pressed="${F.motif === k}">${l}</button>`)
   .join("")}</div></div>
+<label>Code postal du logement (facultatif)<input id="cp" autocomplete="off" autocapitalize="characters" maxlength="7" placeholder="Ex. H2X 1Y4" value="${F.cp || ""}"></label>
+<p class="hint" style="margin-top:-6px">Seuls les 3 premiers caractères (ex. H2X) sont gardés, pour la <a href="/carte" target="_blank" rel="noopener">carte des arnaques par quartier</a>. Un secteur n'y apparaît qu'à partir de 3 personnes différentes.</p>
 <label style="flex-direction:row;align-items:flex-start;gap:10px;font-weight:500"><input type="checkbox" id="bonnefoi" style="width:22px;min-height:22px;margin-top:2px">Je signale de bonne foi, à partir de ce que j'ai vécu.</label>
 <p class="err" id="e" hidden></p>
 <button class="btn" id="go">Envoyer le signalement</button></form>
@@ -47,8 +49,20 @@ export function lierSignaler(F) {
   );
 }
 
+/** Secteur (RTA) : les 3 premiers caractères d'un code postal du Québec, ou "" si absent ou invalide. */
+export function rtaDe(texte) {
+  const r = String(texte || "")
+    .replace(/\s/g, "")
+    .toUpperCase()
+    .slice(0, 3);
+  return /^[GHJ][0-9][A-Z]$/.test(r) ? r : "";
+}
+
 export function validerSignal(F) {
   if (!F.motif) return "Choisis une raison.";
+  const cp = $("#cp") ? $("#cp").value.trim() : "";
+  if (cp && !rtaDe(cp))
+    return "Le code postal doit être celui d'un logement au Québec (ex. H2X 1Y4), ou laisse la case vide.";
   if (!$("#bonnefoi").checked) return "Coche la case pour confirmer.";
   return "";
 }
