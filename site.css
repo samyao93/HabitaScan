@@ -263,7 +263,7 @@ article li{margin-bottom:6px}
 
 /* Carte des arnaques par quartier (/carte) */
 .carte-page{max-width:980px}
-.carte{height:min(70vh,560px);border-radius:16px;border:1px solid var(--line);margin:8px 0 18px;z-index:0}
+.carte-zone{height:min(70vh,560px);border-radius:16px;border:1px solid var(--line);margin:8px 0 18px;z-index:0}
 .carte-etat{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:16px 18px;color:var(--soft)}
 .carte-outils{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:center;justify-content:space-between;margin:10px 0}
 .carte-outils label{font-size:15px;font-weight:600;display:flex;gap:8px;align-items:center}
