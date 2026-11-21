@@ -14,7 +14,7 @@ export function vueAdmin() {
   return `${top("compte", "Admin")}
 <h2>Espace admin</h2>${ADM.demo ? `<p class="demo">Démo : données fictives, rien n'est envoyé.</p>` : ""}
 ${ADM.console ? `<a class="btn" href="${ADM.console}" target="_blank" rel="noopener">Ouvrir la console complète (ordinateur) ↗</a><p class="hint">Utilisateurs, réglages, quotas, loyers, administrateurs, journal : tout se gère dans la console.</p>` : ""}
-<div class="seg seg6" role="group" aria-label="Section">${o("chiffres", "Chiffres")}${o("demandes", "Demandes")}${o("connexions", "Connexions")}${o("identites", "Identités")}${o("signalements", "Signalements")}${o("montants", "Montants")}</div>
+<div class="seg seg6" role="group" aria-label="Section">${o("chiffres", "Chiffres")}${o("demandes", "Demandes")}${o("connexions", "Connexions")}${o("identites", "Identités")}${o("signalements", "Signalements")}${o("badges", "Badges")}${o("montants", "Montants")}</div>
 <div id="adm" aria-live="polite"><p class="hint">Chargement…</p></div>`;
 }
 

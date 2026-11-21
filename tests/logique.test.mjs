@@ -185,3 +185,67 @@ test("analyserReponse (message-filtre) : refus de visite ou dépôt exigé = rou
     "g",
   );
 });
+
+test("badge : repère le code dans l'annonce et la mention sans code", () => {
+  const codeBadge = fn("codeBadge"),
+    mentionBadge = fn("mentionBadge");
+  assert.equal(codeBadge("Annonce vérifiée HabitaScan : HS-U9YDJA. Appelez-moi"), "HS-U9YDJA");
+  assert.equal(codeBadge("code hs u9ydja"), "HS-U9YDJA");
+  assert.equal(codeBadge("HS-U9YDJ0"), null, "0 n'est pas dans l'alphabet");
+  assert.equal(codeBadge("CHS-U9YDJAB"), null);
+  assert.equal(mentionBadge("Annonce vérifiée par HabitaScan, aucun souci"), true);
+  assert.equal(mentionBadge("Bel appartement"), false);
+});
+
+test("badge : vert seulement si le contact correspond, rouge si copié, faux ou d'une autre ville", () => {
+  const itemsBadge = fn("itemsBadge");
+  const ok = {
+    statut: "valide",
+    code: "HS-U9YDJA",
+    nom: "Élise Tremblay",
+    type: "personne",
+    rue: "rue Exemple",
+    ville: "Montréal",
+    verifie_le: "2026-11-21",
+    expire_le: "2027-11-21",
+    contacts: ["514 ••• ••42"],
+  };
+  assert.equal(itemsBadge({ badge: { ...ok, contact_correspond: true } })[0].c, "g");
+  assert.equal(itemsBadge({ badge: { ...ok, contact_correspond: false } })[0].c, "r");
+  assert.equal(itemsBadge({ badge: { ...ok, contact_correspond: null } })[0].c, "y");
+  assert.equal(
+    itemsBadge({ ville: "Laval", badge: { ...ok, contact_correspond: true, ville_correspond: false } })[0].c,
+    "r",
+  );
+  assert.equal(itemsBadge({ badge: { statut: "inconnu", code: "HS-ZZZZZZ" } })[0].c, "r");
+  assert.equal(itemsBadge({ badge: { statut: "suspendu", code: "HS-ZZZZZZ", signalements: 3 } })[0].c, "r");
+  assert.equal(itemsBadge({ badge: { statut: "expire", code: "HS-ZZZZZZ" } })[0].c, "y");
+  assert.equal(itemsBadge({ mentionBadge: true })[0].c, "y");
+  // Sans code : reconnu par le numéro ou le courriel de l'annonce
+  const pc = { ...ok, par_contact: true, contact_correspond: true, immeubles: 2 };
+  assert.equal(itemsBadge({ badge: pc })[0].c, "g");
+  assert.ok(itemsBadge({ badge: pc })[0].t.includes("1 autre immeuble"));
+  assert.equal(itemsBadge({ ville: "Laval", badge: { ...pc, ville_correspond: false } })[0].c, "y");
+  assert.equal(itemsBadge({}).length, 0);
+  // Le nom vient de la base : il est échappé
+  assert.ok(!itemsBadge({ badge: { ...ok, nom: "<img>", contact_correspond: true } })[0].t.includes("<img>"));
+});
+
+test("badge : un badge valide ne cache pas un signal rouge", () => {
+  const r = verdict({
+    argent: "oui",
+    visite: "oui",
+    badge: {
+      statut: "valide",
+      code: "HS-U9YDJA",
+      nom: "X",
+      rue: "rue Y",
+      ville: "Montréal",
+      contact_correspond: true,
+      verifie_le: "2026-11-21",
+      expire_le: "2027-11-21",
+    },
+  });
+  assert.equal(r.c, "r");
+  assert.ok(r.items.some((i) => i.c === "g" && i.t.includes("Annonce vérifiée")));
+});

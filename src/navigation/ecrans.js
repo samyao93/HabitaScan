@@ -3,6 +3,7 @@ import { vueAdmin } from "../admin/ecran.js";
 import { CFG } from "../admin/parametres.js";
 import { blocProfil, boutonCarte } from "../annonce/profil.js";
 import { blocMesApprofondies, offreApprofondie, vueApprofondie } from "../approfondie/ecrans.js";
+import { boutonBadge, vueBadge } from "../badge/ecrans.js";
 import { VCFG, prixTxt } from "../approfondie/rapport.js";
 import { vueBudget } from "../budget/ecrans.js";
 import { barreCompte, vueCompte } from "../compte/ecrans.js";
@@ -120,6 +121,7 @@ ${CFG.message ? `<div class="card invite" role="status"><p>${esc(CFG.message)}</
 ${CFG.approfondie ? `<button class="btn ghost btn-va" data-va-de="accueil">Vérification complète par notre équipe<small>Propriétaire, entreprise, photos, autres annonces · ${prixTxt()} · rapport en ${VCFG.delai} h</small></button>` : ""}
 <button class="btn ghost" data-go="budget" id="nouvB">Calculer mon budget d'installation</button>
 <button class="btn ghost" data-go="reno" id="nouvR">Vérifier un entrepreneur en rénovation</button>
+${boutonBadge()}
 </div>
 ${!etat.anonyme && etat.profil && ["aucune", "refusee"].includes(etat.profil.identite_statut) ? `<button class="btn ghost" data-go="identite">Confirmer mon identité (pour signaler)</button>` : ""}
 ${blocMesApprofondies}
@@ -199,6 +201,7 @@ ${boutonSignaler(etat.fiche)}
       ? vuePageLegale("conditions", "Conditions", etat.session ? "accueil" : "bienvenue")
       : vueConditions(etat.session ? "accueil" : "bienvenue"),
   reno: () => vueReno(etat.fiche, "accueil"),
+  badge: () => vueBadge(etat.fiche, "accueil"),
   renoResultat: () => vueRenoResultat(etat.fiche, "accueil"),
 
   victime: () => `${top(etat.session ? "accueil" : "bienvenue", "Aide")}
