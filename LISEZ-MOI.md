@@ -140,7 +140,7 @@ Vie privée : au signalement, la personne peut donner le code postal du logement
 
 ## 7b. Badge « Annonce vérifiée » (propriétaires)
 
-HabitaScan n'héberge aucune annonce : le propriétaire continue de publier sur Kijiji, Facebook, etc. Il prouve une fois qu'il possède l'immeuble ; chaque vérification reconnaît ensuite toute seule son code `HS-XXXXXX` dans le texte de l'annonce (collé ou capture), ou simplement son numéro ou son courriel (« Propriétaire vérifié »). Gratuit au lancement (réglage `badge_prix` réservé pour plus tard). Migration : `supabase/migrations/20261121_badge_annonce_verifiee.sql`.
+HabitaScan n'héberge aucune annonce : le propriétaire continue de publier sur Kijiji, Facebook, etc. Il prouve une fois qu'il possède l'immeuble ; chaque vérification reconnaît ensuite toute seule son code `HS-XXXXXX` dans le texte de l'annonce (collé ou capture), ou simplement son numéro ou son courriel (« Propriétaire vérifié »). Gratuit au lancement (réglage `badge_prix` réservé pour plus tard). Migration : `supabase/migrations/20261121b_badge_annonce_verifiee.sql`.
 
 Trois verrous contre les fraudeurs :
 1. **Identité confirmée** du compte (pièce d'identité, section 7).
