@@ -262,6 +262,8 @@ test("analyserFil : les messages lus par l'IA gardent leurs types, et l'autre me
   assert.match(fil.tendances[0].m, /Telegram \(message 2\)/);
   const A = fn("appliquerFil")({ c: "g", t: "", s: "", signaux: [] }, fil, fn("TEXTES_FILTRE"));
   assert.equal(A.c, "y", "une tendance jaune retire le vert");
+});
+
 test("rtaDe : garde seulement les 3 premiers caractères d'un code postal du Québec", () => {
   const rtaDe = fn("rtaDe");
   assert.equal(rtaDe("h2x 1y4"), "H2X");
@@ -271,6 +273,8 @@ test("rtaDe : garde seulement les 3 premiers caractères d'un code postal du Qu�
   assert.equal(rtaDe("123 rue Principale"), "");
   assert.equal(rtaDe(""), "");
   assert.equal(rtaDe(null), "");
+});
+
 test("badge : repère le code dans l'annonce et la mention sans code", () => {
   const codeBadge = fn("codeBadge"),
     mentionBadge = fn("mentionBadge");
