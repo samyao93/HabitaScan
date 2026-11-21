@@ -77,11 +77,11 @@ export default [
     rules: { ...REGLES, "no-unused-vars": ["error", { vars: "all", args: "none", caughtErrors: "none" }] },
   },
   {
-    files: ["md.js", "theme.js"],
+    files: ["md.js", "theme.js", "carte.js"],
     languageOptions: {
       ecmaVersion: "latest",
       sourceType: "script",
-      globals: { ...globals.browser, Capacitor: "readonly" },
+      globals: { ...globals.browser, Capacitor: "readonly", L: "readonly" },
     },
     rules: REGLES,
   },

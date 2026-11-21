@@ -1,6 +1,7 @@
 /* Message-filtre : liaisons. */
 import { etat } from "../etat.js";
 import { TEXTES_FILTRE, analyserReponse, fusionFiltre } from "./regles.js";
+import { analyserFil, appliquerFil, decouperConversation, messagesIA } from "./conversation.js";
 import { CLE_IA, IA_ADAPT, iaActif } from "../ia/analyse.js";
 import { extraireContacts, fusionContacts } from "../memoire/contacts.js";
 import { itemsMemoire, memoire } from "../memoire/memoire.js";
@@ -8,6 +9,8 @@ import { MES } from "../mesure/mesure.js";
 import { go } from "../navigation/routeur.js";
 import { $, app } from "../utils/dom.js";
 import { reduireImage } from "../utils/images.js";
+
+export const MAX_CAPTURES_CONVERSATION = 8;
 
 export function lierMessageFiltre(v) {
   if (v !== "resultat" || !$("#f-msg")) return;
@@ -47,7 +50,10 @@ export function lierMessageFiltre(v) {
   if (fc)
     fc.onchange = () => {
       etat.fiche.frepTxt = $("#f-rep").value;
-      etat.fiche.fcaps = [...fc.files].slice(0, 4);
+      /* Dans l'ordre de la discussion : les captures sont nommées et datées au moment où on les prend. */
+      etat.fiche.fcaps = [...fc.files]
+        .sort((a, b) => a.lastModified - b.lastModified || a.name.localeCompare(b.name))
+        .slice(0, MAX_CAPTURES_CONVERSATION);
       go("resultat");
       setTimeout(() => {
         const e = $("#f-msg");
@@ -69,16 +75,20 @@ export function lierMessageFiltre(v) {
       return;
     }
     etat.fiche.frepTxt = t;
-    let A = analyserReponse(t);
+    /* Conversation entière collée : seuls les messages de l'annonceur comptent pour le verdict. */
+    let msgs = decouperConversation(t);
+    const ann = msgs.filter((m) => m.auteur === "annonceur");
+    let A = analyserReponse(ann.length && ann.length < msgs.length ? ann.map((m) => m.texte).join("\n") : t);
     const b = $("#f-lire");
     if (iaActif()) {
       b.disabled = true;
-      b.textContent = "Analyse de la conversation…";
+      b.textContent = caps.length > 1 ? `Lecture de ${caps.length} captures…` : "Analyse de la conversation…";
       try {
         const images = [];
         for (const c of caps) images.push(await reduireImage(c));
         const r = await IA_ADAPT.analyser({ images, texte: t, mode: "conversation" });
         A = fusionFiltre(A, r);
+        if (messagesIA(r.messages).length) msgs = messagesIA(r.messages);
         etat.fiche.contacts = fusionContacts(etat.fiche.contacts, { tels: r.telephones, courriels: r.courriels });
         try {
           MES.noter("ia_conversation");
@@ -98,6 +108,8 @@ export function lierMessageFiltre(v) {
       [],
     );
     itemsMemoire(m).forEach((x) => A.signaux.unshift({ c: x.c, m: x.t }));
+    /* Suivi message par message : pression qui monte, autre messagerie, pièce d'identité. */
+    A = appliquerFil(A, analyserFil(msgs), TEXTES_FILTRE);
     if (A.signaux.some((z) => z.c === "r") && A.c !== "r") {
       A.c = "r";
       A.t = TEXTES_FILTRE.r[0];

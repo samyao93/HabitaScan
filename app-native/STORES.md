@@ -32,6 +32,15 @@ Puis augmente le numéro de version :
 - **Android** : `android/app/build.gradle` → `versionCode` (+1 à chaque envoi) et `versionName`.
 - **iPhone** : dans Xcode, onglet « General » → Version et Build.
 
+## 2b. Partager une annonce vers l'app
+
+- **Android** : rien à faire. HabitaScan apparaît dans le menu « Partager » (texte, lien ou image) grâce à
+  `android/app/src/main/AndroidManifest.xml` et `PartagePlugin.java`.
+- **iPhone** : il faut créer une fois l'extension de partage dans Xcode. Étapes : `ios/partage-extension/LISEZ-MOI.md`.
+
+Pour tester : dans Facebook ou Kijiji, ouvre une annonce > Partager > HabitaScan. L'écran « Vérifier » s'ouvre,
+rempli avec le texte et le lien, ou avec la capture partagée.
+
 ## 3. Google Play
 
 **Ce qu'il te faut** : un compte Google Play Console (25 $ US, une fois) et Android Studio (déjà installé).

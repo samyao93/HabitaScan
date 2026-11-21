@@ -10,7 +10,7 @@ import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { build } from "esbuild";
-import { optionsApp } from "./construire.mjs";
+import { fichierApp, optionsLangue } from "./construire.mjs";
 
 export const RACINE = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -43,7 +43,7 @@ const STUB =
  * `extra` : code (module ES, chemins relatifs à src/) exécuté après le démarrage de l'app ; il peut importer
  * n'importe quel module de l'app pour l'observer.
  */
-export async function avecApp(travail, extra = "") {
+export async function avecApp(travail, extra = "", langue = "fr") {
   const chrome = cheminChrome();
   if (!chrome) throw new Error("Google Chrome introuvable (variable CHROME).");
   const tmp = mkdtempSync(join(tmpdir(), "hs-app-"));
@@ -53,14 +53,14 @@ export async function avecApp(travail, extra = "") {
   }
   // L'app construite comme en production, avec en plus le code d'observation
   await build(
-    optionsApp({
+    await optionsLangue(langue, {
       entryPoints: undefined,
       stdin: {
         contents: `import "./main.js";\n${extra}`,
         resolveDir: join(RACINE, "src"),
         sourcefile: "observation.js",
       },
-      outfile: join(tmp, "app.js"),
+      outfile: join(tmp, fichierApp(langue)),
     }),
   );
   writeFileSync(join(tmp, "stub.js"), STUB);
@@ -119,7 +119,7 @@ export async function avecApp(travail, extra = "") {
       });
     await envoyer("Runtime.enable");
     await envoyer("Page.enable");
-    await envoyer("Page.navigate", { url: pathToFileURL(join(tmp, "app.html")).href });
+    await envoyer("Page.navigate", { url: pathToFileURL(join(tmp, "app.html")).href + "?lang=" + langue });
     await attendre(2500);
     const evaluer = async (expr) => {
       const r = await envoyer("Runtime.evaluate", { expression: expr, returnByValue: true, awaitPromise: true });
@@ -141,7 +141,7 @@ export async function avecApp(travail, extra = "") {
 }
 
 /** HTML de chaque écran (clés de V), sans session puis avec une session simulée. */
-export async function rendreEcrans() {
+export async function rendreEcrans(langue = "fr") {
   const extra = `import { etat } from "./etat.js";
 import { go } from "./navigation/routeur.js";
 import { V } from "./navigation/ecrans.js";
@@ -156,21 +156,25 @@ window.HS_ECRAN = (v, session) => {
     return "ERREUR : " + e.message;
   }
 };`;
-  return avecApp(async (evaluer, erreurs) => {
-    const ecrans = await evaluer("HS_ECRANS()");
-    const sortie = { erreursChargement: [...erreurs], sansSession: {}, avecSession: {} };
-    for (const v of ecrans) sortie.sansSession[v] = await evaluer(`HS_ECRAN(${JSON.stringify(v)},false)`);
-    for (const v of ecrans)
-      sortie.avecSession[v] = await evaluer(
-        `HS_ECRAN(${JSON.stringify(v)},{user:{id:"00000000-0000-0000-0000-000000000000",email:"test@example.com"}})`,
-      );
-    sortie.erreursRendu = erreurs.slice(sortie.erreursChargement.length);
-    return sortie;
-  }, extra);
+  return avecApp(
+    async (evaluer, erreurs) => {
+      const ecrans = await evaluer("HS_ECRANS()");
+      const sortie = { erreursChargement: [...erreurs], sansSession: {}, avecSession: {} };
+      for (const v of ecrans) sortie.sansSession[v] = await evaluer(`HS_ECRAN(${JSON.stringify(v)},false)`);
+      for (const v of ecrans)
+        sortie.avecSession[v] = await evaluer(
+          `HS_ECRAN(${JSON.stringify(v)},{user:{id:"00000000-0000-0000-0000-000000000000",email:"test@example.com"}})`,
+        );
+      sortie.erreursRendu = erreurs.slice(sortie.erreursChargement.length);
+      return sortie;
+    },
+    extra,
+    langue,
+  );
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
-  const sortie = await rendreEcrans();
+  const sortie = await rendreEcrans(process.argv[3] || "fr");
   const n = Object.keys(sortie.sansSession).length;
   if (process.argv[2]) writeFileSync(process.argv[2], JSON.stringify(sortie, null, 1));
   console.log(

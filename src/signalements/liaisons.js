@@ -3,7 +3,7 @@ import { sb } from "../config.js";
 import { etat } from "../etat.js";
 import { peutSignaler } from "../memoire/memoire.js";
 import { go } from "../navigation/routeur.js";
-import { lierSignaler, validerSignal } from "./signalements.js";
+import { lierSignaler, rtaDe, validerSignal } from "./signalements.js";
 import { $, busy, err } from "../utils/dom.js";
 import { LS } from "../utils/stockage.js";
 
@@ -60,6 +60,20 @@ export function lierSignalement(v) {
       busy(false, "Réessayer");
       return err("Le signalement n'a pas pu être envoyé. Réessaie.");
     }
+    /* Carte des arnaques par quartier : ville et secteur (3 caractères) seulement, jamais l'adresse.
+       Un échec ici n'empêche pas le signalement. */
+    const rta = rtaDe($("#cp") && $("#cp").value);
+    if (rta || etat.fiche.ville)
+      await sb
+        .rpc("noter_lieu_signalement", {
+          p_ville: etat.fiche.ville || null,
+          p_rta: rta || null,
+          p_motif: etat.fiche.motif,
+        })
+        .then(
+          () => {},
+          () => {},
+        );
     LS.set("vl_sig", null);
     etat.fiche = {};
     go("signalOk");

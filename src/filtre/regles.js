@@ -14,62 +14,74 @@ export const FILTRE_MSG = {
   },
 };
 
-/* Ce que la réponse peut révéler (le texte est mis en minuscules et sans accents avant la recherche) */
+/* Ce que la réponse peut révéler (le texte est mis en minuscules et sans accents avant la recherche).
+   Chaque entrée : couleur, motif, explication, type (le même vocabulaire que l'analyse IA, pour suivre la conversation). */
 export const FILTRE_SIGNAUX = [
   [
     "r",
     /depot|deposit|pour reserver|reservation|to (hold|reserve)|caution|paiement d.avance|en avance|payer d.avance|in advance/,
     "Il demande de l'argent pour réserver ou garantir le logement. Au Québec, le propriétaire peut exiger seulement le premier mois, à la signature, et aucun dépôt.",
+    "depot",
   ],
   [
     "r",
     /interac|virement|e-?transfer|western union|moneygram|paypal|crypto|bitcoin|carte[s]? cadeau|gift card|wise\b/,
     "Il veut un paiement par virement, transfert ou carte-cadeau avant la signature.",
+    "paiement_suspect",
   ],
   [
     "r",
     /etranger|a l.exterieur du pays|hors du pays|en mission|out of (the )?country|abroad|overseas|missionnaire|militaire|offshore/,
     "Il dit être à l'étranger ou loin. C'est un scénario typique des fausses annonces.",
+    "proprietaire_absent",
   ],
   [
     "r",
     /(cle|cles|key|keys).{0,40}(poste|courrier|mail|livr|envoy|ship)|(poste|courrier|airbnb|livr).{0,40}(cle|cles|key)/,
     "Il propose d'envoyer les clés par la poste ou par un service : on ne visite donc jamais.",
+    "refus_visite",
   ],
   [
     "r",
     /pas de visite|aucune visite|visite (n.est pas|impossible|pas possible)|pas possible de (le )?visiter|ne (peux|peut|pouvez|pourrez) pas (le )?visiter|no visit|can.?t (visit|show)|cannot (visit|show)|unable to show/,
     "Il refuse ou évite la visite.",
+    "refus_visite",
   ],
   [
     "r",
     /numero d.assurance sociale|\bnas\b|\bsin\b|passeport|passport|permis de conduire|driver.?s licen|releve bancaire|bank statement/,
     "Il demande tes papiers (NAS, passeport, relevé bancaire) avant la visite. Ne les envoie pas.",
+    "pieces_identite_demandees",
   ],
   [
     "y",
     /beaucoup de (gens|personnes|demandes)|plusieurs (personnes|candidats)|many (people|applicants)|vite|rapidement|aujourd.hui seulement|urgent|asap|first come/,
     "Il te presse. La pression est une technique courante ; une vraie visite peut attendre un jour.",
+    "urgence",
   ],
   [
     "y",
     /whatsapp|telegram|signal|texto|sms|courriel|e-?mail/,
     "Il veut continuer ailleurs (WhatsApp, courriel). Garde la conversation sur la plateforme jusqu'à la visite.",
+    "changement_plateforme",
   ],
   [
     "g",
     /(samedi|dimanche|lundi|mardi|mercredi|jeudi|vendredi|demain|ce soir|saturday|sunday|monday|tuesday|wednesday|thursday|friday|tomorrow)|\b\d{1,2} ?h\b|\b\d{1,2}:\d{2}\b|\d{1,2} ?(am|pm)/,
     "Il propose un moment précis pour la visite.",
+    "visite_proposee",
   ],
   [
     "g",
     /(oui|yes|bien sur|sure|parfait|ok|d.accord).{0,60}(visite|visiter|visit)|(visite|visit).{0,40}(possible|disponible|available)/,
     "Il accepte la visite.",
+    "visite_acceptee",
   ],
   [
     "g",
     /(signature|signer|sign).{0,60}(bail|lease)|(bail|lease).{0,60}(signature|signer|sign)/,
     "Il accepte de signer un bail.",
+    "bail_accepte",
   ],
 ];
 
@@ -112,8 +124,21 @@ export function fusionFiltre(A, r) {
   return { c, t: t[0], s: t[1], signaux: s, ia: true, resume: r.resume || "" };
 }
 
+/* Retire les dépôts niés (« aucun dépôt », « pas de dépôt », « no deposit ») : ce sont de bons signes. */
+export const sansNegations = (x) =>
+  x.replace(
+    /\b(aucun|aucune|pas de|pas d'|sans|jamais de|no|without|never)\s*(frais de |frais d'|paiement d'|payment )?(depot|deposit|caution|reservation|avance|advance)\w*/g,
+    " ",
+  );
+
+/* Types repérés par les règles locales dans un message (sans doublon). */
+export const typesLocaux = (t) => {
+  const x = sansNegations(sansAcc(t));
+  return [...new Set(FILTRE_SIGNAUX.filter(([, re]) => re.test(x)).map((e) => e[3]))];
+};
+
 export function analyserReponse(t) {
-  const x = sansAcc(t);
+  const x = sansNegations(sansAcc(t));
   const s = FILTRE_SIGNAUX.filter(([, re]) => re.test(x)).map(([c, , m]) => ({ c, m }));
   const r = s.filter((z) => z.c === "r").length,
     y = s.filter((z) => z.c === "y").length,

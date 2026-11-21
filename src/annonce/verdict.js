@@ -1,6 +1,8 @@
 /* Verdict de la vérification d'une annonce (rouge, jaune, vert) et ses raisons. */
+import { FAITS, faitScenario } from "./faits.js";
 import { itemsProfil } from "./profil.js";
 import { MOTS_ARGENT, MOTS_SCENARIO, MOYENS_FRAUDE, SITES, trouverMot } from "./regles.js";
+import { itemsBadge } from "../badge/regles.js";
 import { BAS, HAUT } from "../config.js";
 import { etat } from "../etat.js";
 import { itemsIA } from "../ia/analyse.js";
@@ -23,23 +25,31 @@ export function analyser() {
       c: "r",
       t: "<b>On te demande de l'argent avant le bail.</b> Au Québec, le propriétaire peut seulement exiger le premier mois de loyer, et aucun dépôt.",
       law: L1904,
+      fait: FAITS.depot,
     });
   if (motP)
     it.push({
       c: "r",
       t: `<b>Paiement par « ${esc(motP)} ».</b> Aucun propriétaire honnête ne demande ce moyen de paiement : il est presque impossible de récupérer l'argent.`,
+      fait: FAITS.paiement,
     });
   if (motA && etat.fiche.argent !== "oui")
     it.push({
       c: "y",
       t: `<b>Il est question de « ${esc(motA)} ».</b> Si on te demande un dépôt ou des frais avant le bail, c'est illégal. Seul le premier mois de loyer peut être exigé d'avance.`,
       law: L1904,
+      fait: FAITS.depot,
     });
-  if (motS) it.push({ c: "y", t: `<b>Scénario d'arnaque courant</b> repéré : « ${esc(motS)} ».` });
+  if (motS)
+    it.push({ c: "y", t: `<b>Scénario d'arnaque courant</b> repéré : « ${esc(motS)} ».`, fait: faitScenario(motS) });
   itemsProfil(etat.fiche).forEach((x) => it.push(x));
   itemsIA(etat.fiche).forEach((x) => it.push(x));
   if (etat.fiche.visite === "non")
-    it.push({ c: "y", t: "<b>Tu n'as pas visité.</b> Ne paie rien sans avoir vu le logement en personne." });
+    it.push({
+      c: "y",
+      t: "<b>Tu n'as pas visité.</b> Ne paie rien sans avoir vu le logement en personne.",
+      fait: FAITS.visite,
+    });
   else
     it.push({
       c: "g",
@@ -85,6 +95,7 @@ export function analyser() {
     const sg = itemSignalements(etat.fiche.nbSig);
     if (sg) it.push(sg);
   }
+  itemsBadge(etat.fiche).forEach((x) => it.push(x));
   itemsMemoire(etat.fiche.mem).forEach((x) => it.push(x));
   itemsRecopie(etat.fiche.copie).forEach((x) => it.push(x));
   itemsCopiesWeb(etat.fiche).forEach((x) => it.push(x));
@@ -97,6 +108,7 @@ export function analyser() {
         .map((u) => `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(new URL(u).hostname)}</a>`)
         .join(", ")}`,
       law: "Recherche d'image inversée (Google Vision)",
+      fait: FAITS.copie,
     });
   else if (etat.fiche.images && etat.fiche.images.ok)
     it.push({ c: "g", t: "Les images de la capture n'ont pas été trouvées ailleurs sur le web." });
@@ -124,6 +136,7 @@ export function analyser() {
         c: "y",
         t: `<b>Prix nettement sous la moyenne, en plus d'un autre signal.</b> ${money(etat.fiche.prixN)} contre ${money(moy)} en moyenne à ${esc(etat.fiche.ville)}. Un prix trop beau combiné à ces signaux est l'appât classique des fausses annonces.`,
         law: LSCHL,
+        fait: FAITS.prix,
       });
     else if (r < BAS)
       it.push({

@@ -1,8 +1,10 @@
 /* Table des écrans de l'app : nom de l'écran → HTML. */
 import { vueAdmin } from "../admin/ecran.js";
 import { CFG } from "../admin/parametres.js";
+import { htmlFait } from "../annonce/faits.js";
 import { blocProfil, boutonCarte } from "../annonce/profil.js";
 import { blocMesApprofondies, offreApprofondie, vueApprofondie } from "../approfondie/ecrans.js";
+import { boutonBadge, vueBadge } from "../badge/ecrans.js";
 import { VCFG, prixTxt } from "../approfondie/rapport.js";
 import { vueBudget } from "../budget/ecrans.js";
 import { barreCompte, vueCompte } from "../compte/ecrans.js";
@@ -120,6 +122,7 @@ ${CFG.message ? `<div class="card invite" role="status"><p>${esc(CFG.message)}</
 ${CFG.approfondie ? `<button class="btn ghost btn-va" data-va-de="accueil">Vérification complète par notre équipe<small>Propriétaire, entreprise, photos, autres annonces · ${prixTxt()} · rapport en ${VCFG.delai} h</small></button>` : ""}
 <button class="btn ghost" data-go="budget" id="nouvB">Calculer mon budget d'installation</button>
 <button class="btn ghost" data-go="reno" id="nouvR">Vérifier un entrepreneur en rénovation</button>
+${boutonBadge()}
 </div>
 ${!etat.anonyme && etat.profil && ["aucune", "refusee"].includes(etat.profil.identite_statut) ? `<button class="btn ghost" data-go="identite">Confirmer mon identité (pour signaler)</button>` : ""}
 ${blocMesApprofondies}
@@ -164,7 +167,7 @@ ${blocProfil(etat.fiche)}
     const R = etat.fiche.res;
     return `${top("accueil", "Résultat")}
 <div class="verdict ${R.c}"><strong>${{ r: "Ne paie pas", y: "Visite d'abord, puis vérifie le propriétaire", g: "Aucun signal. Tu peux visiter." }[R.c]}</strong><span>${esc(etat.fiche.ville)} · ${etat.fiche.ch === "3" ? "3 ch. et plus" : etat.fiche.ch + " ch."} · <span class="num">${money(etat.fiche.prixN)}</span></span></div>
-<div class="card"><h2>Ce que l'app a vérifié</h2><ul class="reasons">${R.items.map((i) => `<li><span class="dot ${i.c}"></span><div>${i.t}${i.law ? `<div class="law">${i.law}</div>` : ""}</div></li>`).join("")}</ul></div>
+<div class="card"><h2>Ce que l'app a vérifié</h2><ul class="reasons">${R.items.map((i) => `<li><span class="dot ${i.c}"></span><div>${i.t}${i.law ? `<div class="law">${i.law}</div>` : ""}${htmlFait(i.fait)}</div></li>`).join("")}</ul></div>
 ${rappelIA()}
 <p class="rule">${{ r: "N'envoie aucun argent et ne donne aucune pièce d'identité à cette personne.", y: "Ne paie rien avant d'avoir visité et confirmé qui est le propriétaire.", g: "Avant de payer : confirme le propriétaire, puis signe le bail. Le premier mois se paie à la signature, jamais avant, et jamais de dépôt." }[R.c]}</p>
 ${R.c !== "r" ? `<p class="rule paiement">${REGLE_PAIEMENT}</p>` : ""}
@@ -174,6 +177,8 @@ ${blocFiltre()}
 ${offreApprofondie("resultat")}
 ${boutonCarte(etat.fiche)}
 ${boutonSignaler(etat.fiche)}
+<button type="button" class="btn ghost" id="b-carte">Partager le résultat en image</button>
+<p class="hint" id="carte-info">Pour prévenir un coloc ou un parent. L'image montre le verdict, la ville, le loyer et les signaux, jamais l'adresse ni l'annonceur.</p>
 <button class="btn" id="nouv">Vérifier une autre annonce</button>`;
   },
   signaler: () => vueSignaler(etat.fiche, "accueil"),
@@ -199,6 +204,7 @@ ${boutonSignaler(etat.fiche)}
       ? vuePageLegale("conditions", "Conditions", etat.session ? "accueil" : "bienvenue")
       : vueConditions(etat.session ? "accueil" : "bienvenue"),
   reno: () => vueReno(etat.fiche, "accueil"),
+  badge: () => vueBadge(etat.fiche, "accueil"),
   renoResultat: () => vueRenoResultat(etat.fiche, "accueil"),
 
   victime: () => `${top(etat.session ? "accueil" : "bienvenue", "Aide")}

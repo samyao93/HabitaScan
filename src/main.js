@@ -9,7 +9,7 @@ import { ecouterChoixIA } from "./ia/liaisons.js";
 import { chargerPages, chargerTextes } from "./legal/pages.js";
 import { ecouterErreurs } from "./mesure/mesure.js";
 import { go } from "./navigation/routeur.js";
-import { ecouterPartageNatif, lirePartageDansAdresse } from "./partage.js";
+import { ecouterPartageNatif, lirePartageDansAdresse, lirePartageNatif, partagePret } from "./partage.js";
 import { app, top } from "./utils/dom.js";
 
 lirePartageDansAdresse();
@@ -28,16 +28,18 @@ ecouterPartageNatif();
     await Promise.all([chargerLoyers(), chargerRegistre(), chargerParametres(), chargerTextes(), chargerPages()]);
     await ouvrirSession();
     await chargerProfil();
+    await lirePartageNatif();
     const vq = new URLSearchParams(location.search).get("v");
     go(
       ["confidentialite", "conditions"].includes(vq)
         ? vq
         : etat.session
-          ? etat.fiche.partage
+          ? etat.fiche.partage || etat.fiche.ocr
             ? "verifier"
             : "accueil"
           : "bienvenue",
     );
+    partagePret();
   } catch (e) {
     app.innerHTML = `${top()}<p class="err">Impossible de joindre le serveur. Vérifie ta connexion et recharge la page.</p>`;
   }

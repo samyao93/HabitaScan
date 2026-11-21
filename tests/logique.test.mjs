@@ -185,3 +185,211 @@ test("analyserReponse (message-filtre) : refus de visite ou dépôt exigé = rou
     "g",
   );
 });
+
+test("analyserReponse (message-filtre) : « aucun dépôt » est un bon signe, pas un signal", () => {
+  const analyserReponse = fn("analyserReponse");
+  assert.equal(analyserReponse("Oui, visite samedi. Pas de dépôt, premier mois à la signature du bail.").c, "g");
+  assert.equal(analyserReponse("Sure, visit tomorrow, no deposit needed.").c, "g");
+  assert.equal(analyserReponse("Il faut un dépôt de 300 $ pour réserver.").c, "r");
+});
+
+test("decouperConversation : un message par ligne, « Moi : » pour le locataire", () => {
+  const msgs = fn("decouperConversation")(
+    [
+      "Moi : Bonjour, votre logement m'intéresse beaucoup.",
+      "Marc : Oui, il est disponible.",
+      "Vous : Je peux visiter samedi ?",
+      "Marc : Je suis à l'étranger.",
+      "Rendez-vous à 14:30",
+    ].join("\n"),
+  );
+  assert.equal(
+    msgs.map((m) => m.auteur).join(","),
+    ["locataire", "annonceur", "locataire", "annonceur", "annonceur"].join(","),
+  );
+  assert.equal(msgs[1].texte, "Oui, il est disponible.");
+  assert.equal(msgs[4].texte, "Rendez-vous à 14:30", "une heure n'est pas un nom d'auteur");
+});
+
+test("analyserFil : la pression qui monte, l'autre messagerie puis l'argent, la pièce d'identité", () => {
+  const analyserFil = fn("analyserFil"),
+    decouper = fn("decouperConversation");
+  const fil = analyserFil(
+    decouper(
+      [
+        "Marc : Bonjour, oui il est toujours disponible.",
+        "Moi : Je peux visiter cette semaine ?",
+        "Marc : Il y a beaucoup de gens intéressés, il faut faire vite.",
+        "Marc : Écris-moi plutôt sur WhatsApp au 514 555 0101.",
+        "Marc : C'est urgent, envoie le dépôt par Interac pour réserver.",
+        "Marc : Envoie aussi une photo de ton passeport.",
+      ].join("\n"),
+    ),
+  );
+  assert.equal(fil.nb, 5, "les messages du locataire ne comptent pas");
+  assert.equal(fil.etapes.map((e) => e.niveau).join(","), ["i", "y", "y", "r", "r"].join(","));
+  const cles = fil.tendances.map((t) => t.cle);
+  assert.ok(cles.includes("pression"));
+  assert.ok(cles.includes("escalade"));
+  assert.ok(cles.includes("identite"));
+  const p = fil.tendances.find((t) => t.cle === "plateforme");
+  assert.equal(p.c, "r", "autre messagerie suivie d'une demande d'argent = rouge");
+  assert.match(p.m, /WhatsApp \(message 3\).*message 4/);
+});
+
+test("analyserFil : une conversation saine ne donne aucune tendance, et un seul message ne donne pas de fil", () => {
+  const analyserFil = fn("analyserFil");
+  const fil = analyserFil([
+    { auteur: "annonceur", texte: "Bonjour, oui c'est libre." },
+    { auteur: "locataire", texte: "Super, est-ce qu'il faut un dépôt ?" },
+    { auteur: "annonceur", texte: "Non, aucun dépôt. Visite samedi à 10 h, on signe le bail sur place." },
+  ]);
+  assert.equal(fil.nb, 2);
+  assert.equal(fil.tendances.length, 0);
+  assert.equal(fil.etapes[1].niveau, "g");
+  assert.equal(analyserFil([{ auteur: "annonceur", texte: "Oui, visite samedi." }]), null);
+});
+
+test("analyserFil : les messages lus par l'IA gardent leurs types, et l'autre messagerie seule reste jaune", () => {
+  const fil = fn("analyserFil")(
+    fn("messagesIA")([
+      { auteur: "annonceur", extrait: "Bonjour !", types: [] },
+      { auteur: "annonceur", extrait: "Add me on Telegram", types: ["changement_plateforme"] },
+    ]),
+  );
+  assert.equal(fil.tendances.length, 1);
+  assert.equal(fil.tendances[0].c, "y");
+  assert.match(fil.tendances[0].m, /Telegram \(message 2\)/);
+  const A = fn("appliquerFil")({ c: "g", t: "", s: "", signaux: [] }, fil, fn("TEXTES_FILTRE"));
+  assert.equal(A.c, "y", "une tendance jaune retire le vert");
+});
+
+test("rtaDe : garde seulement les 3 premiers caractères d'un code postal du Québec", () => {
+  const rtaDe = fn("rtaDe");
+  assert.equal(rtaDe("h2x 1y4"), "H2X");
+  assert.equal(rtaDe(" G1R2J6 "), "G1R");
+  assert.equal(rtaDe("J4K"), "J4K");
+  assert.equal(rtaDe("K1A 0B1"), ""); // Ontario : hors carte
+  assert.equal(rtaDe("123 rue Principale"), "");
+  assert.equal(rtaDe(""), "");
+  assert.equal(rtaDe(null), "");
+});
+
+test("badge : repère le code dans l'annonce et la mention sans code", () => {
+  const codeBadge = fn("codeBadge"),
+    mentionBadge = fn("mentionBadge");
+  assert.equal(codeBadge("Annonce vérifiée HabitaScan : HS-U9YDJA. Appelez-moi"), "HS-U9YDJA");
+  assert.equal(codeBadge("code hs u9ydja"), "HS-U9YDJA");
+  assert.equal(codeBadge("HS-U9YDJ0"), null, "0 n'est pas dans l'alphabet");
+  assert.equal(codeBadge("CHS-U9YDJAB"), null);
+  assert.equal(mentionBadge("Annonce vérifiée par HabitaScan, aucun souci"), true);
+  assert.equal(mentionBadge("Bel appartement"), false);
+});
+
+test("badge : vert seulement si le contact correspond, rouge si copié, faux ou d'une autre ville", () => {
+  const itemsBadge = fn("itemsBadge");
+  const ok = {
+    statut: "valide",
+    code: "HS-U9YDJA",
+    nom: "Élise Tremblay",
+    type: "personne",
+    rue: "rue Exemple",
+    ville: "Montréal",
+    verifie_le: "2026-11-21",
+    expire_le: "2027-11-21",
+    contacts: ["514 ••• ••42"],
+  };
+  assert.equal(itemsBadge({ badge: { ...ok, contact_correspond: true } })[0].c, "g");
+  assert.equal(itemsBadge({ badge: { ...ok, contact_correspond: false } })[0].c, "r");
+  assert.equal(itemsBadge({ badge: { ...ok, contact_correspond: null } })[0].c, "y");
+  assert.equal(
+    itemsBadge({ ville: "Laval", badge: { ...ok, contact_correspond: true, ville_correspond: false } })[0].c,
+    "r",
+  );
+  assert.equal(itemsBadge({ badge: { statut: "inconnu", code: "HS-ZZZZZZ" } })[0].c, "r");
+  assert.equal(itemsBadge({ badge: { statut: "suspendu", code: "HS-ZZZZZZ", signalements: 3 } })[0].c, "r");
+  assert.equal(itemsBadge({ badge: { statut: "expire", code: "HS-ZZZZZZ" } })[0].c, "y");
+  assert.equal(itemsBadge({ mentionBadge: true })[0].c, "y");
+  // Sans code : reconnu par le numéro ou le courriel de l'annonce
+  const pc = { ...ok, par_contact: true, contact_correspond: true, immeubles: 2 };
+  assert.equal(itemsBadge({ badge: pc })[0].c, "g");
+  assert.ok(itemsBadge({ badge: pc })[0].t.includes("1 autre immeuble"));
+  assert.equal(itemsBadge({ ville: "Laval", badge: { ...pc, ville_correspond: false } })[0].c, "y");
+  assert.equal(itemsBadge({}).length, 0);
+  // Le nom vient de la base : il est échappé
+  assert.ok(!itemsBadge({ badge: { ...ok, nom: "<img>", contact_correspond: true } })[0].t.includes("<img>"));
+});
+
+test("badge : un badge valide ne cache pas un signal rouge", () => {
+  const r = verdict({
+    argent: "oui",
+    visite: "oui",
+    badge: {
+      statut: "valide",
+      code: "HS-U9YDJA",
+      nom: "X",
+      rue: "rue Y",
+      ville: "Montréal",
+      contact_correspond: true,
+      verifie_le: "2026-11-21",
+      expire_le: "2027-11-21",
+    },
+  });
+  assert.equal(r.c, "r");
+  assert.ok(r.items.some((i) => i.c === "g" && i.t.includes("Annonce vérifiée")));
+});
+
+test("faits sourcés : chaque fait a un texte et une source, et le verdict les attache aux bons signaux", () => {
+  for (const [k, f] of Object.entries(fn("FAITS"))) {
+    assert.ok(f.t && f.t.length > 40, `fait ${k} sans texte`);
+    assert.match(f.src, /<a href="https:\/\//, `fait ${k} sans lien vers sa source`);
+  }
+  const R = verdict({ argent: "oui", visite: "non", annonce: "Je suis à l'étranger, écris-moi sur WhatsApp" });
+  assert.ok(R.items.some((i) => i.fait === fn("FAITS").depot));
+  assert.ok(R.items.some((i) => i.fait === fn("FAITS").visite));
+  assert.equal(fn("faitScenario")("whatsapp"), fn("FAITS").messagerie);
+  assert.equal(fn("faitScenario")("à l'étranger"), fn("FAITS").etranger);
+  assert.equal(fn("faitScenario")("beaucoup de demandes"), null);
+});
+
+test("carte du verdict : titre court, compte des signaux, aucune adresse ni coordonnée", () => {
+  const titreSignal = fn("titreSignal"),
+    contenuCarte = fn("contenuCarte");
+  assert.equal(titreSignal("<b>Tu n'as pas visité.</b> Ne paie rien."), "Tu n'as pas visité");
+  assert.equal(titreSignal("Profil d'apparence normale. Attention : piraté."), "Profil d'apparence normale");
+  const R = verdict({ argent: "oui", visite: "non", annonce: "western union" });
+  const F = { res: R, ville: "Montréal", ch: "2", prixN: 900, adr: "1234 rue Secrète", contact: "514 555-0123" };
+  const k = contenuCarte(F);
+  assert.equal(k.c, "r");
+  assert.match(k.titre, /^Ne paie pas : \d+ signaux$/);
+  const tout = JSON.stringify(k);
+  assert.ok(
+    !tout.includes("Secrète") && !tout.includes("555-0123"),
+    "la carte ne doit jamais montrer l'adresse ni le contact",
+  );
+  assert.equal(contenuCarte({ res: { c: "g", items: [] } }).titre, "Aucun signal d'arnaque");
+});
+
+test("partage natif reçu : texte et lien remplissent la vérification", () => {
+  const recevoir = fn("recevoirPartage"),
+    etat = fn("etat");
+  assert.equal(recevoir({}), false);
+  assert.equal(recevoir({ texte: "4 1/2 à louer https://www.kijiji.ca/v-appartement/123?utm=x" }), true);
+  assert.equal(etat.fiche.partage, true);
+  assert.equal(etat.fiche.lien, "https://kijiji.ca/v-appartement/123");
+});
+
+test("traduction anglaise : format du fichier et paires lues", async () => {
+  const { lireTraductions } = await import("../outils/construire.mjs");
+  const t = lireTraductions('# note\n== src/a.js\nBonjour\nHello\n\n« Oui »\n"Yes"\n');
+  assert.deepEqual(t, {
+    "src/a.js": [
+      ["Bonjour", "Hello"],
+      ["« Oui »", '"Yes"'],
+    ],
+  });
+  assert.throws(() => lireTraductions("== src/a.js\nseule\n"), /incomplète/);
+  const { readFileSync } = await import("node:fs");
+  const table = lireTraductions(readFileSync(new URL("../traductions/en.txt", import.meta.url), "utf8"));
+  assert.ok(Object.keys(table).length >= 30, "traductions/en.txt couvre les modules de l'app");
+});
