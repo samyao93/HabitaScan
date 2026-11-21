@@ -112,6 +112,16 @@ Chaque signalement d'un utilisateur à l'identité confirmée avertit les suivan
 
 **Captures d'écran** : l'app repère automatiquement la zone de la photo dans une capture (là où les couleurs sont variées) et calcule l'empreinte sur cette zone ; elle reconnaît donc la même photo vue sur deux sites différents.
 
+## 6 c. Carte des arnaques par quartier (habitascan.vercel.app/carte)
+
+Page publique et anonyme pour le public, les médias et les associations de locataires : nombre de personnes ayant signalé une arnaque par secteur postal (3 premiers caractères du code postal, ex. H2X), sur les 12 derniers mois, avec export CSV.
+
+1. Applique `supabase/migrations/20261121_carte_arnaques.sql` dans SQL Editor (puis régénère `supabase/schema.sql`).
+2. Sur ton ordinateur, à la racine du projet : `node outils/importer-secteurs.mjs`. Il télécharge la position des secteurs du Québec (GeoNames, CC BY 4.0) dans `carte-secteurs.json` ; ajoute ce fichier au dépôt. Sans lui, la page montre seulement le tableau.
+3. Réglages (table `parametres`) : `carte_seuil_min` (3 par défaut, jamais moins de 3) = nombre minimal de personnes différentes pour montrer un secteur ; `carte_mois` (12) = période couverte.
+
+Vie privée : au signalement, la personne peut donner le code postal du logement ; l'app n'envoie que les 3 premiers caractères. Aucune adresse, aucun lien d'annonce ni aucune date n'est publié. Les secteurs sous le seuil sont regroupés dans « Autres secteurs » de la ville (même seuil). Le fond de carte vient d'OpenStreetMap (gratuit pour un trafic modeste ; à remplacer par un fournisseur de tuiles si la page devient très consultée).
+
 ## 7. Espace admin et confidentialité
 
 **Espace admin** : connecte-toi dans l'app avec le compte déclaré admin (section 1). Un bouton « Espace admin » apparaît à l'accueil, visible seulement pour toi. Il a 4 onglets :

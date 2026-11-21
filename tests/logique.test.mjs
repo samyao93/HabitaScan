@@ -185,3 +185,14 @@ test("analyserReponse (message-filtre) : refus de visite ou dépôt exigé = rou
     "g",
   );
 });
+
+test("rtaDe : garde seulement les 3 premiers caractères d'un code postal du Québec", () => {
+  const rtaDe = fn("rtaDe");
+  assert.equal(rtaDe("h2x 1y4"), "H2X");
+  assert.equal(rtaDe(" G1R2J6 "), "G1R");
+  assert.equal(rtaDe("J4K"), "J4K");
+  assert.equal(rtaDe("K1A 0B1"), ""); // Ontario : hors carte
+  assert.equal(rtaDe("123 rue Principale"), "");
+  assert.equal(rtaDe(""), "");
+  assert.equal(rtaDe(null), "");
+});

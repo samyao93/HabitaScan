@@ -7,8 +7,8 @@
     "construire": "cd .. && node outils/construire.mjs",
     "dev": "cd .. && node outils/construire.mjs --dev",
     "lint": "cd .. && eslint -c outils/eslint.config.mjs .",
-    "format": "cd .. && prettier --write \"src/**/*.js\" md.js \"outils/*.mjs\" \"tests/*.mjs\"",
-    "format:verifier": "cd .. && prettier --check \"src/**/*.js\" md.js \"outils/*.mjs\" \"tests/*.mjs\"",
+    "format": "cd .. && prettier --write \"src/**/*.js\" md.js carte.js \"outils/*.mjs\" \"tests/*.mjs\"",
+    "format:verifier": "cd .. && prettier --check \"src/**/*.js\" md.js carte.js \"outils/*.mjs\" \"tests/*.mjs\"",
     "test": "cd .. && node --test \"tests/*.test.mjs\"",
     "verifier": "npm run format:verifier && npm run lint && npm run construire && npm test"
   },

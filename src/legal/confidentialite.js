@@ -42,6 +42,10 @@ export function vueConfidentialite(back) {
         "Avertir les autres utilisateurs (mémoire collective). Ils voient seulement un nombre",
       ],
       [
+        "Lieu du signalement : la ville de l'annonce et, si tu le donnes, les 3 premiers caractères du code postal du logement (jamais l'adresse)",
+        "La carte publique des arnaques par quartier. Elle montre seulement des totaux, et un secteur n'y apparaît qu'à partir de 3 personnes différentes",
+      ],
+      [
         "Photo de pièce d'identité, seulement pour signaler",
         "Éviter les fausses accusations. Lue automatiquement pour pré-remplir les informations, puis vérifiée par l'équipe. Supprimée après la vérification",
       ],
