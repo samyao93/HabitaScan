@@ -104,3 +104,15 @@ test("aucune clé secrète dans le code", () => {
   ];
   for (const f of fichiers) for (const [re, nom] of MOTIFS) assert.ok(!re.test(lire(f)), `${nom} trouvée dans ${f}`);
 });
+
+test("aucun marqueur de conflit git dans les fichiers suivis", () => {
+  const fichiers = execFileSync("git", ["ls-files"], { cwd: RACINE, encoding: "utf8" })
+    .split("\n")
+    .filter((f) => /\.(html|css|js|mjs|json|txt|md|sql|ts)$/.test(f));
+  const fautifs = fichiers.filter((f) => /^(<{7} |={7}$|>{7} )/m.test(lire(f)));
+  assert.deepEqual(fautifs, []);
+});
+
+test("la classe .carte des cartes de contenu n'a pas de hauteur fixe", () => {
+  assert.doesNotMatch(lire("site.css"), /(^|\})\s*\.carte\{[^}]*height:/m);
+});
