@@ -1232,17 +1232,17 @@ id="f-copier">Copy the message</button>
 id="f-partager">Partager</button>
 id="f-partager">Share</button>
 
-<label for="f-rep" style="margin-top:14px">Colle sa réponse ici</label><textarea id="f-rep" rows="4" maxlength="3000" placeholder="La réponse de l'annonceur…">
-<label for="f-rep" style="margin-top:14px">Paste their reply here</label><textarea id="f-rep" rows="4" maxlength="3000" placeholder="The poster's reply…">
+<label for="f-rep" style="margin-top:14px">Colle sa réponse, ou toute la conversation</label><textarea id="f-rep" rows="4" maxlength="8000" placeholder="La réponse de l'annonceur… Pour toute la conversation, un message par ligne (« Moi : … » pour les tiens).">
+<label for="f-rep" style="margin-top:14px">Paste their reply, or the whole conversation</label><textarea id="f-rep" rows="4" maxlength="8000" placeholder="The poster's reply… For the whole conversation, one message per line (“Me: …” for yours).">
 
-capture${etat.fiche.fcaps.length > 1 ? "s" : ""} de la discussion</b> · toucher pour changer` : "Ajouter des captures de la discussion (facultatif)"
-screenshot${etat.fiche.fcaps.length > 1 ? "s" : ""} of the conversation</b> · tap to change` : "Add screenshots of the conversation (optional)"
+capture${etat.fiche.fcaps.length > 1 ? "s" : ""} de la discussion</b> · toucher pour changer` : "Ajouter des captures de toute la discussion (jusqu'à 8, facultatif)"
+screenshot${etat.fiche.fcaps.length > 1 ? "s" : ""} of the conversation</b> · tap to change` : "Add screenshots of the whole conversation (up to 8, optional)"
 
-<b>Analyse intelligente de la conversation</b><span class="hint">Lit sa réponse et tes captures de la discussion, aussi en anglais : c'est là que les fraudeurs se trahissent. Envoyées à Anthropic pour l'analyse, puis oubliées.</span>
-<b>Smart analysis of the conversation</b><span class="hint">Reads their reply and your screenshots of the conversation, in French or English: that's where scammers give themselves away. Sent to Anthropic for the analysis, then forgotten.</span>
+<b>Analyse intelligente de la conversation</b><span class="hint">Lit toute la discussion, message par message, aussi en anglais : c'est là que les fraudeurs se trahissent. Envoyées à Anthropic pour l'analyse, puis oubliées.</span>
+<b>Smart analysis of the conversation</b><span class="hint">Reads the whole conversation, message by message, in French or English: that's where scammers give themselves away. Sent to Anthropic for the analysis, then forgotten.</span>
 
-id="f-lire">Analyser sa réponse</button>
-id="f-lire">Analyze their reply</button>
+"Analyser la conversation" : "Analyser sa réponse"}</button>
+"Analyze the conversation" : "Analyze their reply"}</button>
 
 <b>Aucun mot suspect, mais un fraudeur prudent peut les éviter.</b> L'IA lit le sens de sa réponse.
 <b>No suspicious words, but a careful scammer can avoid them.</b> The AI reads the meaning of their reply.
