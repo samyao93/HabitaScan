@@ -138,19 +138,6 @@ Vie privée : au signalement, la personne peut donner le code postal du logement
 
 **Politique de confidentialité** : elle s'affiche dans l'app (lien sur l'accueil, l'inscription et la page de la pièce d'identité). Avant la mise en ligne, remplis les crochets de `RESPONSABLE` au début de la section « Politique de confidentialité » dans `app.js` (nom, titre, entreprise, courriel, adresse, date), et les durées de conservation entre crochets.
 
-## 7b. Badge « Annonce vérifiée » (propriétaires)
-
-HabitaScan n'héberge aucune annonce : le propriétaire continue de publier sur Kijiji, Facebook, etc. Il prouve une fois qu'il possède l'immeuble ; chaque vérification reconnaît ensuite toute seule son code `HS-XXXXXX` dans le texte de l'annonce (collé ou capture), ou simplement son numéro ou son courriel (« Propriétaire vérifié »). Gratuit au lancement (réglage `badge_prix` réservé pour plus tard). Migration : `supabase/migrations/20261121b_badge_annonce_verifiee.sql`.
-
-Trois verrous contre les fraudeurs :
-1. **Identité confirmée** du compte (pièce d'identité, section 7).
-2. **Registre foncier** : Espace admin > Badges. Consulte le propriétaire inscrit du lot (1 $ par document) et compare-le au nom déclaré et à l'identité du compte (prénom + initiale). Une entreprise : vérifie que la personne en est dirigeante au registre des entreprises (NEQ). L'app signale en rouge un nom qui ne concorde pas.
-3. **Lettre par la poste** : « Registre conforme : créer le code de la lettre » affiche un code à 8 caractères, une seule fois, et le texte de la lettre. Envoie-la à l'adresse du propriétaire inscrite au dernier acte de vente ou au rôle d'évaluation, **jamais à une adresse donnée par le demandeur**. Le propriétaire entre le code dans l'app (5 essais, 60 jours) et reçoit son badge, valide 12 mois (`badge_duree_mois`).
-
-Côté locataire : vert seulement si le numéro ou le courriel de l'annonce est l'un de ceux déclarés par le propriétaire (ou celui de son compte). Code inexistant = « Faux badge » ; bon code avec un autre numéro = « Badge copié » ; immeuble d'une autre ville = rouge ; aucun contact dans l'annonce = jaune. Un badge valide ne cache jamais un signal rouge (argent avant le bail, etc.). À 3 signalements des contacts du propriétaire depuis sa vérification (`badge_seuil_signalements`), le badge est suspendu automatiquement ; « Retirer le badge » le révoque.
-
-Réglages (table `parametres`) : `badge_actif` (0 = fermé), `badges_max_jour` (3), `badges_max_compte` (10), `quota_verifier_badge` (60 vérifications de code par personne et par jour).
-
 ## 7c. Vérification approfondie payante (Stripe)
 
 Le client paie par carte sur une page Stripe ; HabitaScan ne voit jamais le numéro de carte.
@@ -195,7 +182,6 @@ Option que chaque utilisateur active lui-même (case « Analyse intelligente » 
 | Paiement (carte, nom, courriel) | Stripe | Stripe seulement |
 | Compteurs d'utilisation par jour, erreurs techniques | `evenements`, `erreurs_app` | Toi seulement |
 | Quotas d'usage par jour | `quotas` | Personne (usage interne) |
-| Badge : adresse et lot de l'immeuble, nom inscrit au Registre foncier, contacts des annonces (empreinte + forme masquée), empreinte du code de la lettre | `badges` | Le propriétaire, toi. Avec le bon code, un locataire voit le nom, la rue, la ville et les contacts masqués. L'adresse postale de la lettre n'est jamais enregistrée |
 | Captures et texte envoyés à l'analyse intelligente (si activée) | Nulle part : envoyés à Anthropic pour l'analyse, jamais enregistrés par HabitaScan | Anthropic (traitement) |
 | Loyers SCHL, licences RBQ | `loyers_reference`, `licences_rbq` | Tout le monde (lecture) |
 
