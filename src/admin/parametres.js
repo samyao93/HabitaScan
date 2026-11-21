@@ -35,8 +35,6 @@ export const CFG = {
   ia: true,
   recherche: true,
   approfondie: true,
-  badge: true,
-  badgeMois: 12,
   sms: false,
   message: "",
   support: "",
@@ -47,7 +45,6 @@ const DRAPEAUX = {
   recherche_active: "recherche",
   approfondie_active: "approfondie",
   sms_actif: "sms",
-  badge_actif: "badge",
 };
 
 function appliquerParametres(rows) {
@@ -56,7 +53,6 @@ function appliquerParametres(rows) {
     const v = +r.valeur;
     if (p && v > 0) p.set(v);
     if (DRAPEAUX[r.cle]) CFG[DRAPEAUX[r.cle]] = v !== 0;
-    if (r.cle === "badge_duree_mois" && v > 0) CFG.badgeMois = v;
   });
 }
 
