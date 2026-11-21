@@ -84,12 +84,13 @@ Deno.serve(async (req) => {
   const cle = Deno.env.get("ANTHROPIC_API_KEY");
   if (!cle) return json(req, { error: "non_configure" }, 503);
 
-  let images: string[] = [], texte = "", mode = "annonce";
+  let images: string[] = [], texte = "", mode = "annonce", anglais = false;
   try {
     const b = await req.json();
     images = Array.isArray(b.images) ? b.images.slice(0, MAX_IMAGES) : [];
     texte = typeof b.texte === "string" ? b.texte.slice(0, MAX_TEXTE) : "";
     mode = b.mode === "conversation" ? "conversation" : "annonce";
+    anglais = b.langue === "en"; // app en anglais : résumé et explications en anglais
   } catch {
     return json(req, { error: "requete" }, 400);
   }
@@ -111,7 +112,8 @@ Deno.serve(async (req) => {
     body: JSON.stringify({
       model: "claude-haiku-5-5",
       max_tokens: 1500,
-      system: mode === "conversation" ? SYSTEME_CONVERSATION : SYSTEME_ANNONCE,
+      system: (mode === "conversation" ? SYSTEME_CONVERSATION : SYSTEME_ANNONCE) +
+        (anglais ? "\nÉcris le résumé et chaque explication en anglais, pas en français." : ""),
       tools: [OUTIL],
       tool_choice: { type: "tool", name: "rapport" },
       messages: [{ role: "user", content: contenu }],

@@ -43,7 +43,8 @@ export const FAITS = {
 /* Choisit le fait qui correspond au mot de scénario repéré. */
 export function faitScenario(mot) {
   if (/whatsapp|telegram/.test(mot)) return FAITS.messagerie;
-  if (/tranger|pays|country|voyage|missionnaire|poste|clés|cles/.test(mot)) return FAITS.etranger;
+  if (/tranger|pays|country|overseas|abroad|voyage|missionnaire|poste|clés|cles|keys|viewing/.test(mot))
+    return FAITS.etranger;
   return null;
 }
 
