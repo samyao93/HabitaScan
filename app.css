@@ -83,6 +83,9 @@ a:hover{color:var(--blue-strong)}
 .hint a{font-weight:600}
 .law{font-size:12.5px;line-height:1.45;color:var(--faint);margin-top:4px}
 .law a{color:var(--soft)}
+.fait{font-size:13px;line-height:1.45;color:var(--soft);margin-top:8px;padding:8px 10px;border-left:3px solid var(--blue);background:var(--bg);border-radius:6px}
+.fait span{color:var(--faint);font-size:12px}
+.fait a{color:var(--soft)}
 .err{color:var(--red);font-weight:600;font-size:14.5px;background:var(--redbg);border:1px solid var(--redline);border-radius:var(--r-sm);padding:10px 12px}
 .err[hidden]{display:none}
 .pied{display:flex;flex-wrap:wrap;gap:4px 18px;justify-content:center;margin-top:4px}
