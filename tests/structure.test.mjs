@@ -116,3 +116,30 @@ test("aucun marqueur de conflit git dans les fichiers suivis", () => {
 test("la classe .carte des cartes de contenu n'a pas de hauteur fixe", () => {
   assert.doesNotMatch(lire("site.css"), /(^|\})\s*\.carte\{[^}]*height:/m);
 });
+
+test("chaque guide a un titre, une description, une adresse canonique, est au sitemap et finit sur un appel à vérifier", () => {
+  const plan = lire("sitemap.xml");
+  for (const f of readdirSync(join(RACINE, "guides")).filter((x) => x.endsWith(".html"))) {
+    const g = lire(`guides/${f}`),
+      adresse = `https://habitascan.vercel.app/guides/${f.replace(/\.html$/, "")}`;
+    assert.match(g, /<title>[^<]{20,}<\/title>/, `${f} : titre manquant`);
+    assert.match(g, /<meta name="description" content="[^"]{50,}">/, `${f} : description manquante`);
+    assert.ok(g.includes(`<link rel="canonical" href="${adresse}">`), `${f} : adresse canonique incorrecte`);
+    assert.ok(plan.includes(`<loc>${adresse}</loc>`), `${f} manque dans sitemap.xml`);
+    assert.match(g, /class="encart"[\s\S]*href="\/app[^"]*"/, `${f} : aucun appel vers l'app`);
+    for (const m of g.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)) JSON.parse(m[1]);
+  }
+});
+
+test("les deux versions du guide « Louer depuis l'étranger » se renvoient l'une à l'autre (hreflang)", () => {
+  const fr = lire("guides/louer-au-quebec-depuis-l-etranger.html"),
+    en = lire("guides/renting-in-quebec-from-abroad.html");
+  for (const g of [fr, en]) {
+    assert.ok(
+      g.includes('hreflang="fr-CA" href="https://habitascan.vercel.app/guides/louer-au-quebec-depuis-l-etranger"'),
+    );
+    assert.ok(g.includes('hreflang="en-CA" href="https://habitascan.vercel.app/guides/renting-in-quebec-from-abroad"'));
+  }
+  assert.ok(fr.includes(">Vérifier mon annonce</a>"));
+  assert.ok(en.includes(">Check my listing</a>"));
+});
