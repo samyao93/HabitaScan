@@ -154,3 +154,15 @@ test("loyers-annonces.json : importé, avec source, période et type de logement
   assert.ok(d.source && d.url && d.periode && d.description);
   assert.ok(d.villes["Montréal"].some((x) => x && x.loyer > 500 && x.periode));
 });
+
+test("loyer de référence SCHL : la médiane quand elle existe, sinon la moyenne", () => {
+  const ref = (...a) => plain(hs("loyerSchl")(...a));
+  assert.deepEqual(ref("Montréal", 2, { Montréal: [1131, 1346, 1625] }), {
+    loyer: 1250,
+    stat: "médian",
+    periode: "octobre 2025",
+  });
+  assert.equal(ref("Montréal", "3", {}).loyer, 1545);
+  assert.equal(ref("Ville inconnue", 1, { "Ville inconnue": [900, 0, 0] }).stat, "moyen");
+  assert.equal(ref("Ville inconnue", 2, { "Ville inconnue": [900, 0, 0] }), null);
+});

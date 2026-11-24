@@ -1,5 +1,6 @@
 /* Budget : postes de dépenses, montants de référence et calcul. */
 import { etat } from "../etat.js";
+import { loyerSchl } from "../prix/reference.js";
 
 export const villeDefaut = () => (etat.loyers["Montréal"] ? "Montréal" : Object.keys(etat.loyers)[0]);
 
@@ -74,8 +75,8 @@ export function budgetDefaut(F) {
   if (B.epicerie == null) B.epicerie = String(EPICERIE.p * ((+B.adultes || 1) + (+B.enfants || 0)));
   if (B.garde == null) B.garde = gardeDefaut(B);
   if (B.loyer == null) {
-    const l = etat.loyers[B.ville];
-    B.loyer = l ? String(l[Math.min(+B.ch, 3) - 1]) : "";
+    const r = loyerSchl(B.ville, B.ch);
+    B.loyer = r ? String(r.loyer) : "";
   }
   return B;
 }
@@ -102,8 +103,8 @@ export function calculerBudget(B) {
   const mois = +B.mois || 3;
   const max = revMois ? Math.max(0, Math.floor(revMois * 0.3 - elec)) : 0;
   const ratio = revMois ? (loyer + elec) / revMois : 0;
-  const l = etat.loyers[B.ville],
-    moy = l && l[Math.min(+B.ch, 3) - 1];
+  const ref = loyerSchl(B.ville, B.ch),
+    moy = ref ? ref.loyer : 0;
   const base = netMois || revMois,
     total = uniques + mensuel * mois;
   return {
@@ -122,6 +123,7 @@ export function calculerBudget(B) {
     max,
     ratio,
     moy,
+    ref,
     loyer,
     elec,
   };

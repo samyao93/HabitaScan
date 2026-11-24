@@ -1,7 +1,7 @@
 /* Trouver un logement : sources, lecture du prix et des chambres, tri, liens Kijiji et Facebook. */
 import { CFG } from "../admin/parametres.js";
+import { loyerSchl } from "../prix/reference.js";
 import { sb } from "../config.js";
-import { etat } from "../etat.js";
 import { m0, sansAccents } from "../utils/texte.js";
 
 // Sites où l'app cherche. « courtier » : annonce publiée par un courtier immobilier, encadré par l'OACIQ.
@@ -67,7 +67,6 @@ export const ALERTES_EXTRAIT = [
 ];
 
 export function trierResultats(res, f) {
-  const l = etat.loyers[f.ville];
   const vus = new Set();
   const sortie = [];
   for (const r of res) {
@@ -81,11 +80,14 @@ export function trierResultats(res, f) {
       ch = lireChambres(txt);
     if (f.max && prix && prix > f.max) continue;
     if (f.ch && ch && (f.ch === "3" ? ch < 3 : ch != +f.ch)) continue;
-    const moy = l && l[Math.min(ch || +f.ch || 1, 3) - 1];
+    const ref = loyerSchl(f.ville, ch || +f.ch || 1),
+      moy = ref ? ref.loyer : 0;
     const t = sansAccents(txt);
     const alertes = ALERTES_EXTRAIT.filter(([re]) => re.test(t)).map((a) => a[1]);
     if (prix && moy && prix < moy * 0.6)
-      alertes.push(`Prix très bas pour la ville (moyenne SCHL ${m0(moy)}) : vérifie-la avant tout contact`);
+      alertes.push(
+        `Prix très bas pour la ville (loyer ${ref && ref.stat} SCHL ${m0(moy)}) : vérifie-la avant tout contact`,
+      );
     sortie.push({ ...r, url: cle, source: s, prix, ch, moy, alertes });
   }
   return sortie.sort(
