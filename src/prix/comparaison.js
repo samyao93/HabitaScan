@@ -2,6 +2,7 @@
    (Statistique Canada) et à la médiane des annonces déjà vérifiées dans HabitaScan.
    Chaque référence affiche sa source, sa période et le type de logement. Une référence absente est dite absente. */
 import ANNONCES from "./loyers-annonces.json";
+import MEDIANES_SCHL from "./medianes-schl.json";
 import { sb } from "../config.js";
 import { esc, money } from "../utils/dom.js";
 
@@ -32,7 +33,7 @@ export async function chargerMedianeHabitascan(ville, ch) {
 }
 
 /* Les trois références pour une fiche : [{ cle, nom, valeur, stat, type, source, periode, lien, note, absent }]. */
-export function referencesPrix(F, loyers, infos, annonces = ANNONCES) {
+export function referencesPrix(F, loyers, infos, annonces = ANNONCES, medianes = MEDIANES_SCHL) {
   const ch = Math.min(+F.ch || 1, 3),
     v = F.ville,
     type = libelleCh(ch);
@@ -40,6 +41,8 @@ export function referencesPrix(F, loyers, infos, annonces = ANNONCES) {
   const info = (infos && infos[v]) || {};
   const sc = annonces.villes && annonces.villes[v] && annonces.villes[v][ch - 1];
   const hs = F.medianeHS;
+  const md = medianes.villes && medianes.villes[v] && medianes.villes[v][ch - 1];
+  const qualite = md && medianes.qualites && medianes.qualites[md.qualite];
   return [
     {
       cle: "schl",
@@ -50,6 +53,17 @@ export function referencesPrix(F, loyers, infos, annonces = ANNONCES) {
       periode: info.periode || "octobre 2025",
       note: "Moyenne de tous les locataires, y compris ceux en place depuis longtemps : souvent plus bas que le loyer d'un logement à louer aujourd'hui.",
       absent: schl ? null : "Pas de loyer SCHL pour cette ville.",
+    },
+    {
+      cle: "schl_mediane",
+      nom: "Loyer médian SCHL",
+      valeur: md ? md.loyer : null,
+      type: `${medianes.type}, ${type}`,
+      source: medianes.source,
+      periode: medianes.periode,
+      lien: medianes.url,
+      note: `La moitié des logements loués coûtent moins, l'autre moitié plus. Mêmes locataires que la moyenne SCHL, mais moins tirée par les loyers très élevés.${qualite ? ` Fiabilité selon la SCHL : ${qualite}.` : ""}`,
+      absent: md ? null : "La SCHL ne publie pas de loyer médian pour cette ville et ce nombre de chambres.",
     },
     {
       cle: "statcan",
