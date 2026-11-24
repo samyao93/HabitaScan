@@ -34,8 +34,8 @@ export function vueConfidentialite(back) {
     [
       ["Courriel ou cellulaire", "Te connecter avec un code, retrouver ton compte, compter les utilisateurs"],
       [
-        "Résumé de tes vérifications : ville, chambres, loyer, lien, résultat ; travaux et licence RBQ ; empreintes non réversibles des photos et du texte de l'annonce (jamais les photos ni le texte eux-mêmes)",
-        "Ton historique, et reconnaître la même annonce publiée ailleurs. Les autres voient seulement des nombres, des prix et des villes, jamais qui a vérifié",
+        "Résumé de tes vérifications : ville, chambres, loyer, lien, résultat ; travaux et licence RBQ ; empreintes non réversibles des photos et du texte de l'annonce (jamais les photos ni le texte eux-mêmes) ; empreinte chiffrée des numéros et courriels de l'annonceur (jamais en clair)",
+        "Ton historique, reconnaître la même annonce publiée ailleurs, et t'alerter si cette annonce, ou une annonce avec les mêmes photos, le même numéro ou le même texte, est signalée ensuite (désactivable dans Mon compte). Les autres voient seulement des nombres, des prix et des villes, jamais qui a vérifié",
       ],
       [
         "Signalement : lien de l'annonce, numéros de téléphone et courriels de l'annonceur (seulement en empreinte chiffrée, jamais en clair), empreinte visuelle des photos (la photo ne quitte pas ton téléphone), et motif",
@@ -72,7 +72,7 @@ export function vueConfidentialite(back) {
       ],
       [
         "Numéros de téléphone et courriels de l'annonceur trouvés dans l'annonce ou la conversation",
-        "Vérifier s'ils ont déjà été signalés. Comparés puis oubliés, sauf si tu les signales (empreinte chiffrée seulement)",
+        "Vérifier s'ils ont déjà été signalés. Gardés seulement en empreinte chiffrée, avec ta vérification, pour l'alerte de signalement",
       ],
     ],
     ["Renseignement", "Pourquoi"],

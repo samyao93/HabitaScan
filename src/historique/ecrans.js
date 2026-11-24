@@ -1,4 +1,5 @@
 /* Historique des vérifications et détail d'une vérification. */
+import { alerteDe, alertesActives, blocAlerteDetail } from "../alertes/alertes.js";
 import { etat } from "../etat.js";
 import { HIS } from "./api.js";
 import { REGLE_PAIEMENT } from "../memoire/contacts.js";
@@ -53,7 +54,7 @@ function sousTitreVerif(x) {
 const ligneVerif = (
   x,
 ) => `<button type="button" class="hrow" data-verif="${esc(x.id)}" aria-label="Voir le détail : ${titreVerif(x).replace(/<[^>]+>/g, "")}">
-<span class="hdot ${x.c}"></span><span class="hmain"><b>${titreVerif(x)}</b><small>${sousTitreVerif(x)}</small></span><span class="tag ${x.c}">${(TAG_VERDICT[x.module] || TAG_VERDICT.logement)[x.c] || ""}</span><span class="chev" aria-hidden="true">›</span></button>`;
+<span class="hdot ${x.c}"></span><span class="hmain"><b>${titreVerif(x)}</b><small>${sousTitreVerif(x)}</small></span>${alertesActives() && alerteDe(x.id) ? `<span class="tag r">Signalée</span>` : `<span class="tag ${x.c}">${(TAG_VERDICT[x.module] || TAG_VERDICT.logement)[x.c] || ""}</span>`}<span class="chev" aria-hidden="true">›</span></button>`;
 
 /* Carte d'accueil : les 3 dernières, cliquables */
 export function blocHistorique() {
@@ -90,6 +91,7 @@ export function vueDetailVerif() {
   const ligne = (k, v) => (v ? `<div><dt>${k}</dt><dd>${v}</dd></div>` : "");
   const lienOk = x.lien && /^https?:\/\//i.test(x.lien);
   return `${top(retour, "Détail")}
+${blocAlerteDetail(x.id)}
 <div class="verdict ${x.c}"><strong>${TITRE_VERDICT[m][x.c] || ""}</strong><span>${titreVerif(x)}</span></div>
 <div class="card"><h2>Détails</h2><dl class="details">
 ${ligne("Vérifiée le", esc(dateLongue(x.date)))}

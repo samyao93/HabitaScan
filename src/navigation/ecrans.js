@@ -1,6 +1,7 @@
 /* Table des écrans de l'app : nom de l'écran → HTML. */
 import { vueAdmin } from "../admin/ecran.js";
 import { CFG } from "../admin/parametres.js";
+import { blocAlertes } from "../alertes/alertes.js";
 import { htmlFait } from "../annonce/faits.js";
 import { blocProfil, boutonCarte } from "../annonce/profil.js";
 import { blocMesApprofondies, offreApprofondie, vueApprofondie } from "../approfondie/ecrans.js";
@@ -113,6 +114,7 @@ ${al.length ? `<ul class="reasons">${al.map((a) => `<li><span class="dot y"></sp
   accueil: () => `${top(null)}
 ${etat.profil ? barreCompte() : ""}
 ${etat.profil && etat.profil.suspendu ? `<div class="verdict r" role="alert"><strong>Compte suspendu</strong><span>Tu peux encore consulter tes vérifications, mais plus en enregistrer de nouvelles.${CFG.support ? ` Pour en parler : <a href="mailto:${esc(CFG.support)}">${esc(CFG.support)}</a>.` : ""}</span></div>` : ""}
+${blocAlertes()}
 ${CFG.message ? `<div class="card invite" role="status"><p>${esc(CFG.message)}</p></div>` : ""}
 <h1>Que veux-tu faire ?</h1>
 <div class="choix-accueil">
