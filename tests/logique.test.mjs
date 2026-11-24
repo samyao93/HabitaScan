@@ -67,7 +67,8 @@ test("lireChambres : convertit les tailles québécoises (4 1/2 = 2 chambres)", 
   assert.equal(lireChambres("grand 6 1/2"), 3);
   assert.equal(lireChambres("2 chambres fermées"), 2);
   assert.equal(lireChambres("2 bedrooms"), 2);
-  assert.equal(lireChambres("studio meublé"), 1);
+  assert.equal(lireChambres("studio meublé"), 0);
+  assert.equal(lireChambres("2 1/2 à louer"), 0);
   assert.equal(lireChambres("logement à louer"), null);
 });
 

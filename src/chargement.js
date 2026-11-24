@@ -21,14 +21,14 @@ export async function chargerLoyers() {
   etat.loyersInfo = {};
   etat.medianes = {};
   (data || []).forEach((r) => {
-    (etat.loyers[r.ville] = etat.loyers[r.ville] || [0, 0, 0])[r.chambres - 1] = r.loyer;
+    (etat.loyers[r.ville] = etat.loyers[r.ville] || [0, 0, 0, 0])[r.chambres] = r.loyer || 0;
     if (r.periode || r.source) etat.loyersInfo[r.ville] = { periode: r.periode, source: r.source };
     if (r.mediane)
-      (etat.medianes[r.ville] = etat.medianes[r.ville] || [null, null, null])[r.chambres - 1] = {
+      (etat.medianes[r.ville] = etat.medianes[r.ville] || [null, null, null, null])[r.chambres] = {
         loyer: r.mediane,
         periode: r.mediane_periode || "",
       };
   });
-  const ordre = Object.entries(etat.loyers).sort((a, b) => b[1][1] - a[1][1]);
+  const ordre = Object.entries(etat.loyers).sort((a, b) => b[1][2] - a[1][2]);
   etat.loyers = Object.fromEntries(ordre);
 }

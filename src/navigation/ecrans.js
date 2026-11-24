@@ -21,6 +21,7 @@ import { lienConfidentialite, vueConfidentialite } from "../legal/confidentialit
 import { PAGES_LEG, vuePageLegale } from "../legal/pages.js";
 import { REGLE_PAIEMENT } from "../memoire/contacts.js";
 import { blocComparaison } from "../prix/comparaison.js";
+import { CHOIX_CH, courtCh } from "../prix/reference.js";
 import { vueProprio } from "../proprietaire/ecran.js";
 import { vueReno, vueRenoResultat } from "../renovation/ecrans.js";
 import { boutonSignaler, vueSignalOk, vueSignaler } from "../signalements/signalements.js";
@@ -152,7 +153,7 @@ ${etat.fiche.lu ? `<p class="lu" role="status">${etat.fiche.lu}</p>` : ""}
     .join(
       "",
     )}<option value="Autre" ${etat.fiche.ville === "Autre" ? "selected" : ""}>Autre ville</option></select></label>
-<div class="grid2"><label>Chambres<select id="ch"><option value="1">1</option><option value="2">2</option><option value="3">3 et plus</option></select></label>
+<div class="grid2"><label>Chambres<select id="ch">${CHOIX_CH.map(([v, t]) => `<option value="${v}">${t}</option>`).join("")}</select></label>
 <label>Loyer demandé<input id="prix" inputmode="numeric" placeholder="1 300" value="${esc(etat.fiche.prix)}"></label></div>
 <label>Adresse (facultatif, reste sur ton téléphone)<input id="adr" autocomplete="off" placeholder="1234, rue Exemple" value="${esc(etat.fiche.adr || "")}"></label>
 <label>Téléphone ou courriel de l'annonceur (facultatif)<input id="contact" autocomplete="off" placeholder="514 555-0123 ou nom@exemple.com" value="${esc(etat.fiche.contact || "")}"><span class="hint" style="font-weight:400">Pour savoir s'il a déjà été signalé par d'autres utilisateurs.</span></label>
@@ -168,7 +169,7 @@ ${blocProfil(etat.fiche)}
   resultat: () => {
     const R = etat.fiche.res;
     return `${top("accueil", "Résultat")}
-<div class="verdict ${R.c}"><strong>${{ r: "Ne paie pas", y: "Visite d'abord, puis vérifie le propriétaire", g: "Aucun signal. Tu peux visiter." }[R.c]}</strong><span>${esc(etat.fiche.ville)} · ${etat.fiche.ch === "3" ? "3 ch. et plus" : etat.fiche.ch + " ch."} · <span class="num">${money(etat.fiche.prixN)}</span></span></div>
+<div class="verdict ${R.c}"><strong>${{ r: "Ne paie pas", y: "Visite d'abord, puis vérifie le propriétaire", g: "Aucun signal. Tu peux visiter." }[R.c]}</strong><span>${esc(etat.fiche.ville)} · ${courtCh(etat.fiche.ch)} · <span class="num">${money(etat.fiche.prixN)}</span></span></div>
 <div class="card"><h2>Ce que l'app a vérifié</h2><ul class="reasons">${R.items.map((i) => `<li><span class="dot ${i.c}"></span><div>${i.t}${i.law ? `<div class="law">${i.law}</div>` : ""}${htmlFait(i.fait)}</div></li>`).join("")}</ul></div>
 ${blocComparaison(etat.fiche, etat.loyers, etat.loyersInfo)}
 ${blocCout(etat.fiche)}

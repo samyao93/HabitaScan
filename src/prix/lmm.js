@@ -1,13 +1,14 @@
 /* Repère du coût mensuel réel : loyer médian du marché (LMM) 2026 de la Société d'habitation du Québec,
    ajusté et services compris. Il se compare au loyer + dépenses, jamais au loyer seul d'une annonce. */
 import LMM from "./lmm-shq.json";
+import { indiceCh } from "./reference.js";
 
 /* { lmm, region, periode, source, note, ecart, texte } ou null. total : coût mensuel connu ; minimum : des dépenses
    manquent encore (le total est un minimum, donc on ne dit jamais « sous le repère »). */
 export function repereLmm(ville, ch, total, minimum, lmm = LMM) {
   const v = lmm.villes && lmm.villes[ville];
-  const n = Math.min(Math.max(+ch || 1, 1), 3);
-  const val = v && v.loyers[n - 1];
+  const n = indiceCh(ch);
+  const val = v && v.loyers[n];
   if (!val || !(total > 0)) return null;
   const p = Math.round(((total - val) / val) * 100);
   let texte;

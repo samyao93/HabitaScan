@@ -41,7 +41,7 @@ export function appliquerIA(r) {
   etat.fiche.ia = r;
   const villes = Object.keys(etat.loyers);
   if (r.prix) etat.fiche.prix = String(r.prix);
-  if (r.chambres) etat.fiche.ch = String(Math.min(r.chambres, 3));
+  if (r.chambres != null) etat.fiche.ch = String(Math.min(r.chambres, 3));
   if (r.ville) {
     const v = villes.find(
       (x) =>
@@ -55,7 +55,7 @@ export function appliquerIA(r) {
   const lus = [
     r.prix ? `${r.prix} $` : "",
     r.ville || "",
-    r.chambres ? `${r.chambres} ch.` : "",
+    r.chambres === 0 ? "studio" : r.chambres ? `${r.chambres} ch.` : "",
     r.cession ? "cession de bail" : "",
   ]
     .filter(Boolean)

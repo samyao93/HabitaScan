@@ -71,12 +71,15 @@ Deno.serve(async (req) => {
   } catch {
     return json(req, { error: "requete" }, 400);
   }
-  if (!VILLE.test(ville) || !["", "1", "2", "3"].includes(ch)) return json(req, { error: "parametres" }, 400);
+  if (!VILLE.test(ville) || !["", "0", "1", "2", "3"].includes(ch)) return json(req, { error: "parametres" }, 400);
 
-  const taille = ch ? `${Number(ch) + 2} 1/2` : "";
+  // Studio (ch = "0") : un 1 1/2 ou un 2 1/2 au Québec.
+  const taille = ch === "0" ? "2 1/2" : ch ? `${Number(ch) + 2} 1/2` : "";
   const requetes = [
     `logement à louer ${taille} ${ville}`.replace(/\s+/g, " ").trim(),
-    `appartement à louer ${ch ? ch + " chambres " : ""}${ville}`.replace(/\s+/g, " ").trim(),
+    ch === "0"
+      ? `studio à louer ${ville}`
+      : `appartement à louer ${ch ? ch + " chambres " : ""}${ville}`.replace(/\s+/g, " ").trim(),
   ];
   const chercher = (q: string) => cleTavily ? tavily(q, cleTavily) : brave(q, cleBrave!);
   try {

@@ -10,6 +10,7 @@
   ],
   "villes": {
     "Montréal": [
+      null,
       {
         "loyer": 1480,
         "periode": "2e trimestre 2026"
@@ -24,6 +25,7 @@
       }
     ],
     "Québec": [
+      null,
       {
         "loyer": 1210,
         "periode": "2e trimestre 2026"
@@ -35,6 +37,7 @@
       null
     ],
     "Gatineau": [
+      null,
       {
         "loyer": 1440,
         "periode": "2e trimestre 2026"
@@ -49,6 +52,7 @@
       }
     ],
     "Sherbrooke": [
+      null,
       {
         "loyer": 1040,
         "periode": "2e trimestre 2026"
@@ -63,6 +67,7 @@
       }
     ],
     "Trois-Rivières": [
+      null,
       {
         "loyer": 970,
         "periode": "2e trimestre 2026"
@@ -71,6 +76,7 @@
       null
     ],
     "Drummondville": [
+      null,
       null,
       {
         "loyer": 1200,

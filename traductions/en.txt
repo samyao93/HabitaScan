@@ -45,9 +45,6 @@ Can't reach the server. Check your connection and reload the page.
 Number(r.prix).toLocaleString("fr-CA") + " $"
 "$" + Number(r.prix).toLocaleString("en-CA")
 
-"3 ch. et plus" : r.ch + " ch."
-"3+ bedrooms" : r.ch + " bd."
-
 "cession de bail"
 "lease transfer"
 
@@ -125,9 +122,6 @@ const TITRES = { r: "Don't pay", y: "Visit first", g: "No scam signals" };
 
 signa${n > 1 ? "ux" : "l"}
 signal${n > 1 ? "s" : ""}
-
-"3 ch. et plus" : (F.ch || "?") + " ch."
-"3+ bedrooms" : (F.ch || "?") + " bd."
 
 "Avant de payer : visite, confirme le propriétaire, puis signe le bail."
 "Before paying: visit, confirm the landlord, then sign the lease."
@@ -534,8 +528,8 @@ id="lire">Read the text</button>
 <label>Ville<select id="ville">
 <label>City<select id="ville">
 
-<label>Chambres<select id="ch"><option value="1">1</option><option value="2">2</option><option value="3">3 et plus</option></select></label>
-<label>Bedrooms<select id="ch"><option value="1">1</option><option value="2">2</option><option value="3">3 or more</option></select></label>
+<label>Chambres<select id="ch">
+<label>Bedrooms<select id="ch">
 
 <label>Loyer demandé<input id="prix" inputmode="numeric" placeholder="1 300"
 <label>Rent asked<input id="prix" inputmode="numeric" placeholder="1300"
@@ -575,9 +569,6 @@ ${top("accueil", "Result")}
 
 { r: "Ne paie pas", y: "Visite d'abord, puis vérifie le propriétaire", g: "Aucun signal. Tu peux visiter." }
 { r: "Don't pay", y: "Visit first, then check the landlord", g: "No signals. You can visit." }
-
-etat.fiche.ch === "3" ? "3 ch. et plus" : etat.fiche.ch + " ch."
-etat.fiche.ch === "3" ? "3+ bedrooms" : etat.fiche.ch + " bd."
 
 <h2>Ce que l'app a vérifié</h2>
 <h2>What the app checked</h2>
@@ -869,8 +860,8 @@ The owner registered in the Land Register is a company.
 ["abonnements", "Subscriptions"],
 
 == src/budget/ecrans.js
-<h3 class="sous">Comparer les villes</h3><p class="hint">Pour ${ch === 3 ? "3 chambres et plus" : ch + " chambre" + (ch > 1 ? "s" : "")}. Loyer médian SCHL (octobre 2025) et laissez-passer 2026.</p>
-<h3 class="sous">Compare cities</h3><p class="hint">For ${ch === 3 ? "3 bedrooms or more" : ch + " bedroom" + (ch > 1 ? "s" : "")}. CMHC median rent (October 2025) and 2026 transit pass.</p>
+<h3 class="sous">Comparer les villes</h3><p class="hint">Pour ${ch === 0 ? "un studio" : ch === 3 ? "3 chambres et plus" : ch + " chambre" + (ch > 1 ? "s" : "")}. Loyer médian SCHL (octobre 2025) et laissez-passer 2026.</p>
+<h3 class="sous">Compare cities</h3><p class="hint">For ${ch === 0 ? "a studio" : ch === 3 ? "3 bedrooms or more" : ch + " bedroom" + (ch > 1 ? "s" : "")}. CMHC median rent (October 2025) and 2026 transit pass.</p>
 
 <th>Ville</th><th>Loyer médian</th><th>Transport</th>
 <th>City</th><th>Median rent</th><th>Transit</th>
@@ -941,11 +932,8 @@ id="b-annonces">Search listings already posted in ${esc(B.ville)}</button>
     "Ville",
     "City",
 
-${choix("ch", "Chambres", [
-${choix("ch", "Bedrooms", [
-
-["3", "3 et plus"],
-["3", "3 or more"],
+${choix("ch", "Chambres", CHOIX_CH)}
+${choix("ch", "Bedrooms", CHOIX_CH)}
 
 ${choix("adultes", "Adultes", n([1, 4]))}${choix("enfants", "Enfants", n([0, 5]))}
 ${choix("adultes", "Adults", n([1, 4]))}${choix("enfants", "Children", n([0, 5]))}
@@ -1379,9 +1367,6 @@ g: "Pay as the work progresses, never everything in advance.",
 "Ville inconnue"
 "Unknown city"
 
-: esc(x.ch ?? "?")} ch.`
-: esc(x.ch ?? "?")} bd.`
-
 money(+x.prix) + "/mois"
 money(+x.prix) + "/month"
 
@@ -1427,8 +1412,8 @@ ligne("Checked on",
 ligne("Ville",
 ligne("City",
 
-ligne("Chambres", x.ch == 3 ? "3 et plus"
-ligne("Bedrooms", x.ch == 3 ? "3 or more"
+ligne("Chambres", x.ch == null ? "" : x.ch == 0 ? "Studio" : x.ch == 3 ? "3 et plus"
+ligne("Bedrooms", x.ch == null ? "" : x.ch == 0 ? "Studio" : x.ch == 3 ? "3 or more"
 
 ligne("Loyer demandé", x.prix ? `<span class="num">${money(+x.prix)}</span> par mois` : "")
 ligne("Rent asked", x.prix ? `<span class="num">${money(+x.prix)}</span> per month` : "")
@@ -2125,9 +2110,6 @@ rel="noopener">Open the RBQ licence register</a>
 `<span class="num">${m0(r.prix)}</span> / mois` : "Prix non lu"
 `<span class="num">${m0(r.prix)}</span> / month` : "Price not read"
 
-r.ch >= 3 ? "3 ch. et plus" : r.ch + " ch."
-r.ch >= 3 ? "3+ bedrooms" : r.ch + " bd."
-
 <div>Aucun signal dans le texte de l'annonce.</div>
 <div>No signals in the listing's text.</div>
 
@@ -2142,9 +2124,6 @@ data-verif="${i}">Check</button>
 
 rel="noopener">Ouvrir</a>
 rel="noopener">Open</a>
-
-f.ch === "3" ? "3 ch. et plus" : f.ch + " ch."
-f.ch === "3" ? "3+ bedrooms" : f.ch + " bd."
 
 <h2>Chercher aussi directement</h2><p class="hint">Kijiji s'ouvre avec tes critères (${esc(crit)}) déjà appliqués ; pour les autres sites, ajoute-les dans leurs filtres. Trouve une annonce, puis reviens la vérifier.</p>
 <h2>Also search directly</h2><p class="hint">Kijiji opens with your criteria (${esc(crit)}) already applied; for the other sites, add them in their filters. Find a listing, then come back to check it.</p>
@@ -2178,9 +2157,6 @@ ${top(back, "Find")}
 
 <label>Chambres<select id="t-ch"><option value="">Toutes</option>
 <label>Bedrooms<select id="t-ch"><option value="">All</option>
-
-v === "3" ? "3 et plus" : v
-v === "3" ? "3 or more" : v
 
 <label>Budget maximum par mois<input id="t-max" inputmode="numeric" placeholder="1 400"
 <label>Maximum budget per month<input id="t-max" inputmode="numeric" placeholder="1400"
@@ -2314,6 +2290,15 @@ id="alertes-vues">Got it</button>
 "The change didn't work. Try again."
 
 == src/prix/reference.js
+n === 0 ? "Studio" : n === 3 ? "3 ch. et plus" : `${n} ch.`
+n === 0 ? "Studio" : n === 3 ? "3+ bedrooms" : `${n} bd.`
+
+return "? ch.";
+return "? bd.";
+
+["3", "3 et plus"],
+["3", "3 or more"],
+
 stat: "médian"
 stat: "median"
 

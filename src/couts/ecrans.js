@@ -11,6 +11,7 @@ import {
   questionsVisite,
 } from "./regles.js";
 import { repereLmm } from "../prix/lmm.js";
+import { libelleCh } from "../prix/reference.js";
 import { $, esc, money } from "../utils/dom.js";
 
 const L1904 =
@@ -51,8 +52,8 @@ function ligneDepense(p, d) {
 function blocLmm(F, c) {
   const r = repereLmm(F.ville, F.ch, c.total, c.minimum);
   if (!r) return "";
-  const ch = r.ch === 3 ? "3 chambres" : `${r.ch} chambre${r.ch > 1 ? "s" : ""}`;
-  return `<p class="soft"><b>Repère, services compris :</b> <span class="num">${money(r.lmm)}</span> par mois pour ${ch} (${esc(r.region)}). ${esc(r.texte)}</p>
+  const ch = r.ch === 3 ? "3 chambres" : libelleCh(r.ch);
+  return `<p class="soft"><b>Repère, services compris :</b> <span class="num">${money(r.lmm)}</span> par mois pour ${r.ch === 0 ? "un " : ""}${ch} (${esc(r.region)}). ${esc(r.texte)}</p>
 <p class="law">${esc(r.source)}, ${esc(r.periode)}. ${esc(r.note)}${r.ch === 3 ? " Pour 4 chambres et plus, le repère est plus élevé." : ""}</p>`;
 }
 

@@ -93,12 +93,12 @@ test("comparaison du prix : écart, références absentes dites absentes, source
     ref: "2026-04",
     periode: "2e trimestre 2026",
     description: "Loyer demandé dans les annonces (moyenne), appartements",
-    villes: { Montréal: [{ loyer: 1480, periode: "2e trimestre 2026" }, null, null] },
+    villes: { Montréal: [null, { loyer: 1480, periode: "2e trimestre 2026" }, null, null] },
   };
   const F = { ville: "Montréal", ch: "1", prixN: 1500, medianeHS: { n: 4, mediane: null, jours: 90, minimum: 10 } };
   const r = refs(
     F,
-    { Montréal: [1131, 1346, 1625] },
+    { Montréal: [0, 1131, 1346, 1625] },
     { Montréal: { periode: "octobre 2025", source: "SCHL" } },
     annonces,
   );
@@ -129,6 +129,7 @@ test("import Statistique Canada : loyer demandé des appartements, chambres, der
     '"REF_DATE","GEO","DGUID","Rental unit type","Estimates","UOM","UOM_ID","SCALAR_FACTOR","SCALAR_ID","VECTOR","COORDINATE","VALUE","STATUS"',
     '"2026-01","Montréal, Census metropolitan area (CMA)","x","Apartment - 1 bedroom","Average asking rent","Dollars","81","units","0","v","1","1470",""',
     '"2026-04","Montréal, Census metropolitan area (CMA)","x","Apartment - 1 bedroom","Average asking rent","Dollars","81","units","0","v","1","1480",""',
+    '"2026-04","Montréal, Census metropolitan area (CMA)","x","Apartment - No bedroom","Average asking rent","Dollars","81","units","0","v","1","1250",""',
     '"2026-04","Montréal, Census metropolitan area (CMA)","x","Apartment - 1 bedroom","Average paid rent","Dollars","81","units","0","v","1","1200",""',
     '"2026-04","Montréal, Census metropolitan area (CMA)","x","House - 3 or more bedrooms","Average asking rent","Dollars","81","units","0","v","1","2900",""',
     '"2026-04","Montréal, Census metropolitan area (CMA)","x","Apartment - 3 or more bedrooms","Average asking rent","Dollars","81","units","0","v","1","2300",""',
@@ -140,11 +141,12 @@ test("import Statistique Canada : loyer demandé des appartements, chambres, der
   assert.equal(r.periode, "2e trimestre 2026");
   assert.match(r.description, /demandé.*moyenne.*appartements/);
   assert.deepEqual(r.villes["Montréal"], [
+    { loyer: 1250, periode: "2e trimestre 2026" },
     { loyer: 1480, periode: "2e trimestre 2026" },
     null,
     { loyer: 2300, periode: "2e trimestre 2026" },
   ]);
-  assert.equal(r.villes.Gatineau[1].loyer, 1700, "partie québécoise seulement");
+  assert.equal(r.villes.Gatineau[2].loyer, 1700, "partie québécoise seulement");
   assert.equal(r.villes.Sherbrooke, undefined, "valeur de plus d'un an : écartée");
 });
 
@@ -157,19 +159,19 @@ test("loyers-annonces.json : importé, avec source, période et type de logement
 
 test("loyer de référence SCHL : la médiane quand elle existe, sinon la moyenne", () => {
   const ref = (...a) => plain(hs("loyerSchl")(...a));
-  assert.deepEqual(ref("Montréal", 2, { Montréal: [1131, 1346, 1625] }), {
+  assert.deepEqual(ref("Montréal", 2, { Montréal: [0, 1131, 1346, 1625] }), {
     loyer: 1250,
     stat: "médian",
     periode: "octobre 2025",
   });
   assert.equal(ref("Montréal", "3", {}).loyer, 1545);
-  assert.equal(ref("Ville inconnue", 1, { "Ville inconnue": [900, 0, 0] }).stat, "moyen");
-  assert.equal(ref("Ville inconnue", 2, { "Ville inconnue": [900, 0, 0] }), null);
+  assert.equal(ref("Ville inconnue", 1, { "Ville inconnue": [0, 900, 0, 0] }).stat, "moyen");
+  assert.equal(ref("Ville inconnue", 2, { "Ville inconnue": [0, 900, 0, 0] }), null);
 });
 
 test("médiane SCHL saisie dans l'Espace admin : prioritaire sur celle du fichier", () => {
   const etat = hs("etat");
-  etat.medianes = { Montréal: [null, { loyer: 1300, periode: "octobre 2026" }, null] };
+  etat.medianes = { Montréal: [null, null, { loyer: 1300, periode: "octobre 2026" }, null] };
   try {
     const r = plain(hs("loyerSchl")("Montréal", 2, {}));
     assert.deepEqual(r, { loyer: 1300, stat: "médian", periode: "octobre 2026" });
@@ -190,4 +192,20 @@ test("repère LMM 2026 (SHQ, avec services) : comparé au coût réel, jamais «
   assert.match(r("Montréal", "2", 1200, true).texte, /pas encore connues/);
   assert.equal(r("Rivière-du-Loup", "1", 900, false).region, "AR de Matane et de Rivière-du-Loup");
   assert.equal(r("Autre", "1", 900, false), null);
+});
+
+test("studio : médiane SCHL, repère LMM, libellés et comparaison", () => {
+  assert.equal(plain(hs("loyerSchl")("Montréal", "0", {})).loyer, 950, "médiane SCHL studio, Montréal, octobre 2025");
+  assert.equal(plain(hs("medianeSchl")("Gatineau", "0")).qualite, "d");
+  assert.equal(plain(hs("repereLmm")("Québec", "0", 900, false)).lmm, 900, "LMM 2026 studio, RMR de Québec");
+  assert.equal(hs("indiceCh")("0"), 0);
+  assert.equal(hs("indiceCh")(""), 1);
+  assert.equal(hs("indiceCh")("5"), 3);
+  assert.equal(hs("courtCh")("0"), "Studio");
+  assert.equal(hs("courtCh")(undefined), "? ch.");
+  assert.equal(hs("libelleCh")(0), "studio");
+  const r = plain(hs("referencesPrix")({ ville: "Montréal", ch: "0", prixN: 1000 }, {}, {}));
+  assert.equal(r[1].valeur, 950);
+  assert.match(r[1].type, /studio/);
+  assert.match(r[0].absent, /studios/);
 });

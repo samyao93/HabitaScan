@@ -1,6 +1,7 @@
 /* Lecture automatique d'une annonce : texte collé, captures (lecture du texte), recherche des photos. */
 import { sb } from "../config.js";
 import { etat } from "../etat.js";
+import { courtCh } from "../prix/reference.js";
 import { esc } from "../utils/dom.js";
 import { reduireImage } from "../utils/images.js";
 
@@ -27,11 +28,12 @@ export function extraireAnnonce(brut, villes) {
     }
   }
   if (prix.length) r.prix = String(prix[0]);
-  /* Chambres : « 4 1/2 », « 4½ », « 4.5 », « 2 chambres », « 2 cc », « 2 bedrooms », « 2 br ». */
+  /* Chambres : « 4 1/2 », « 4½ », « 4.5 », « 2 chambres », « 2 cc », « 2 bedrooms », « 2 br » ; studio : « 1 1/2 », « 2 1/2 », « studio ». */
   const demi = bas.match(/\b([1-9])\s?(?:½|1\/2|\.5|,5)(?!\d)/);
   const ch = bas.match(/\b([1-6])\s?(?:chambres?|cc\b|c\.c\.|bedrooms?|beds?\b|br\b|bdr)/);
   if (ch) r.ch = String(Math.min(+ch[1], 3));
   else if (demi && +demi[1] >= 3) r.ch = String(Math.min(+demi[1] - 2, 3));
+  else if ((demi && +demi[1] <= 2) || /\b(?:studio|bachelor|loft)\b/.test(bas)) r.ch = "0";
   /* Ville : une des villes de référence nommée dans le texte. */
   const norm = (s) =>
     s
@@ -49,7 +51,7 @@ export function extraireAnnonce(brut, villes) {
 function resumeLecture(r) {
   const p = [];
   if (r.prix) p.push(Number(r.prix).toLocaleString("fr-CA") + " $");
-  if (r.ch) p.push(r.ch === "3" ? "3 ch. et plus" : r.ch + " ch.");
+  if (r.ch) p.push(courtCh(r.ch));
   if (r.ville) p.push(r.ville);
   if (r.cession) p.push("cession de bail");
   return p.join(" · ");

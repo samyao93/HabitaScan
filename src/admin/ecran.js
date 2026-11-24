@@ -1,6 +1,6 @@
 /* Espace admin dans l'app : écran et liaisons. */
 import { ADM } from "./api.js";
-import { medianeSchl } from "../prix/reference.js";
+import { courtCh, medianeSchl } from "../prix/reference.js";
 import { PARAMS, nb } from "./parametres.js";
 import { etat } from "../etat.js";
 import { ALERTES_ID } from "../identite/identite.js";
@@ -132,13 +132,13 @@ ${(p.alertes || []).length ? `<ul class="reasons">${p.alertes.map((a) => `<li><s
       el().innerHTML = `<div class="card"><h2>Budget</h2><p class="hint">Change un montant quand le tarif change (chaque année). Indique la source dans tes notes.</p>
 ${PARAMS.map((p) => `<label>${p.n}<span class="ligne"><input data-param="${p.cle}" inputmode="decimal" value="${String(p.get()).replace(".", ",")}"><button type="button" class="btn ghost petit" data-sauver="${p.cle}">Enregistrer</button></span></label>`).join("")}</div>
 <div class="card"><h2>Loyers moyens SCHL</h2><p class="hint">À mettre à jour chaque année avec l'Enquête sur les logements locatifs.</p>
-<table class="tvilles"><thead><tr><th>Ville</th><th>1 ch.</th><th>2 ch.</th><th>3 ch.+</th></tr></thead><tbody>
-${villes.map((v) => `<tr><td>${esc(v)}</td>${[0, 1, 2].map((i) => `<td><input class="mini" data-loyer="${esc(v)}" data-ch="${i + 1}" inputmode="numeric" value="${etat.loyers[v][i] || ""}"></td>`).join("")}</tr>`).join("")}</tbody></table>
+<table class="tvilles"><thead><tr><th>Ville</th><th>Studio</th><th>1 ch.</th><th>2 ch.</th><th>3 ch.+</th></tr></thead><tbody>
+${villes.map((v) => `<tr><td>${esc(v)}</td>${[0, 1, 2, 3].map((i) => `<td><input class="mini" data-loyer="${esc(v)}" data-ch="${i}" inputmode="numeric" value="${etat.loyers[v][i] || ""}"></td>`).join("")}</tr>`).join("")}</tbody></table>
 <p class="hint" id="adm-msg" role="status"></p></div>
 <div class="card"><h2>Loyers médians SCHL</h2><p class="hint">Utilisés pour le budget, le verdict et la comparaison du prix. Chaque décembre : Portail de l'information sur le marché de l'habitation, Québec, « Loyer médian ($) » selon le nombre de chambres. Vide : médiane d'octobre 2025 intégrée à l'app.</p>
 <label>Période des médianes<input id="med-periode" value="${esc(medianeSchl(villes[0], 1)?.periode || "octobre 2025")}"></label>
-<table class="tvilles"><thead><tr><th>Ville</th><th>1 ch.</th><th>2 ch.</th><th>3 ch.+</th></tr></thead><tbody>
-${villes.map((v) => `<tr><td>${esc(v)}</td>${[1, 2, 3].map((c) => `<td><input class="mini" data-mediane="${esc(v)}" data-ch="${c}" inputmode="numeric" value="${medianeSchl(v, c)?.loyer || ""}"></td>`).join("")}</tr>`).join("")}</tbody></table>
+<table class="tvilles"><thead><tr><th>Ville</th><th>Studio</th><th>1 ch.</th><th>2 ch.</th><th>3 ch.+</th></tr></thead><tbody>
+${villes.map((v) => `<tr><td>${esc(v)}</td>${[0, 1, 2, 3].map((c) => `<td><input class="mini" data-mediane="${esc(v)}" data-ch="${c}" inputmode="numeric" value="${medianeSchl(v, c)?.loyer || ""}"></td>`).join("")}</tr>`).join("")}</tbody></table>
 <p class="hint" id="adm-msg-med" role="status"></p></div>`;
       const msg = (t) => {
         const m = $("#adm-msg");
@@ -173,8 +173,8 @@ ${villes.map((v) => `<tr><td>${esc(v)}</td>${[1, 2, 3].map((c) => `<td><input cl
               if (!(v >= 200 && v <= 10000)) return msg("Loyer invalide.");
               try {
                 await ADM.sauverLoyer(inp.dataset.loyer, +inp.dataset.ch, v);
-                etat.loyers[inp.dataset.loyer][+inp.dataset.ch - 1] = v;
-                msg(`${inp.dataset.loyer}, ${inp.dataset.ch} ch. : ${m0(v)} enregistré.`);
+                etat.loyers[inp.dataset.loyer][+inp.dataset.ch] = v;
+                msg(`${inp.dataset.loyer}, ${courtCh(inp.dataset.ch)} : ${m0(v)} enregistré.`);
               } catch (x) {
                 msg("Erreur d'enregistrement.");
               }
@@ -196,10 +196,10 @@ ${villes.map((v) => `<tr><td>${esc(v)}</td>${[1, 2, 3].map((c) => `<td><input cl
               if (!(v >= 200 && v <= 10000)) return msgMed("Loyer invalide.");
               try {
                 await ADM.sauverMediane(ville, ch, v, periode);
-                (etat.medianes[ville] = etat.medianes[ville] || [null, null, null])[ch - 1] = { loyer: v, periode };
-                msgMed(`${ville}, ${ch} ch. : médiane ${m0(v)} (${periode}) enregistrée.`);
+                (etat.medianes[ville] = etat.medianes[ville] || [null, null, null, null])[ch] = { loyer: v, periode };
+                msgMed(`${ville}, ${courtCh(ch)} : médiane ${m0(v)} (${periode}) enregistrée.`);
               } catch (x) {
-                msgMed("Erreur d'enregistrement. La migration 20261124b est-elle appliquée ?");
+                msgMed("Erreur d'enregistrement. Les migrations 20261124b et 20261124c sont-elles appliquées ?");
               }
             }),
         );

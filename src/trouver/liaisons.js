@@ -26,7 +26,7 @@ export function lierTrouver(F) {
           nouveauF({
             lien: r.url,
             ville: f.ville,
-            ch: String(r.ch || f.ch || "2"),
+            ch: String(r.ch ?? (f.ch || "2")),
             prix: r.prix ? String(r.prix) : "",
             annonce: `${r.titre || ""}\n${r.extrait || ""}`,
             lu: `<b>Repris de la recherche :</b> ${esc(r.source.n)}${r.prix ? `, ${m0(r.prix)}` : ""}. Ajoute des captures de l'annonce complète et de la conversation pour une vérification complète.`,

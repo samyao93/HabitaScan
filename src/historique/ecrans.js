@@ -1,6 +1,7 @@
 /* Historique des vérifications et détail d'une vérification. */
 import { alerteDe, alertesActives, blocAlerteDetail } from "../alertes/alertes.js";
 import { etat } from "../etat.js";
+import { courtCh } from "../prix/reference.js";
 import { HIS } from "./api.js";
 import { REGLE_PAIEMENT } from "../memoire/contacts.js";
 import { TRAVAUX } from "../renovation/regles.js";
@@ -40,7 +41,7 @@ const nomTravaux = (k) => (TRAVAUX[k] || { l: "Travaux" }).l.split(/ \(|,/)[0];
 function titreVerif(x) {
   return x.module === "reno"
     ? `Réno · ${esc(nomTravaux(x.travaux))}`
-    : `${esc(x.ville || "Ville inconnue")} · ${x.ch == 3 ? "3+" : esc(x.ch ?? "?")} ch.`;
+    : `${esc(x.ville || "Ville inconnue")} · ${courtCh(x.ch)}`;
 }
 
 function sousTitreVerif(x) {
@@ -98,7 +99,7 @@ ${ligne("Vérifiée le", esc(dateLongue(x.date)))}
 ${
   m === "logement"
     ? ligne("Ville", esc(x.ville || "")) +
-      ligne("Chambres", x.ch == 3 ? "3 et plus" : esc(x.ch ?? "")) +
+      ligne("Chambres", x.ch == null ? "" : x.ch == 0 ? "Studio" : x.ch == 3 ? "3 et plus" : esc(x.ch)) +
       ligne("Loyer demandé", x.prix ? `<span class="num">${money(+x.prix)}</span> par mois` : "") +
       ligne("Annonce", lienOk ? lienExt(esc(x.lien), "Ouvrir l'annonce ↗") : "Aucun lien fourni")
     : ligne("Travaux", esc((TRAVAUX[x.travaux] || { l: "" }).l)) +

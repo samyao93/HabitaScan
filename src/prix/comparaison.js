@@ -3,13 +3,11 @@
    Chaque référence affiche sa source, sa période et le type de logement. Une référence absente est dite absente. */
 import ANNONCES from "./loyers-annonces.json";
 import MEDIANES_SCHL from "./medianes-schl.json";
-import { medianeSchl } from "./reference.js";
+import { indiceCh, libelleCh, medianeSchl } from "./reference.js";
 import { sb } from "../config.js";
 import { esc, money } from "../utils/dom.js";
 
 export const LOYERS_ANNONCES = ANNONCES;
-
-const libelleCh = (ch) => (String(ch) === "3" ? "3 chambres et plus" : `${ch} chambre${+ch > 1 ? "s" : ""}`);
 
 /* Écart en % entre le loyer demandé et une référence : « 12 % au-dessus », « 8 % sous », « au même niveau ». */
 export function ecart(prix, ref) {
@@ -21,9 +19,9 @@ export function ecart(prix, ref) {
 
 /* Médiane HabitaScan (fonction mediane_loyers_annonces) : { n, mediane, jours, minimum }, ou null si indisponible. */
 export async function chargerMedianeHabitascan(ville, ch) {
-  if (!ville || ville === "Autre" || !ch) return null;
+  if (!ville || ville === "Autre" || ch == null || ch === "") return null;
   try {
-    const { data, error } = await sb.rpc("mediane_loyers_annonces", { p_ville: ville, p_chambres: Math.min(+ch, 3) });
+    const { data, error } = await sb.rpc("mediane_loyers_annonces", { p_ville: ville, p_chambres: indiceCh(ch) });
     const r = !error && data && data[0];
     return r
       ? { n: +r.n || 0, mediane: r.mediane ? +r.mediane : null, jours: +r.jours || 90, minimum: +r.minimum || 10 }
@@ -35,12 +33,12 @@ export async function chargerMedianeHabitascan(ville, ch) {
 
 /* Les trois références pour une fiche : [{ cle, nom, valeur, stat, type, source, periode, lien, note, absent }]. */
 export function referencesPrix(F, loyers, infos, annonces = ANNONCES, medianes = MEDIANES_SCHL) {
-  const ch = Math.min(+F.ch || 1, 3),
+  const ch = indiceCh(F.ch),
     v = F.ville,
     type = libelleCh(ch);
-  const schl = loyers[v] && loyers[v][ch - 1];
+  const schl = loyers[v] && loyers[v][ch];
   const info = (infos && infos[v]) || {};
-  const sc = annonces.villes && annonces.villes[v] && annonces.villes[v][ch - 1];
+  const sc = annonces.villes && annonces.villes[v] && annonces.villes[v][ch];
   const hs = F.medianeHS;
   const md = medianeSchl(v, ch, medianes);
   const qualite = md && md.qualite && medianes.qualites && medianes.qualites[md.qualite];
@@ -53,7 +51,11 @@ export function referencesPrix(F, loyers, infos, annonces = ANNONCES, medianes =
       source: info.source || "SCHL, Enquête sur les logements locatifs",
       periode: info.periode || "octobre 2025",
       note: "Moyenne de tous les locataires, y compris ceux en place depuis longtemps : souvent plus bas que le loyer d'un logement à louer aujourd'hui.",
-      absent: schl ? null : "Pas de loyer SCHL pour cette ville.",
+      absent: schl
+        ? null
+        : ch === 0
+          ? "Pas de loyer moyen SCHL pour les studios de cette ville."
+          : "Pas de loyer SCHL pour cette ville.",
     },
     {
       cle: "schl_mediane",
@@ -114,5 +116,5 @@ export function blocComparaison(F, loyers, infos) {
       r.valeur ? `<div class="law">${esc(r.note)}</div>` : ""
     }</div></li>`;
   };
-  return `<div class="card" id="comparaison"><h2>Comparer le prix</h2><p class="soft">Loyer demandé : <b class="num">${money(F.prixN)}</b> · ${esc(F.ville)} · ${libelleCh(Math.min(+F.ch || 1, 3))}</p><ul class="reasons">${refs.map(ligne).join("")}</ul><p class="hint">Un prix différent de ces repères n'est pas une arnaque à lui seul : l'état du logement, le quartier et ce qui est inclus comptent.</p></div>`;
+  return `<div class="card" id="comparaison"><h2>Comparer le prix</h2><p class="soft">Loyer demandé : <b class="num">${money(F.prixN)}</b> · ${esc(F.ville)} · ${libelleCh(F.ch)}</p><ul class="reasons">${refs.map(ligne).join("")}</ul><p class="hint">Un prix différent de ces repères n'est pas une arnaque à lui seul : l'état du logement, le quartier et ce qui est inclus comptent.</p></div>`;
 }

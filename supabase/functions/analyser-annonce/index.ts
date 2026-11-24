@@ -59,7 +59,7 @@ const SYSTEME_ANNONCE = `${COMMUN}
 On te donne des captures d'écran d'une annonce et parfois de la conversation avec l'annonceur, et du texte collé.
 Extrais les informations factuelles de l'annonce, et accorde une attention particulière à la conversation si elle est présente :
 c'est là que les fraudeurs se trahissent.
-- chambres : nombre de chambres fermées. Au Québec, un 3 1/2 = 1 chambre, un 4 1/2 = 2 chambres, un 5 1/2 = 3 chambres.
+- chambres : nombre de chambres fermées. Au Québec, un studio (1 1/2 ou 2 1/2) = 0, un 3 1/2 = 1 chambre, un 4 1/2 = 2 chambres, un 5 1/2 = 3 chambres.
 - Le résumé : une ou deux phrases neutres, en français, qui décrivent le logement et ce que demande l'annonceur.
 - reponse_filtre : null.
 Réponds uniquement avec l'outil « rapport ».`;
@@ -73,7 +73,7 @@ const OUTIL = {
       prix: { type: ["integer", "null"], description: "Loyer mensuel en dollars" },
       ville: { type: ["string", "null"] },
       adresse: { type: ["string", "null"] },
-      chambres: { type: ["integer", "null"], minimum: 1, maximum: 6 },
+      chambres: { type: ["integer", "null"], minimum: 0, maximum: 6 },
       cession: { type: ["boolean", "null"], description: "Cession de bail ou reprise de bail" },
       disponible: { type: ["string", "null"], description: "Date de disponibilité telle qu'écrite" },
       langue: { type: ["string", "null"], description: "Langue principale : fr, en ou autre" },
@@ -228,7 +228,7 @@ Deno.serve(async (req) => {
               .slice(0, 4),
           }));
   const prix = Number.isInteger(sortie.prix) && sortie.prix >= 100 && sortie.prix <= 20000 ? sortie.prix : null;
-  const ch = Number.isInteger(sortie.chambres) && sortie.chambres >= 1 && sortie.chambres <= 6 ? sortie.chambres : null;
+  const ch = Number.isInteger(sortie.chambres) && sortie.chambres >= 0 && sortie.chambres <= 6 ? sortie.chambres : null;
   return json(req, {
     mode,
     prix,

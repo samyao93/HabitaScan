@@ -54,12 +54,18 @@ export const ADM = {
     }
   },
   async sauverMediane(ville, chambres, mediane, periode) {
-    const { error } = await sb
+    const { data, error } = await sb
       .from("loyers_reference")
       .update({ mediane, mediane_periode: periode })
       .eq("ville", ville)
-      .eq("chambres", chambres);
+      .eq("chambres", chambres)
+      .select("ville");
     if (error) throw error;
+    // Studio : la ligne n'existe pas encore (pas de loyer moyen), on la crée avec la médiane seule.
+    if (!data || !data.length) {
+      const r = await sb.from("loyers_reference").insert({ ville, chambres, mediane, mediane_periode: periode });
+      if (r.error) throw r.error;
+    }
   },
   async supprimerCompte() {
     const { error } = await sb.functions.invoke("supprimer-compte", { body: {} });
