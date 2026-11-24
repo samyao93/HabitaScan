@@ -10,7 +10,10 @@
   ],
   "villes": {
     "Montréal": [
-      null,
+      {
+        "loyer": 1250,
+        "periode": "2e trimestre 2026"
+      },
       {
         "loyer": 1480,
         "periode": "2e trimestre 2026"
@@ -25,7 +28,10 @@
       }
     ],
     "Québec": [
-      null,
+      {
+        "loyer": 960,
+        "periode": "2e trimestre 2026"
+      },
       {
         "loyer": 1210,
         "periode": "2e trimestre 2026"
@@ -37,7 +43,10 @@
       null
     ],
     "Gatineau": [
-      null,
+      {
+        "loyer": 1070,
+        "periode": "2e trimestre 2026"
+      },
       {
         "loyer": 1440,
         "periode": "2e trimestre 2026"
@@ -52,7 +61,10 @@
       }
     ],
     "Sherbrooke": [
-      null,
+      {
+        "loyer": 790,
+        "periode": "2e trimestre 2026"
+      },
       {
         "loyer": 1040,
         "periode": "2e trimestre 2026"
