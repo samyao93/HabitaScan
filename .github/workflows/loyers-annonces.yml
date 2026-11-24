@@ -1,0 +1,31 @@
+# Loyers des annonces récentes (Statistique Canada, tableau 46-10-0092-01).
+# Télécharge le tableau et affiche le fichier src/prix/loyers-annonces.json qu'il produirait, sans rien modifier
+# dans le dépôt. Pour mettre à jour : lancer `node outils/importer-loyers-annonces.mjs` sur un ordinateur
+# (ou recopier le résultat affiché ici), puis ajouter le fichier dans une PR.
+name: Loyers des annonces (aperçu)
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - outils/importer-loyers-annonces.mjs
+
+permissions:
+  contents: read
+
+jobs:
+  apercu:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: outils/package-lock.json
+      - name: Installer les outils
+        run: npm ci
+        working-directory: outils
+      - name: Aperçu
+        run: node outils/importer-loyers-annonces.mjs --apercu

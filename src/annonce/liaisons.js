@@ -4,6 +4,7 @@ import { appliquerLecture, extraireAnnonce, lireCapture, rechercheImages } from 
 import { normaliser } from "./regles.js";
 import { analyser } from "./verdict.js";
 import { chargerProfil } from "../compte/session.js";
+import { lierCout, preparerCouts } from "../couts/ecrans.js";
 import { sb } from "../config.js";
 import { etat } from "../etat.js";
 import { iaActif } from "../ia/analyse.js";
@@ -13,6 +14,7 @@ import { chercherCopies } from "../memoire/copies-web.js";
 import { empreinteTexte, empreintesCaptures, empreintesPhotos } from "../memoire/empreintes.js";
 import { memoire, retrouverAnnonce } from "../memoire/memoire.js";
 import { go } from "../navigation/routeur.js";
+import { chargerMedianeHabitascan } from "../prix/comparaison.js";
 import { $, err, keep } from "../utils/dom.js";
 
 /* Écran « verifier » */
@@ -113,12 +115,15 @@ export function lierCapturesVerifier(v) {
         : etat.fiche.ocrTxt || etat.fiche.annonce,
     );
     const img = (etat.fiche.photosLog || [])[0] || etat.fiche.zonePhoto || etat.fiche.capture;
-    [etat.fiche.mem, etat.fiche.copie, etat.fiche.images, etat.fiche.copiesWeb] = await Promise.all([
-      memoire(etat.fiche.contacts, etat.fiche.photos),
-      retrouverAnnonce(),
-      img ? rechercheImages(img) : null,
-      chercherCopies(),
-    ]);
+    [etat.fiche.mem, etat.fiche.copie, etat.fiche.images, etat.fiche.copiesWeb, etat.fiche.medianeHS] =
+      await Promise.all([
+        memoire(etat.fiche.contacts, etat.fiche.photos),
+        retrouverAnnonce(),
+        img ? rechercheImages(img) : null,
+        chercherCopies(),
+        chargerMedianeHabitascan(etat.fiche.ville, etat.fiche.ch),
+      ]);
+    preparerCouts(etat.fiche);
     etat.fiche.res = analyser();
     const brut = etat.fiche.res.items.map((i) => ({
       c: i.c,
@@ -151,6 +156,7 @@ export function lierCapturesVerifier(v) {
 
 /* Écran « resultat » */
 export function lierResultat(v) {
+  lierCout(etat.fiche);
   $("#nouv").onclick = () => {
     etat.fiche = {};
     go("verifier");

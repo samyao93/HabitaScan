@@ -122,6 +122,15 @@ Page publique et anonyme pour le public, les médias et les associations de loca
 
 Vie privée : au signalement, la personne peut donner le code postal du logement ; l'app n'envoie que les 3 premiers caractères. Aucune adresse, aucun lien d'annonce ni aucune date n'est publié. Les secteurs sous le seuil sont regroupés dans « Autres secteurs » de la ville (même seuil). Le fond de carte vient d'OpenStreetMap (gratuit pour un trafic modeste ; à remplacer par un fournisseur de tuiles si la page devient très consultée).
 
+## 6 d. Rapport : coût mensuel réel et comparaison du loyer
+
+Dans le résultat d'une vérification :
+- **Coût mensuel réel** : loyer + dépenses lues dans l'annonce (chauffage, électricité, eau chaude, internet, stationnement). Une dépense dont le montant n'est pas écrit est affichée « non précisée » et n'est jamais comptée 0 $ : le total devient « Au moins … ». La personne peut corriger chaque ligne. Les frais ponctuels sont à part (seul le premier mois peut être exigé, art. 1904). Code : `src/couts/`.
+- **Questions à poser à la visite**, selon ce qui manque dans l'annonce (dont la section G du bail).
+- **Comparer le prix** (`src/prix/`) : loyer moyen SCHL (table `loyers_reference`), loyer demandé moyen des annonces récentes de Statistique Canada (tableau 46-10-0092-01, appartements, par région métropolitaine) et médiane des annonces déjà vérifiées dans HabitaScan (90 jours, même ville et mêmes chambres, sans les « Ne paie pas », à partir de 10 annonces différentes ; fonction `mediane_loyers_annonces`, migration `20261124_mediane_loyers_annonces.sql`). Chaque repère affiche sa source, sa période et le type de logement.
+
+**Mise à jour trimestrielle des loyers des annonces** (Statistique Canada publie vers mars, juin, septembre, décembre) : `node outils/importer-loyers-annonces.mjs` réécrit `src/prix/loyers-annonces.json` ; ajoute-le dans une PR. Sans ordinateur : GitHub > Actions > « Loyers des annonces (aperçu) » > Run workflow affiche le fichier à recopier. Saguenay, Rimouski et Rivière-du-Loup n'y sont pas (pas de chiffre publié) : l'app l'indique.
+
 ## 7. Espace admin et confidentialité
 
 **Espace admin** : connecte-toi dans l'app avec le compte déclaré admin (section 1). Un bouton « Espace admin » apparaît à l'accueil, visible seulement pour toi. Il a 4 onglets :
