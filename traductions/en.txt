@@ -263,29 +263,29 @@ Civil Code of Québec, art. 1904 · <a href="https://www.quebec.ca/nouvelles/act
 "Astuce : cherche la photo de l'annonce avec Google Lens (dans l'app Google) pour voir si elle est publiée ailleurs."
 "Tip: search the listing's photo with Google Lens (in the Google app) to see if it's posted elsewhere."
 
-"SCHL, loyers moyens octobre 2025"
-"CMHC, average rents October 2025"
+`SCHL, loyer ${ref.stat}, ${ref.periode}`
+`CMHC, ${ref.stat} rent, ${ref.periode}`
 
-<b>Prix sous la moyenne</b> (${money(moy)} à ${esc(etat.fiche.ville)}) : normal pour une cession, car le nouveau locataire reprend le bail existant et son loyer.
-<b>Price below average</b> (${money(moy)} in ${esc(etat.fiche.ville)}): normal for a lease transfer, since the new tenant takes over the existing lease and its rent.
+<b>Prix sous le loyer ${ref.stat}</b> (${money(moy)} à ${esc(etat.fiche.ville)}) : normal pour une cession, car le nouveau locataire reprend le bail existant et son loyer.
+<b>Price below the ${ref.stat} rent</b> (${money(moy)} in ${esc(etat.fiche.ville)}): normal for a lease transfer, since the new tenant takes over the existing lease and its rent.
 
 'Code civil du Québec, art. 1870 à 1873 · <a
 'Civil Code of Québec, art. 1870 to 1873 · <a
 
-<b>Prix nettement sous la moyenne, en plus d'un autre signal.</b> ${money(etat.fiche.prixN)} contre ${money(moy)} en moyenne à ${esc(etat.fiche.ville)}. Un prix trop beau combiné à ces signaux est l'appât classique des fausses annonces.
-<b>Price well below average, on top of another signal.</b> ${money(etat.fiche.prixN)} versus ${money(moy)} on average in ${esc(etat.fiche.ville)}. A too-good price combined with these signals is the classic bait of fake listings.
+<b>Prix nettement sous le loyer ${ref.stat}, en plus d'un autre signal.</b> ${money(etat.fiche.prixN)} contre ${money(moy)} (loyer ${ref.stat}) à ${esc(etat.fiche.ville)}. Un prix trop beau combiné à ces signaux est l'appât classique des fausses annonces.
+<b>Price well below the ${ref.stat} rent, on top of another signal.</b> ${money(etat.fiche.prixN)} versus ${money(moy)} (${ref.stat} rent) in ${esc(etat.fiche.ville)}. A too-good price combined with these signals is the classic bait of fake listings.
 
-<b>Prix sous la moyenne</b> (${money(moy)} à ${esc(etat.fiche.ville)}). Ça arrive souvent : vieil immeuble, quartier moins cher, propriétaire de longue date. Pas un signe d'arnaque à lui seul.
-<b>Price below average</b> (${money(moy)} in ${esc(etat.fiche.ville)}). It happens often: old building, cheaper neighbourhood, long-time landlord. Not a scam sign on its own.
+<b>Prix sous le loyer ${ref.stat}</b> (${money(moy)} à ${esc(etat.fiche.ville)}). Ça arrive souvent : vieil immeuble, quartier moins cher, propriétaire de longue date. Pas un signe d'arnaque à lui seul.
+<b>Price below the ${ref.stat} rent</b> (${money(moy)} in ${esc(etat.fiche.ville)}). It happens often: old building, cheaper neighbourhood, long-time landlord. Not a scam sign on its own.
 
-<b>Prix élevé</b> (${money(moy)} en moyenne). Pas une arnaque en soi : vérifie la section G du bail. Tu peux demander au Tribunal de fixer le loyer dans les 10 jours suivant la signature.
-<b>High price</b> (${money(moy)} on average). Not a scam in itself: check section G of the lease. You can ask the Tribunal to set the rent within 10 days of signing.
+<b>Prix élevé</b> (loyer ${ref.stat} : ${money(moy)}). Pas une arnaque en soi : vérifie la section G du bail. Tu peux demander au Tribunal de fixer le loyer dans les 10 jours suivant la signature.
+<b>High price</b> (${ref.stat} rent: ${money(moy)}). Not a scam in itself: check section G of the lease. You can ask the Tribunal to set the rent within 10 days of signing.
 
 'Code civil du Québec, art. 1896 · <a href="https://www.tal.gouv.qc.ca/sites/default/files/Ajustement-bail-logement.pdf" target="_blank" rel="noopener">TAL, formulaire de bail</a>'
 'Civil Code of Québec, art. 1896 · <a href="https://www.tal.gouv.qc.ca/sites/default/files/Ajustement-bail-logement.pdf" target="_blank" rel="noopener">TAL, lease form</a>'
 
-<b>Prix dans la normale</b> pour ${esc(etat.fiche.ville)} (${money(moy)} en moyenne).
-<b>Normal price</b> for ${esc(etat.fiche.ville)} (${money(moy)} on average).
+<b>Prix dans la normale</b> pour ${esc(etat.fiche.ville)} (loyer ${ref.stat} : ${money(moy)}).
+<b>Normal price</b> for ${esc(etat.fiche.ville)} (${ref.stat} rent: ${money(moy)}).
 
 "Pas encore de loyer de référence pour cette ville."
 "No reference rent for this city yet."
@@ -869,11 +869,11 @@ The owner registered in the Land Register is a company.
 ["abonnements", "Subscriptions"],
 
 == src/budget/ecrans.js
-<h3 class="sous">Comparer les villes</h3><p class="hint">Pour ${ch === 3 ? "3 chambres et plus" : ch + " chambre" + (ch > 1 ? "s" : "")}. Loyer moyen SCHL (octobre 2025) et laissez-passer 2026.</p>
-<h3 class="sous">Compare cities</h3><p class="hint">For ${ch === 3 ? "3 bedrooms or more" : ch + " bedroom" + (ch > 1 ? "s" : "")}. CMHC average rent (October 2025) and 2026 transit pass.</p>
+<h3 class="sous">Comparer les villes</h3><p class="hint">Pour ${ch === 3 ? "3 chambres et plus" : ch + " chambre" + (ch > 1 ? "s" : "")}. Loyer médian SCHL (octobre 2025) et laissez-passer 2026.</p>
+<h3 class="sous">Compare cities</h3><p class="hint">For ${ch === 3 ? "3 bedrooms or more" : ch + " bedroom" + (ch > 1 ? "s" : "")}. CMHC median rent (October 2025) and 2026 transit pass.</p>
 
-<th>Ville</th><th>Loyer moyen</th><th>Transport</th>
-<th>City</th><th>Average rent</th><th>Transit</th>
+<th>Ville</th><th>Loyer médian</th><th>Transport</th>
+<th>City</th><th>Median rent</th><th>Transit</th>
 
 String(t.p).replace(".", ",") + " $"
 "$" + String(t.p)
@@ -881,8 +881,8 @@ String(t.p).replace(".", ",") + " $"
 '<span class="ok">Oui</span>' : '<span class="non">Non</span>'
 '<span class="ok">Yes</span>' : '<span class="non">No</span>'
 
-<p class="hint">« Oui » : le loyer moyen et ton électricité restent sous 30 % de ton revenu.</p>
-<p class="hint">"Yes": the average rent and your electricity stay under 30% of your income.</p>
+<p class="hint">« Oui » : le loyer médian et ton électricité restent sous 30 % de ton revenu.</p>
+<p class="hint">"Yes": the median rent and your electricity stay under 30% of your income.</p>
 
 <p class="hint">Entre le loyer visé pour voir ton budget.</p>
 <p class="hint">Enter your target rent to see your budget.</p>
@@ -920,8 +920,8 @@ String(t.p).replace(".", ",") + " $"
 <h3 class="sous">Où va ton argent chaque mois</h3>
 <h3 class="sous">Where your money goes each month</h3>
 
-<p class="hint">Loyer moyen à ${esc(B.ville)} : <b class="num">${m0(R.moy)}</b> (SCHL, Enquête sur les logements locatifs, octobre 2025).</p>
-<p class="hint">Average rent in ${esc(B.ville)}: <b class="num">${m0(R.moy)}</b> (CMHC, Rental Market Survey, October 2025).</p>
+<p class="hint">Loyer ${R.ref.stat} à ${esc(B.ville)} : <b class="num">${m0(R.ref.loyer)}</b> (SCHL, Enquête sur les logements locatifs, ${esc(R.ref.periode)}).</p>
+<p class="hint">${R.ref.stat === "median" ? "Median" : "Average"} rent in ${esc(B.ville)}: <b class="num">${m0(R.ref.loyer)}</b> (CMHC, Rental Market Survey, ${esc(R.ref.periode)}).</p>
 
 id="b-annonces">Chercher des logements jusqu'à ${m0(R.max)}</button>
 id="b-annonces">Search listings already posted, up to ${m0(R.max)}</button>
@@ -971,8 +971,8 @@ ${champ("net", "Household net pay (optional)", "2,900")}${choix("netUnite", "Per
 Le montant qui arrive vraiment dans ton compte, après impôts et retenues (voir ton talon de paie). Il sert à calculer ce qui te reste chaque mois.</p>
 The amount that actually reaches your account, after taxes and deductions (see your pay stub). It's used to calculate what's left each month.</p>
 
-${champ("loyer", "Loyer visé par mois", "1 200", "Par défaut : loyer moyen SCHL de la ville.")}
-${champ("loyer", "Target rent per month", "1,200", "Default: the city's CMHC average rent.")}
+${champ("loyer", "Loyer visé par mois", "1 200", "Par défaut : loyer médian SCHL de la ville.")}
+${champ("loyer", "Target rent per month", "1,200", "Default: the city's CMHC median rent.")}
 
 ${choix("mois", "Prévoir l'argent pour", [
 ${choix("mois", "Plan money for", [
@@ -2134,8 +2134,8 @@ r.ch >= 3 ? "3+ bedrooms" : r.ch + " bd."
 <div>Publiée par un courtier immobilier, encadré par l'${lienExt(L_OACIQ, "OACIQ")}.</div>
 <div>Posted by a real estate broker, regulated by the ${lienExt(L_OACIQ, "OACIQ")}.</div>
 
-<div>Loyer moyen SCHL ici : ${m0(r.moy)}.</div>
-<div>CMHC average rent here: ${m0(r.moy)}.</div>
+<div>Loyer médian SCHL ici : ${m0(r.moy)}.</div>
+<div>CMHC median rent here: ${m0(r.moy)}.</div>
 
 data-verif="${i}">Vérifier</button>
 data-verif="${i}">Check</button>
@@ -2229,8 +2229,8 @@ v === "3" ? "3 or more" : v
 "Propriétaire « à l'étranger »"
 "Landlord \"abroad\""
 
-`Prix très bas pour la ville (moyenne SCHL ${m0(moy)}) : vérifie-la avant tout contact`
-`Very low price for the city (CMHC average ${m0(moy)}): check it before any contact`
+`Prix très bas pour la ville (loyer ${ref && ref.stat} SCHL ${m0(moy)}) : vérifie-la avant tout contact`
+`Very low price for the city (CMHC ${ref && ref.stat} rent ${m0(moy)}): check it before any contact`
 
 == src/historique/ecrans.js
 <span class="tag r">Signalée</span>
@@ -2312,3 +2312,10 @@ id="alertes-vues">Got it</button>
 
 "Le changement n'a pas fonctionné. Réessaie."
 "The change didn't work. Try again."
+
+== src/prix/reference.js
+stat: "médian"
+stat: "median"
+
+stat: "moyen"
+stat: "average"

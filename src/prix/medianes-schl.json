@@ -1,0 +1,140 @@
+{
+  "source": "SCHL, Enquête sur les logements locatifs (Portail de l'information sur le marché de l'habitation)",
+  "url": "https://www03.cmhc-schl.gc.ca/hmip-pimh/fr/TableMapChart/TableCategory?geographyType=Province&geographyId=24&categoryLevel1=March%C3%A9%20locatif%20primaire&categoryLevel2=Loyer%20m%C3%A9dian%20%28%24%29",
+  "periode": "octobre 2025",
+  "type": "Logements locatifs d'initiative privée (appartements et maisons en rangée)",
+  "qualites": {
+    "a": "excellente",
+    "b": "très bonne",
+    "c": "bonne",
+    "d": "passable, à utiliser avec prudence"
+  },
+  "villes": {
+    "Montréal": [
+      {
+        "loyer": 1056,
+        "qualite": "a"
+      },
+      {
+        "loyer": 1250,
+        "qualite": "a"
+      },
+      {
+        "loyer": 1545,
+        "qualite": "b"
+      }
+    ],
+    "Québec": [
+      {
+        "loyer": 1034,
+        "qualite": "a"
+      },
+      {
+        "loyer": 1134,
+        "qualite": "a"
+      },
+      {
+        "loyer": 1378,
+        "qualite": "a"
+      }
+    ],
+    "Gatineau": [
+      {
+        "loyer": 1250,
+        "qualite": "b"
+      },
+      {
+        "loyer": 1350,
+        "qualite": "b"
+      },
+      {
+        "loyer": 1350,
+        "qualite": "d"
+      }
+    ],
+    "Sherbrooke": [
+      {
+        "loyer": 850,
+        "qualite": "a"
+      },
+      {
+        "loyer": 997,
+        "qualite": "a"
+      },
+      {
+        "loyer": 1350,
+        "qualite": "b"
+      }
+    ],
+    "Trois-Rivières": [
+      {
+        "loyer": 764,
+        "qualite": "b"
+      },
+      {
+        "loyer": 900,
+        "qualite": "a"
+      },
+      {
+        "loyer": 1000,
+        "qualite": "a"
+      }
+    ],
+    "Saguenay": [
+      {
+        "loyer": 719,
+        "qualite": "a"
+      },
+      {
+        "loyer": 900,
+        "qualite": "a"
+      },
+      {
+        "loyer": 921,
+        "qualite": "b"
+      }
+    ],
+    "Drummondville": [
+      {
+        "loyer": 918,
+        "qualite": "a"
+      },
+      {
+        "loyer": 1035,
+        "qualite": "d"
+      },
+      {
+        "loyer": 1400,
+        "qualite": "b"
+      }
+    ],
+    "Rimouski": [
+      {
+        "loyer": 734,
+        "qualite": "a"
+      },
+      {
+        "loyer": 900,
+        "qualite": "b"
+      },
+      {
+        "loyer": 1075,
+        "qualite": "b"
+      }
+    ],
+    "Rivière-du-Loup": [
+      {
+        "loyer": 685,
+        "qualite": "b"
+      },
+      {
+        "loyer": 830,
+        "qualite": "a"
+      },
+      {
+        "loyer": 917,
+        "qualite": "a"
+      }
+    ]
+  }
+}

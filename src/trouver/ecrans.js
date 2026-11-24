@@ -15,7 +15,7 @@ ${r.exemple ? `<p class="tag-demo">Exemple (démo)</p>` : ""}
 <ul class="reasons">
 ${r.alertes.length ? r.alertes.map((a) => `<li><span class="dot y"></span><div>${esc(a)}</div></li>`).join("") : `<li><span class="dot g"></span><div>Aucun signal dans le texte de l'annonce.</div></li>`}
 ${r.source.courtier ? `<li><span class="dot g"></span><div>Publiée par un courtier immobilier, encadré par l'${lienExt(L_OACIQ, "OACIQ")}.</div></li>` : ""}
-${r.prix && r.moy ? `<li><span class="dot i"></span><div>Loyer moyen SCHL ici : ${m0(r.moy)}.</div></li>` : ""}</ul>
+${r.prix && r.moy ? `<li><span class="dot i"></span><div>Loyer médian SCHL ici : ${m0(r.moy)}.</div></li>` : ""}</ul>
 ${r.exemple ? `<button class="btn" data-verif="${i}">Vérifier</button>` : `<div class="grid2"><a class="btn ghost lienbouton" href="${urlWeb(r.url) ? esc(r.url) : "#"}" target="_blank" rel="noopener">Ouvrir</a><button class="btn" data-verif="${i}">Vérifier</button></div>`}
 </div></article>`;
 }

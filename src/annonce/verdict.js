@@ -8,6 +8,7 @@ import { itemsIA } from "../ia/analyse.js";
 import { itemsCopiesWeb } from "../memoire/copies-web.js";
 import { itemsMemoire, itemsRecopie } from "../memoire/memoire.js";
 import { itemSignalements } from "../signalements/signalements.js";
+import { loyerSchl } from "../prix/reference.js";
 import { esc, money } from "../utils/dom.js";
 import { urlWeb } from "../utils/liens.js";
 
@@ -115,9 +116,9 @@ export function analyser() {
       c: "i",
       t: "Astuce : cherche la photo de l'annonce avec Google Lens (dans l'app Google) pour voir si elle est publiée ailleurs.",
     });
-  const loy = etat.loyers[etat.fiche.ville],
-    moy = loy && loy[Math.min(+etat.fiche.ch, 3) - 1],
-    LSCHL = "SCHL, loyers moyens octobre 2025";
+  const ref = loyerSchl(etat.fiche.ville, etat.fiche.ch),
+    moy = ref ? ref.loyer : 0,
+    LSCHL = ref ? `SCHL, loyer ${ref.stat}, ${ref.periode}` : "";
   /* Prix bas : jamais un signal à lui seul (vieil immeuble, quartier moins cher, propriétaire de longue date).
     Il ne devient jaune que s'il s'ajoute à un autre signal d'alarme. */
   const autreSignal = it.some((i) => i.c === "r" || i.c === "y");
@@ -126,32 +127,32 @@ export function analyser() {
     if (r < BAS && etat.fiche.cession === "oui")
       it.push({
         c: "i",
-        t: `<b>Prix sous la moyenne</b> (${money(moy)} à ${esc(etat.fiche.ville)}) : normal pour une cession, car le nouveau locataire reprend le bail existant et son loyer.`,
+        t: `<b>Prix sous le loyer ${ref.stat}</b> (${money(moy)} à ${esc(etat.fiche.ville)}) : normal pour une cession, car le nouveau locataire reprend le bail existant et son loyer.`,
         law: 'Code civil du Québec, art. 1870 à 1873 · <a href="https://www.tal.gouv.qc.ca/sites/default/files/notices/TAL_817_E.pdf" target="_blank" rel="noopener">TAL</a>',
       });
     else if (r < BAS && autreSignal)
       it.push({
         c: "y",
-        t: `<b>Prix nettement sous la moyenne, en plus d'un autre signal.</b> ${money(etat.fiche.prixN)} contre ${money(moy)} en moyenne à ${esc(etat.fiche.ville)}. Un prix trop beau combiné à ces signaux est l'appât classique des fausses annonces.`,
+        t: `<b>Prix nettement sous le loyer ${ref.stat}, en plus d'un autre signal.</b> ${money(etat.fiche.prixN)} contre ${money(moy)} (loyer ${ref.stat}) à ${esc(etat.fiche.ville)}. Un prix trop beau combiné à ces signaux est l'appât classique des fausses annonces.`,
         law: LSCHL,
         fait: FAITS.prix,
       });
     else if (r < BAS)
       it.push({
         c: "i",
-        t: `<b>Prix sous la moyenne</b> (${money(moy)} à ${esc(etat.fiche.ville)}). Ça arrive souvent : vieil immeuble, quartier moins cher, propriétaire de longue date. Pas un signe d'arnaque à lui seul.`,
+        t: `<b>Prix sous le loyer ${ref.stat}</b> (${money(moy)} à ${esc(etat.fiche.ville)}). Ça arrive souvent : vieil immeuble, quartier moins cher, propriétaire de longue date. Pas un signe d'arnaque à lui seul.`,
         law: LSCHL,
       });
     else if (r > HAUT)
       it.push({
         c: "i",
-        t: `<b>Prix élevé</b> (${money(moy)} en moyenne). Pas une arnaque en soi : vérifie la section G du bail. Tu peux demander au Tribunal de fixer le loyer dans les 10 jours suivant la signature.`,
+        t: `<b>Prix élevé</b> (loyer ${ref.stat} : ${money(moy)}). Pas une arnaque en soi : vérifie la section G du bail. Tu peux demander au Tribunal de fixer le loyer dans les 10 jours suivant la signature.`,
         law: 'Code civil du Québec, art. 1896 · <a href="https://www.tal.gouv.qc.ca/sites/default/files/Ajustement-bail-logement.pdf" target="_blank" rel="noopener">TAL, formulaire de bail</a>',
       });
     else
       it.push({
         c: "g",
-        t: `<b>Prix dans la normale</b> pour ${esc(etat.fiche.ville)} (${money(moy)} en moyenne).`,
+        t: `<b>Prix dans la normale</b> pour ${esc(etat.fiche.ville)} (loyer ${ref.stat} : ${money(moy)}).`,
         law: LSCHL,
       });
   } else it.push({ c: "i", t: "Pas encore de loyer de référence pour cette ville." });

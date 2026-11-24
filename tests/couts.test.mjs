@@ -104,13 +104,18 @@ test("comparaison du prix : écart, références absentes dites absentes, source
   );
   assert.equal(r[0].valeur, 1131);
   assert.equal(r[0].periode, "octobre 2025");
-  assert.equal(r[1].valeur, 1480);
-  assert.match(r[1].type, /appartements, 1 chambre/);
-  assert.equal(r[2].valeur, null);
-  assert.match(r[2].absent, /4 sur 10/);
+  assert.equal(r[1].cle, "schl_mediane");
+  assert.equal(r[1].valeur, 1056, "loyer médian SCHL, Montréal, 1 chambre, octobre 2025");
+  assert.equal(r[1].periode, "octobre 2025");
+  assert.equal(r[2].valeur, 1480);
+  assert.match(r[2].type, /appartements, 1 chambre/);
+  assert.equal(r[3].valeur, null);
+  assert.match(r[3].absent, /4 sur 10/);
   for (const x of r) assert.ok(x.source && x.periode && x.type);
   const r2 = refs({ ...F, ch: "2" }, {}, {}, annonces);
-  assert.match(r2[1].absent, /ne publie pas/);
+  assert.match(r2[2].absent, /ne publie pas/);
+  assert.equal(r2[1].valeur, 1250, "la médiane SCHL ne dépend pas de la table des moyennes");
+  assert.match(refs({ ...F, ville: "Gatineau", ch: "3" }, {}, {}, annonces)[1].note, /prudence/);
   assert.match(r2[0].absent, /Pas de loyer SCHL/);
 });
 
@@ -148,4 +153,16 @@ test("loyers-annonces.json : importé, avec source, période et type de logement
   const d = JSON.parse(readFileSync(new URL("../src/prix/loyers-annonces.json", import.meta.url), "utf8"));
   assert.ok(d.source && d.url && d.periode && d.description);
   assert.ok(d.villes["Montréal"].some((x) => x && x.loyer > 500 && x.periode));
+});
+
+test("loyer de référence SCHL : la médiane quand elle existe, sinon la moyenne", () => {
+  const ref = (...a) => plain(hs("loyerSchl")(...a));
+  assert.deepEqual(ref("Montréal", 2, { Montréal: [1131, 1346, 1625] }), {
+    loyer: 1250,
+    stat: "médian",
+    periode: "octobre 2025",
+  });
+  assert.equal(ref("Montréal", "3", {}).loyer, 1545);
+  assert.equal(ref("Ville inconnue", 1, { "Ville inconnue": [900, 0, 0] }).stat, "moyen");
+  assert.equal(ref("Ville inconnue", 2, { "Ville inconnue": [900, 0, 0] }), null);
 });
