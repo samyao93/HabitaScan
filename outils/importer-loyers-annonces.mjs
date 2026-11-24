@@ -73,7 +73,7 @@ export function lireCsv(texte) {
 export function chambresDe(libelle) {
   const s = sansAccents(libelle);
   if (/studio|bachelor|0 bedroom/.test(s)) return 0;
-  const m = s.match(/\b(\d)\s*(?:\+\s*)?bedrooms?\b/) || s.match(/\b(\d)\s*(?:\+\s*)?chambres?\b/);
+  const m = s.match(/\b(\d)\s*(?:\+|or more|and more|ou plus|et plus)?\s*(?:bedrooms?|chambres?)\b/);
   return m ? +m[1] : null;
 }
 const troisEtPlus = (libelle) => /(\d)\s*\+|or more|and more|and over|et plus|ou plus/.test(sansAccents(libelle));
@@ -109,7 +109,8 @@ export function descriptionFr(libelles) {
 }
 
 /**
- * Lignes du CSV → { periode, ref, description, libelles, villes: { Ville: [1 ch., 2 ch., 3 ch. et plus] } }.
+ * Lignes du CSV → { periode, ref, description, libelles, villes: { Ville: [1 ch., 2 ch., 3 ch. et plus] } },
+ * chaque case valant { loyer, periode } ou null.
  * Choix : loyer demandé (et non payé), médiane si le tableau la donne, tous les types de logement si possible,
  * sinon les appartements ; dernière période où la ville a une valeur.
  */
@@ -126,7 +127,8 @@ export function loyersDe(lignes) {
   for (let i = (iDguid >= 0 ? iDguid : iGeo) + 1; i < (iUom >= 0 ? iUom : iVal); i++) dims.push(i);
   const tous = sansAccents(corps.map((l) => dims.map((i) => l[i]).join("|")).join("\n"));
   const exigeDemande = /asking/.test(tous),
-    exigeMediane = /median/.test(tous);
+    exigeMediane = /median/.test(tous),
+    exigeAppartement = /apartment/.test(tous);
   const score = (s) => (/total|all /.test(s) ? 3 : /apartment/.test(s) ? 2 : 1);
   const choix = {}; // ville → ch → { ref, val, s, libelles }
   for (const l of corps) {
@@ -143,7 +145,9 @@ export function loyersDe(lignes) {
     if (!lc) continue;
     let ch = chambresDe(lc);
     if (ch < 1) continue;
-    if (ch > 3 || (ch === 3 && !troisEtPlus(lc) && /3\s*\+|3 bedrooms (and|or) more/.test(tous))) continue;
+    if (ch > 3 || (ch === 3 && !troisEtPlus(lc) && /3\s*(\+|or more|and more)/.test(tous))) continue;
+    // Les appartements seulement quand le tableau les distingue (comme la SCHL) : jamais un mélange avec les maisons.
+    if (exigeAppartement && !/apartment/.test(s)) continue;
     ch = Math.min(ch, 3);
     const k = cleTri(l[iRef]),
       sc = score(s);
@@ -151,20 +155,26 @@ export function loyersDe(lignes) {
     if (!prec || k > prec.k || (k === prec.k && sc > prec.sc))
       choix[ville][ch] = { k, ref: l[iRef], val: Math.round(val), sc, libelles };
   }
-  const villes = {};
   let ref = null,
     libelles = null;
+  for (const c of Object.values(choix))
+    for (const n of [1, 2, 3]) if (c[n] && (!ref || c[n].k > cleTri(ref))) [ref, libelles] = [c[n].ref, c[n].libelles];
+  // Une valeur plus ancienne que la dernière période (chiffre supprimé ce trimestre) est gardée au plus un an,
+  // avec sa propre période. Absente : null (l'app affiche « pas de donnée »).
+  const [aRef, mRef] = ref ? cleTri(ref).split("-").map(Number) : [0, 0];
+  const recent = (k) => {
+    const [a, m] = k.split("-").map(Number);
+    return (aRef - a) * 12 + (mRef - m) < 12;
+  };
+  const villes = {};
   for (const [ville] of VILLES) {
     const c = choix[ville];
     if (!c) continue;
-    villes[ville] = [1, 2, 3].map((n) => (c[n] ? c[n].val : 0));
-    for (const n of [1, 2, 3])
-      if (c[n] && (!ref || cleTri(c[n].ref) > cleTri(ref))) [ref, libelles] = [c[n].ref, c[n].libelles];
+    villes[ville] = [1, 2, 3].map((n) =>
+      c[n] && recent(c[n].k) ? { loyer: c[n].val, periode: periodeFr(c[n].ref) } : null,
+    );
+    if (villes[ville].every((x) => !x)) delete villes[ville];
   }
-  // Une ville dont la dernière valeur est plus ancienne que la période la plus récente garde la sienne, notée à part.
-  const periodes = {};
-  for (const [ville, c] of Object.entries(choix))
-    for (const n of [1, 2, 3]) if (c[n] && c[n].ref !== ref) periodes[ville] = periodeFr(c[n].ref);
   return {
     source: "Statistique Canada, tableau 46-10-0092-01 (estimations expérimentales)",
     url: URL_PAGE,
@@ -173,7 +183,6 @@ export function loyersDe(lignes) {
     description: libelles ? descriptionFr(libelles) : null,
     libelles,
     villes,
-    ...(Object.keys(periodes).length ? { periodesParVille: periodes } : {}),
   };
 }
 
