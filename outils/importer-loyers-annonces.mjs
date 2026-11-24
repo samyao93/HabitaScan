@@ -72,7 +72,7 @@ export function lireCsv(texte) {
 /** Nombre de chambres d'un libellé (« 2 bedrooms », « 3 bedrooms and more »…) : 0 = studio, null = aucun. */
 export function chambresDe(libelle) {
   const s = sansAccents(libelle);
-  if (/studio|bachelor|0 bedroom/.test(s)) return 0;
+  if (/studio|bachelor|\b(?:0|no) bedroom/.test(s)) return 0;
   const m = s.match(/\b(\d)\s*(?:\+|or more|and more|ou plus|et plus)?\s*(?:bedrooms?|chambres?)\b/);
   return m ? +m[1] : null;
 }

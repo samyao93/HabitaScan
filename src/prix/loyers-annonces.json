@@ -1,0 +1,82 @@
+{
+  "source": "Statistique Canada, tableau 46-10-0092-01 (estimations expérimentales)",
+  "url": "https://www150.statcan.gc.ca/t1/tbl1/fr/tv.action?pid=4610009201",
+  "ref": "2026-04",
+  "periode": "2e trimestre 2026",
+  "description": "Loyer demandé dans les annonces (moyenne), appartements",
+  "libelles": [
+    "Apartment - 2 bedrooms",
+    "Average asking rent"
+  ],
+  "villes": {
+    "Montréal": [
+      {
+        "loyer": 1480,
+        "periode": "2e trimestre 2026"
+      },
+      {
+        "loyer": 1820,
+        "periode": "2e trimestre 2026"
+      },
+      {
+        "loyer": 2260,
+        "periode": "2e trimestre 2026"
+      }
+    ],
+    "Québec": [
+      {
+        "loyer": 1210,
+        "periode": "2e trimestre 2026"
+      },
+      {
+        "loyer": 1460,
+        "periode": "2e trimestre 2026"
+      },
+      null
+    ],
+    "Gatineau": [
+      {
+        "loyer": 1440,
+        "periode": "2e trimestre 2026"
+      },
+      {
+        "loyer": 1700,
+        "periode": "2e trimestre 2026"
+      },
+      {
+        "loyer": 1910,
+        "periode": "2e trimestre 2026"
+      }
+    ],
+    "Sherbrooke": [
+      {
+        "loyer": 1040,
+        "periode": "2e trimestre 2026"
+      },
+      {
+        "loyer": 1300,
+        "periode": "2e trimestre 2026"
+      },
+      {
+        "loyer": 1540,
+        "periode": "2e trimestre 2026"
+      }
+    ],
+    "Trois-Rivières": [
+      {
+        "loyer": 970,
+        "periode": "2e trimestre 2026"
+      },
+      null,
+      null
+    ],
+    "Drummondville": [
+      null,
+      {
+        "loyer": 1200,
+        "periode": "2e trimestre 2026"
+      },
+      null
+    ]
+  }
+}

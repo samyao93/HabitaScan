@@ -7,6 +7,7 @@ import { blocMesApprofondies, offreApprofondie, vueApprofondie } from "../approf
 import { VCFG, prixTxt } from "../approfondie/rapport.js";
 import { vueBudget } from "../budget/ecrans.js";
 import { barreCompte, vueCompte } from "../compte/ecrans.js";
+import { blocCout, blocQuestions } from "../couts/ecrans.js";
 import { blocInvitationLieu } from "../compte/lieu.js";
 import { vueSupprimer } from "../compte/suppression.js";
 import { etat } from "../etat.js";
@@ -18,6 +19,7 @@ import { lienConditions, vueConditions } from "../legal/conditions.js";
 import { lienConfidentialite, vueConfidentialite } from "../legal/confidentialite.js";
 import { PAGES_LEG, vuePageLegale } from "../legal/pages.js";
 import { REGLE_PAIEMENT } from "../memoire/contacts.js";
+import { blocComparaison } from "../prix/comparaison.js";
 import { vueProprio } from "../proprietaire/ecran.js";
 import { vueReno, vueRenoResultat } from "../renovation/ecrans.js";
 import { boutonSignaler, vueSignalOk, vueSignaler } from "../signalements/signalements.js";
@@ -166,6 +168,9 @@ ${blocProfil(etat.fiche)}
     return `${top("accueil", "Résultat")}
 <div class="verdict ${R.c}"><strong>${{ r: "Ne paie pas", y: "Visite d'abord, puis vérifie le propriétaire", g: "Aucun signal. Tu peux visiter." }[R.c]}</strong><span>${esc(etat.fiche.ville)} · ${etat.fiche.ch === "3" ? "3 ch. et plus" : etat.fiche.ch + " ch."} · <span class="num">${money(etat.fiche.prixN)}</span></span></div>
 <div class="card"><h2>Ce que l'app a vérifié</h2><ul class="reasons">${R.items.map((i) => `<li><span class="dot ${i.c}"></span><div>${i.t}${i.law ? `<div class="law">${i.law}</div>` : ""}${htmlFait(i.fait)}</div></li>`).join("")}</ul></div>
+${blocComparaison(etat.fiche, etat.loyers, etat.loyersInfo)}
+${blocCout(etat.fiche)}
+${blocQuestions(etat.fiche)}
 ${rappelIA()}
 <p class="rule">${{ r: "N'envoie aucun argent et ne donne aucune pièce d'identité à cette personne.", y: "Ne paie rien avant d'avoir visité et confirmé qui est le propriétaire.", g: "Avant de payer : confirme le propriétaire, puis signe le bail. Le premier mois se paie à la signature, jamais avant, et jamais de dépôt." }[R.c]}</p>
 ${R.c !== "r" ? `<p class="rule paiement">${REGLE_PAIEMENT}</p>` : ""}

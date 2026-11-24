@@ -8,6 +8,7 @@ export const etat = {
   profil: null, // le profil de la personne connectée
   historique: [], // ses vérifications passées
   loyers: {}, // loyers moyens SCHL par ville
+  loyersInfo: {}, // période et source de ces loyers, par ville
   registrePret: false, // la liste des licences RBQ est chargée
   anonyme: true,
   estAdmin: false,

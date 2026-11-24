@@ -12,10 +12,12 @@ export async function chargerRegistre() {
 }
 
 export async function chargerLoyers() {
-  const { data } = await sb.from("loyers_reference").select("ville,chambres,loyer");
+  const { data } = await sb.from("loyers_reference").select("ville,chambres,loyer,periode,source");
   etat.loyers = {};
+  etat.loyersInfo = {};
   (data || []).forEach((r) => {
     (etat.loyers[r.ville] = etat.loyers[r.ville] || [0, 0, 0])[r.chambres - 1] = r.loyer;
+    if (r.periode || r.source) etat.loyersInfo[r.ville] = { periode: r.periode, source: r.source };
   });
   const ordre = Object.entries(etat.loyers).sort((a, b) => b[1][1] - a[1][1]);
   etat.loyers = Object.fromEntries(ordre);
