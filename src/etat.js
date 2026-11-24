@@ -10,7 +10,7 @@ export const etat = {
   alertes: [], // ses vérifications signalées ensuite par d'autres (alertes/alertes.js)
   loyers: {}, // loyers moyens SCHL par ville
   loyersInfo: {}, // période et source de ces loyers, par ville
-  medianes: {}, // loyers médians SCHL saisis dans l'Espace admin : { ville: [{ loyer, periode } | null ×3] }
+  medianes: {}, // loyers médians SCHL saisis dans l'Espace admin : { ville: [{ loyer, periode } | null ×4] (studio, 1, 2, 3 ch.) }
   registrePret: false, // la liste des licences RBQ est chargée
   anonyme: true,
   estAdmin: false,

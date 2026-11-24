@@ -6,6 +6,7 @@
     "Montréal": {
       "region": "RMR de Montréal",
       "loyers": [
+        1070,
         1190,
         1420,
         1725
@@ -14,6 +15,7 @@
     "Québec": {
       "region": "RMR de Québec",
       "loyers": [
+        900,
         1160,
         1275,
         1505
@@ -22,6 +24,7 @@
     "Gatineau": {
       "region": "RMR de Gatineau",
       "loyers": [
+        1010,
         1355,
         1515,
         1755
@@ -30,6 +33,7 @@
     "Sherbrooke": {
       "region": "RMR de Sherbrooke",
       "loyers": [
+        785,
         1015,
         1185,
         1530
@@ -38,6 +42,7 @@
     "Trois-Rivières": {
       "region": "RMR de Trois-Rivières",
       "loyers": [
+        755,
         875,
         1065,
         1200
@@ -46,6 +51,7 @@
     "Saguenay": {
       "region": "RMR de Saguenay",
       "loyers": [
+        790,
         850,
         1085,
         1180
@@ -54,6 +60,7 @@
     "Drummondville": {
       "region": "RMR de Drummondville",
       "loyers": [
+        825,
         980,
         1105,
         1450
@@ -62,6 +69,7 @@
     "Rimouski": {
       "region": "AR de Rimouski",
       "loyers": [
+        735,
         860,
         1115,
         1270
@@ -70,6 +78,7 @@
     "Rivière-du-Loup": {
       "region": "AR de Matane et de Rivière-du-Loup",
       "loyers": [
+        705,
         820,
         1065,
         1200

@@ -12,6 +12,10 @@
   "villes": {
     "Montréal": [
       {
+        "loyer": 950,
+        "qualite": "a"
+      },
+      {
         "loyer": 1056,
         "qualite": "a"
       },
@@ -25,6 +29,10 @@
       }
     ],
     "Québec": [
+      {
+        "loyer": 818,
+        "qualite": "a"
+      },
       {
         "loyer": 1034,
         "qualite": "a"
@@ -40,6 +48,10 @@
     ],
     "Gatineau": [
       {
+        "loyer": 969,
+        "qualite": "d"
+      },
+      {
         "loyer": 1250,
         "qualite": "b"
       },
@@ -53,6 +65,10 @@
       }
     ],
     "Sherbrooke": [
+      {
+        "loyer": 700,
+        "qualite": "a"
+      },
       {
         "loyer": 850,
         "qualite": "a"
@@ -68,6 +84,10 @@
     ],
     "Trois-Rivières": [
       {
+        "loyer": 655,
+        "qualite": "b"
+      },
+      {
         "loyer": 764,
         "qualite": "b"
       },
@@ -81,6 +101,10 @@
       }
     ],
     "Saguenay": [
+      {
+        "loyer": 650,
+        "qualite": "b"
+      },
       {
         "loyer": 719,
         "qualite": "a"
@@ -96,6 +120,10 @@
     ],
     "Drummondville": [
       {
+        "loyer": 770,
+        "qualite": "c"
+      },
+      {
         "loyer": 918,
         "qualite": "a"
       },
@@ -110,6 +138,10 @@
     ],
     "Rimouski": [
       {
+        "loyer": 673,
+        "qualite": "c"
+      },
+      {
         "loyer": 734,
         "qualite": "a"
       },
@@ -123,6 +155,10 @@
       }
     ],
     "Rivière-du-Loup": [
+      {
+        "loyer": 575,
+        "qualite": "c"
+      },
       {
         "loyer": 685,
         "qualite": "b"

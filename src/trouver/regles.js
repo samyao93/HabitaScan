@@ -55,7 +55,7 @@ export function lireChambres(t) {
   if (m) return Math.min(+m[1], 3);
   m = t.match(/\b([3-7])\s*(?:1\/2|½|\.5|,5|et demi)/);
   if (m) return Math.max(1, Math.min(+m[1] - 2, 3));
-  if (/studio|1 1\/2|2 1\/2/.test(t)) return 1;
+  if (/studio|bachelor|\b[12] ?(?:1\/2|½)/.test(t)) return 0;
   return null;
 }
 
@@ -79,8 +79,8 @@ export function trierResultats(res, f) {
     const prix = lirePrix(txt),
       ch = lireChambres(txt);
     if (f.max && prix && prix > f.max) continue;
-    if (f.ch && ch && (f.ch === "3" ? ch < 3 : ch != +f.ch)) continue;
-    const ref = loyerSchl(f.ville, ch || +f.ch || 1),
+    if (f.ch && ch != null && (f.ch === "3" ? ch < 3 : ch != +f.ch)) continue;
+    const ref = loyerSchl(f.ville, ch ?? (f.ch || 1)),
       moy = ref ? ref.loyer : 0;
     const t = sansAccents(txt);
     const alertes = ALERTES_EXTRAIT.filter(([re]) => re.test(t)).map((a) => a[1]);
@@ -135,9 +135,14 @@ export const ANN = {
   note: "",
   async chercher(f) {
     if (!CFG.recherche) return [];
-    const { data, error } = await sb.functions.invoke("chercher-annonces", {
+    let { data, error } = await sb.functions.invoke("chercher-annonces", {
       body: { ville: f.ville, ch: f.ch, max: f.max },
     });
+    // Ancienne version de la fonction (sans les studios) : on cherche sans filtre, le tri garde les studios.
+    if (error && f.ch === "0" && error.context && error.context.status === 400)
+      ({ data, error } = await sb.functions.invoke("chercher-annonces", {
+        body: { ville: f.ville, ch: "", max: f.max },
+      }));
     if (error) {
       if (error.context && error.context.status === 429) throw new Error("quota");
       throw error;

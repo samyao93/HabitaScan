@@ -5,7 +5,33 @@
 import MEDIANES from "./medianes-schl.json";
 import { etat } from "../etat.js";
 
-const indice = (ch) => Math.min(Math.max(+ch || 1, 1), 3) - 1;
+/* Nombre de chambres → case des tableaux [studio, 1 ch., 2 ch., 3 ch. et plus]. « 0 » = studio ; vide ou inconnu = 1. */
+export function indiceCh(ch) {
+  const n = parseInt(ch, 10);
+  return Number.isFinite(n) ? Math.min(Math.max(n, 0), 3) : 1;
+}
+const indice = indiceCh;
+
+/* « studio », « 1 chambre », « 2 chambres », « 3 chambres et plus ». */
+export function libelleCh(ch) {
+  const n = indiceCh(ch);
+  return n === 0 ? "studio" : n === 3 ? "3 chambres et plus" : `${n} chambre${n > 1 ? "s" : ""}`;
+}
+
+/* Version courte : « Studio », « 2 ch. », « 3 ch. et plus » ; « ? ch. » si inconnu. */
+export function courtCh(ch) {
+  if (ch == null || ch === "" || !Number.isFinite(parseInt(ch, 10))) return "? ch.";
+  const n = indiceCh(ch);
+  return n === 0 ? "Studio" : n === 3 ? "3 ch. et plus" : `${n} ch.`;
+}
+
+/* Options d'un choix du nombre de chambres : [valeur, libellé]. */
+export const CHOIX_CH = [
+  ["0", "Studio"],
+  ["1", "1"],
+  ["2", "2"],
+  ["3", "3 et plus"],
+];
 
 /* { loyer, periode, qualite } ou null. La cote de fiabilité n'existe que pour les valeurs du fichier. */
 export function medianeSchl(ville, ch, medianes = MEDIANES) {
@@ -19,7 +45,7 @@ export function medianeSchl(ville, ch, medianes = MEDIANES) {
   return fic && fic.loyer ? { loyer: fic.loyer, periode: medianes.periode, qualite: fic.qualite } : null;
 }
 
-/* { loyer, stat: "médian" | "moyen", periode } ou null. ch : 1, 2 ou 3 (3 et plus). */
+/* { loyer, stat: "médian" | "moyen", periode } ou null. ch : 0 (studio), 1, 2 ou 3 (3 et plus). */
 export function loyerSchl(ville, ch, loyers = etat.loyers, medianes = MEDIANES) {
   const md = medianeSchl(ville, ch, medianes);
   if (md) return { loyer: md.loyer, stat: "médian", periode: md.periode };

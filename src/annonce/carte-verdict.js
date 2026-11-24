@@ -2,6 +2,7 @@
    Elle ne montre que le verdict, la ville, les chambres, le loyer et le titre des signaux :
    jamais l'adresse, le lien, le texte de l'annonce ni les coordonnées de l'annonceur. */
 import { etat } from "../etat.js";
+import { courtCh } from "../prix/reference.js";
 import { money } from "../utils/dom.js";
 import { partagerImageNative } from "../natif.js";
 
@@ -36,7 +37,7 @@ export function contenuCarte(F) {
   const alertes = R.items.filter((i) => i.c === "r" || i.c === "y");
   const n = alertes.length;
   const titre = R.c === "g" ? TITRES.g : `${TITRES[R.c]} : ${n} signa${n > 1 ? "ux" : "l"}`;
-  const ch = F.ch === "3" ? "3 ch. et plus" : (F.ch || "?") + " ch.";
+  const ch = courtCh(F.ch);
   return {
     c: R.c,
     titre,

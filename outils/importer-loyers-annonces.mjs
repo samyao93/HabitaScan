@@ -109,7 +109,7 @@ export function descriptionFr(libelles) {
 }
 
 /**
- * Lignes du CSV → { periode, ref, description, libelles, villes: { Ville: [1 ch., 2 ch., 3 ch. et plus] } },
+ * Lignes du CSV → { periode, ref, description, libelles, villes: { Ville: [studio, 1 ch., 2 ch., 3 ch. et plus] } },
  * chaque case valant { loyer, periode } ou null.
  * Choix : loyer demandé (et non payé), médiane si le tableau la donne, tous les types de logement si possible,
  * sinon les appartements ; dernière période où la ville a une valeur.
@@ -144,7 +144,6 @@ export function loyersDe(lignes) {
     const lc = libelles.find((x) => chambresDe(x) != null);
     if (!lc) continue;
     let ch = chambresDe(lc);
-    if (ch < 1) continue;
     if (ch > 3 || (ch === 3 && !troisEtPlus(lc) && /3\s*(\+|or more|and more)/.test(tous))) continue;
     // Les appartements seulement quand le tableau les distingue (comme la SCHL) : jamais un mélange avec les maisons.
     if (exigeAppartement && !/apartment/.test(s)) continue;
@@ -158,7 +157,8 @@ export function loyersDe(lignes) {
   let ref = null,
     libelles = null;
   for (const c of Object.values(choix))
-    for (const n of [1, 2, 3]) if (c[n] && (!ref || c[n].k > cleTri(ref))) [ref, libelles] = [c[n].ref, c[n].libelles];
+    for (const n of [0, 1, 2, 3])
+      if (c[n] && (!ref || c[n].k > cleTri(ref))) [ref, libelles] = [c[n].ref, c[n].libelles];
   // Une valeur plus ancienne que la dernière période (chiffre supprimé ce trimestre) est gardée au plus un an,
   // avec sa propre période. Absente : null (l'app affiche « pas de donnée »).
   const [aRef, mRef] = ref ? cleTri(ref).split("-").map(Number) : [0, 0];
@@ -170,7 +170,7 @@ export function loyersDe(lignes) {
   for (const [ville] of VILLES) {
     const c = choix[ville];
     if (!c) continue;
-    villes[ville] = [1, 2, 3].map((n) =>
+    villes[ville] = [0, 1, 2, 3].map((n) =>
       c[n] && recent(c[n].k) ? { loyer: c[n].val, periode: periodeFr(c[n].ref) } : null,
     );
     if (villes[ville].every((x) => !x)) delete villes[ville];

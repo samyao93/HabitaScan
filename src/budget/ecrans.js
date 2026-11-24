@@ -1,14 +1,14 @@
 /* Budget : écran, résultat et comparaison des villes. */
 import { ASSURANCE, EPICERIE, GARDE, TRANSIT, budgetDefaut, calculerBudget } from "./regles.js";
 import { etat } from "../etat.js";
-import { loyerSchl } from "../prix/reference.js";
+import { CHOIX_CH, indiceCh, loyerSchl } from "../prix/reference.js";
 import { esc, top } from "../utils/dom.js";
 import { L_1904, L_SCHL30, lienExt } from "../utils/liens.js";
 import { m0 } from "../utils/texte.js";
 
 function comparerVilles(B, R) {
-  const ch = Math.min(+B.ch, 3);
-  return `<h3 class="sous">Comparer les villes</h3><p class="hint">Pour ${ch === 3 ? "3 chambres et plus" : ch + " chambre" + (ch > 1 ? "s" : "")}. Loyer médian SCHL (octobre 2025) et laissez-passer 2026.</p>
+  const ch = indiceCh(B.ch);
+  return `<h3 class="sous">Comparer les villes</h3><p class="hint">Pour ${ch === 0 ? "un studio" : ch === 3 ? "3 chambres et plus" : ch + " chambre" + (ch > 1 ? "s" : "")}. Loyer médian SCHL (octobre 2025) et laissez-passer 2026.</p>
 <table class="tvilles"><thead><tr><th>Ville</th><th>Loyer médian</th><th>Transport</th>${R.revMois ? "<th>30 %</th>" : ""}</tr></thead><tbody>
 ${Object.keys(etat.loyers)
   .map((v) => {
@@ -73,11 +73,7 @@ export function vueBudget(F, back) {
     "ville",
     "Ville",
     Object.keys(etat.loyers).map((v) => [v, v]),
-  )}${choix("ch", "Chambres", [
-    ["1", "1"],
-    ["2", "2"],
-    ["3", "3 et plus"],
-  ])}</div>
+  )}${choix("ch", "Chambres", CHOIX_CH)}</div>
 <div class="grid2">${choix("adultes", "Adultes", n([1, 4]))}${choix("enfants", "Enfants", n([0, 5]))}</div>
 ${+B.enfants ? choix("garderie", "Enfants en garderie (0 à 5 ans)", n([0, +B.enfants])) : ""}
 <div class="grid2">${champ("revenu", "Revenu du ménage avant impôt", "45 000")}${choix("unite", "Par", [
