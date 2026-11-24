@@ -138,6 +138,7 @@ export function lierCapturesVerifier(v) {
       raisons: brut,
       lien: etat.fiche.lienN,
     };
+    const c = etat.fiche.contacts || { tels: [], courriels: [] };
     const ins = !etat.session
       ? Promise.resolve()
       : sb
@@ -147,7 +148,21 @@ export function lierCapturesVerifier(v) {
             photos: etat.fiche.photos.length ? etat.fiche.photos : null,
             texte_empreinte: etat.fiche.texteEmp || null,
           })
-          .then((r) => (r && r.error ? sb.from("verifications").insert(base) : r));
+          .select("id")
+          .single()
+          .then((r) => (r && r.error ? sb.from("verifications").insert(base).select("id").single() : r))
+          /* Empreintes chiffrées du numéro et du courriel de l'annonceur, pour l'alerte de signalement.
+             Un échec ici n'empêche pas d'enregistrer la vérification. */
+          .then((r) =>
+            r && r.data && r.data.id && (c.tels.length || c.courriels.length)
+              ? sb
+                  .rpc("noter_contacts_verification", { p_id: r.data.id, p_tels: c.tels, p_courriels: c.courriels })
+                  .then(
+                    () => r,
+                    () => r,
+                  )
+              : r,
+          );
     await Promise.all([ins, new Promise((r) => setTimeout(r, 900))]);
     await chargerProfil();
     go("resultat");

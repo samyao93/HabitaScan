@@ -1,6 +1,7 @@
 /* Navigation : affichage d'un écran et liaison de ses boutons. */
 import { ADM } from "../admin/api.js";
 import { lierAdmin } from "../admin/ecran.js";
+import { lierAlertes } from "../alertes/liaisons.js";
 import { lierCapturesVerifier, lierFormulaireVerifier, lierResultat } from "../annonce/liaisons.js";
 import { lierApprofondies } from "../approfondie/liaisons.js";
 import { lierBudget } from "../budget/liaisons.js";
@@ -132,7 +133,14 @@ const LIAISONS = {
   renoResultat: [lierEcranRenoResultat],
 };
 /* Liaisons par thème : chacune vérifie elle-même l'écran affiché. */
-const LIAISONS_THEMES = [lierApprofondies, mesurerVue, lierAnalyseIA, lierHistoriqueCompteLieu, lierMessageFiltre];
+const LIAISONS_THEMES = [
+  lierApprofondies,
+  mesurerVue,
+  lierAnalyseIA,
+  lierHistoriqueCompteLieu,
+  lierMessageFiltre,
+  lierAlertes,
+];
 
 /* Lie les boutons et champs de l'écran qui vient d'être affiché. */
 export function lierEcran(v) {

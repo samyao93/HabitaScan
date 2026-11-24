@@ -2,7 +2,7 @@
 import { peutSignaler, resumeSignal } from "../memoire/memoire.js";
 import { $, app, top } from "../utils/dom.js";
 
-const MOTIFS = {
+export const MOTIFS = {
   argent_avant_bail: "On m'a demandé de l'argent avant le bail",
   faux_proprietaire: "La personne n'est pas le vrai propriétaire",
   logement_inexistant: "Le logement n'existe pas ou n'est pas à louer",

@@ -1,6 +1,7 @@
 /* Écran « Mon compte » et barre de compte. */
 import { ADM } from "../admin/api.js";
 import { CFG } from "../admin/parametres.js";
+import { blocReglageAlertes } from "../alertes/alertes.js";
 import { CPT } from "./api.js";
 import { LIEU } from "./lieu.js";
 import { etat } from "../etat.js";
@@ -19,6 +20,7 @@ ${etat.profil && ["aucune", "refusee"].includes(etat.profil.identite_statut || "
 <button type="button" class="mrow" data-go="historique"><span>Mes vérifications</span><span class="soft num">${nbH}</span><span class="chev">›</span></button>
 ${ADM.estAdmin() ? `<button type="button" class="mrow" data-go="admin" id="nouvA"><span>Espace admin</span><span class="soft">Réservé</span><span class="chev">›</span></button>` : ""}
 </div>
+${blocReglageAlertes()}
 ${
   LIEU.dispo
     ? `<div class="card"><h2>Confidentialité</h2>

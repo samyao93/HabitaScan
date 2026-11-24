@@ -7,6 +7,7 @@ export const etat = {
   session: false, // la session Supabase, ou false si personne n'est connecté
   profil: null, // le profil de la personne connectée
   historique: [], // ses vérifications passées
+  alertes: [], // ses vérifications signalées ensuite par d'autres (alertes/alertes.js)
   loyers: {}, // loyers moyens SCHL par ville
   loyersInfo: {}, // période et source de ces loyers, par ville
   registrePret: false, // la liste des licences RBQ est chargée

@@ -257,6 +257,7 @@ body:has(.app[data-v=bienvenue]) .app{background:radial-gradient(120% 60% at 50%
 .verdict{position:relative;border-radius:var(--r-xl);padding:20px 20px 20px 72px;display:flex;flex-direction:column;gap:6px;border:1px solid}
 .verdict::before{content:"";position:absolute;left:18px;top:20px;width:40px;height:40px;border-radius:50%;background:currentColor}
 .verdict::after{content:"";position:absolute;left:28px;top:30px;width:20px;height:20px;background:#fff;-webkit-mask:var(--vi) center/contain no-repeat;mask:var(--vi) center/contain no-repeat}
+.alertes-liste{margin:4px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}.alertes-liste .lienbtn{padding:0;text-align:left}
 .verdict.r{background:var(--redbg);color:var(--red);border-color:var(--redline);--vi:var(--i-x)}
 .verdict.y{background:var(--amberbg);color:var(--amber);border-color:var(--amberline);--vi:var(--i-alert)}
 .verdict.g{background:var(--okbg);color:var(--ok);border-color:var(--okline);--vi:var(--i-check)}

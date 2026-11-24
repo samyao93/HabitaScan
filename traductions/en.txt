@@ -2231,3 +2231,84 @@ v === "3" ? "3 or more" : v
 
 `Prix très bas pour la ville (moyenne SCHL ${m0(moy)}) : vérifie-la avant tout contact`
 `Very low price for the city (CMHC average ${m0(moy)}): check it before any contact`
+
+== src/historique/ecrans.js
+<span class="tag r">Signalée</span>
+<span class="tag r">Reported</span>
+
+== src/alertes/alertes.js
+"le même lien"
+"the same link"
+
+"les mêmes photos"
+"the same photos"
+
+"le même numéro de téléphone"
+"the same phone number"
+
+"le même courriel"
+"the same email"
+
+"le même texte"
+"the same text"
+
+"une annonce reliée"
+"a related listing"
+
+" et "
+" and "
+
+`${n} personnes` : "une personne"
+`${n} people` : "one person"
+
+`Depuis ta vérification, ${pers(n)} à l'identité confirmée ${n > 1 ? "ont" : "a"} signalé cette annonce comme arnaque.`
+`Since you checked it, ${pers(n)} with a confirmed identity reported this listing as a scam.`
+
+`Depuis ta vérification, ${pers(n)} à l'identité confirmée ${n > 1 ? "ont" : "a"} signalé comme arnaque une annonce qui a ${texteQuoi(a.quoi)}.`
+`Since you checked it, ${pers(n)} with a confirmed identity reported as a scam a listing with ${texteQuoi(a.quoi)}.`
+
+`«&nbsp;${esc(m)}&nbsp;»`
+`"${esc(m)}"`
+
+"/mois"
+"/month"
+
+"vérifiée le "
+"checked on "
+
+"Une de tes vérifications"
+"One of your checks"
+
+`${N.length} annonces que tu as vérifiées ont été signalées` : "Une annonce que tu as vérifiée a été signalée"
+`${N.length} listings you checked have been reported` : "A listing you checked has been reported"
+
+<span>N'envoie aucun argent. Si tu as déjà payé, garde toutes les preuves et signale-le à la police.</span>
+<span>Don't send any money. If you already paid, keep all the evidence and report it to the police.</span>
+
+id="alertes-vues">Compris</button>
+id="alertes-vues">Got it</button>
+
+<strong>Signalée comme arnaque depuis ta vérification</strong>
+<strong>Reported as a scam since you checked it</strong>
+
+` Raisons données : ${m}.`
+` Reasons given: ${m}.`
+
+ Dernier signalement le ${esc(dateCourte(a.dernier))}.</span>
+ Last report on ${esc(dateCourte(a.dernier))}.</span>
+
+<span>N'envoie aucun argent à cet annonceur. Si tu as déjà payé : <button type="button" class="lienbtn" data-go="victime">J'ai été victime d'une arnaque</button>.</span>
+<span>Don't send any money to this advertiser. If you already paid: <button type="button" class="lienbtn" data-go="victime">I was the victim of a scam</button>.</span>
+
+<b>M'alerter si une annonce que j'ai vérifiée est signalée</b><small>Si d'autres utilisateurs signalent ensuite comme arnaque une annonce que tu as vérifiée, ou une annonce avec les mêmes photos, le même numéro ou le même texte, tu es prévenu dans l'app. Tu ne sais jamais qui a signalé.</small>
+<b>Alert me if a listing I checked gets reported</b><small>If other users later report as a scam a listing you checked, or a listing with the same photos, phone number or text, you're notified in the app. You never learn who reported it.</small>
+
+== src/alertes/liaisons.js
+"Activé. Tu seras prévenu dans l'app."
+"On. You'll be notified in the app."
+
+"Désactivé. Tu ne seras plus prévenu si une annonce vérifiée est signalée."
+"Off. You won't be notified anymore if a listing you checked gets reported."
+
+"Le changement n'a pas fonctionné. Réessaie."
+"The change didn't work. Try again."

@@ -1,5 +1,6 @@
 /* Session : ouverture, envoi du code, messages d'erreur, chargement du profil. */
 import { rpc } from "../admin/api.js";
+import { chargerAlertes } from "../alertes/alertes.js";
 import { noterLieu } from "./lieu.js";
 import { sb } from "../config.js";
 import { etat } from "../etat.js";
@@ -33,6 +34,7 @@ export async function chargerProfil() {
   if (!etat.session) {
     etat.profil = null;
     etat.historique = [];
+    etat.alertes = [];
     etat.estAdmin = false;
     return;
   }
@@ -49,6 +51,7 @@ export async function chargerProfil() {
     .order("created_at", { ascending: false })
     .limit(100);
   etat.historique = h.data || [];
+  await chargerAlertes();
   noterLieu();
 }
 

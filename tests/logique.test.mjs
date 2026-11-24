@@ -329,3 +329,45 @@ test("traduction anglaise : format du fichier et paires lues", async () => {
   const table = lireTraductions(readFileSync(new URL("../traductions/en.txt", import.meta.url), "utf8"));
   assert.ok(Object.keys(table).length >= 30, "traductions/en.txt couvre les modules de l'app");
 });
+
+test("alertes de signalement : phrase, carte d'accueil, détail et désactivation", () => {
+  const etat = hs("etat"),
+    texteQuoi = fn("texteQuoi"),
+    phrase = fn("phraseAlerte"),
+    bloc = fn("blocAlertes"),
+    detail = fn("blocAlerteDetail");
+  assert.equal(texteQuoi(["photo"]), "les mêmes photos");
+  assert.equal(texteQuoi(["photo", "tel", "texte"]), "les mêmes photos, le même numéro de téléphone et le même texte");
+  assert.match(phrase({ nb: 1, quoi: ["lien"] }), /une personne .* a signalé cette annonce/);
+  assert.match(phrase({ nb: 3, quoi: ["tel"] }), /3 personnes .* ont signalé .* le même numéro de téléphone/);
+  const avant = { profil: etat.profil, alertes: etat.alertes, historique: etat.historique };
+  try {
+    etat.profil = { alertes_signalement: true };
+    etat.historique = [{ id: "v1", ville: "Montréal", prix: 1200, created_at: "2026-11-20T12:00:00Z" }];
+    etat.alertes = [
+      {
+        verif: "v1",
+        nb: 2,
+        quoi: ["lien"],
+        motifs: ["argent_avant_bail"],
+        dernier: "2026-11-23T12:00:00Z",
+        nouvelle: true,
+      },
+    ];
+    assert.match(bloc(), /Une annonce que tu as vérifiée a été signalée/);
+    assert.match(bloc(), /data-verif="v1"/);
+    assert.match(detail("v1"), /On m'a demandé de l'argent avant le bail/);
+    assert.equal(detail("v2"), "");
+    // Déjà vue (« Compris ») : plus sur l'accueil, toujours dans le détail
+    etat.alertes[0].nouvelle = false;
+    assert.equal(bloc(), "");
+    assert.notEqual(detail("v1"), "");
+    // Désactivée dans Mon compte : rien nulle part
+    etat.alertes[0].nouvelle = true;
+    etat.profil.alertes_signalement = false;
+    assert.equal(bloc(), "");
+    assert.equal(detail("v1"), "");
+  } finally {
+    Object.assign(etat, avant);
+  }
+});
