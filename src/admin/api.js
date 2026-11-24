@@ -53,6 +53,14 @@ export const ADM = {
       if (r.error) throw r.error;
     }
   },
+  async sauverMediane(ville, chambres, mediane, periode) {
+    const { error } = await sb
+      .from("loyers_reference")
+      .update({ mediane, mediane_periode: periode })
+      .eq("ville", ville)
+      .eq("chambres", chambres);
+    if (error) throw error;
+  },
   async supprimerCompte() {
     const { error } = await sb.functions.invoke("supprimer-compte", { body: {} });
     if (error) throw error;

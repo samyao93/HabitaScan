@@ -166,3 +166,16 @@ test("loyer de référence SCHL : la médiane quand elle existe, sinon la moyenn
   assert.equal(ref("Ville inconnue", 1, { "Ville inconnue": [900, 0, 0] }).stat, "moyen");
   assert.equal(ref("Ville inconnue", 2, { "Ville inconnue": [900, 0, 0] }), null);
 });
+
+test("médiane SCHL saisie dans l'Espace admin : prioritaire sur celle du fichier", () => {
+  const etat = hs("etat");
+  etat.medianes = { Montréal: [null, { loyer: 1300, periode: "octobre 2026" }, null] };
+  try {
+    const r = plain(hs("loyerSchl")("Montréal", 2, {}));
+    assert.deepEqual(r, { loyer: 1300, stat: "médian", periode: "octobre 2026" });
+    assert.equal(plain(hs("medianeSchl")("Montréal", 2)).qualite, null, "cote SCHL inconnue pour une valeur saisie");
+    assert.equal(plain(hs("loyerSchl")("Montréal", 1, {})).loyer, 1056, "case vide : valeur du fichier");
+  } finally {
+    etat.medianes = {};
+  }
+});

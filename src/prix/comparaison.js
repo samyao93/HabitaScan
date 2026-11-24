@@ -3,6 +3,7 @@
    Chaque référence affiche sa source, sa période et le type de logement. Une référence absente est dite absente. */
 import ANNONCES from "./loyers-annonces.json";
 import MEDIANES_SCHL from "./medianes-schl.json";
+import { medianeSchl } from "./reference.js";
 import { sb } from "../config.js";
 import { esc, money } from "../utils/dom.js";
 
@@ -41,8 +42,8 @@ export function referencesPrix(F, loyers, infos, annonces = ANNONCES, medianes =
   const info = (infos && infos[v]) || {};
   const sc = annonces.villes && annonces.villes[v] && annonces.villes[v][ch - 1];
   const hs = F.medianeHS;
-  const md = medianes.villes && medianes.villes[v] && medianes.villes[v][ch - 1];
-  const qualite = md && medianes.qualites && medianes.qualites[md.qualite];
+  const md = medianeSchl(v, ch, medianes);
+  const qualite = md && md.qualite && medianes.qualites && medianes.qualites[md.qualite];
   return [
     {
       cle: "schl",
@@ -60,7 +61,7 @@ export function referencesPrix(F, loyers, infos, annonces = ANNONCES, medianes =
       valeur: md ? md.loyer : null,
       type: `${medianes.type}, ${type}`,
       source: medianes.source,
-      periode: medianes.periode,
+      periode: md ? md.periode : medianes.periode,
       lien: medianes.url,
       note: `La moitié des logements loués coûtent moins, l'autre moitié plus. Mêmes locataires que la moyenne SCHL, mais moins tirée par les loyers très élevés.${qualite ? ` Fiabilité selon la SCHL : ${qualite}.` : ""}`,
       absent: md ? null : "La SCHL ne publie pas de loyer médian pour cette ville et ce nombre de chambres.",
