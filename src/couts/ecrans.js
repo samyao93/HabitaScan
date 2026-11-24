@@ -10,6 +10,7 @@ import {
   lireFraisPonctuels,
   questionsVisite,
 } from "./regles.js";
+import { repereLmm } from "../prix/lmm.js";
 import { $, esc, money } from "../utils/dom.js";
 
 const L1904 =
@@ -47,11 +48,20 @@ function ligneDepense(p, d) {
 <label class="mini" ${d.statut === A_CHARGE ? "" : "hidden"}>Montant par mois<input data-dep-m="${p.cle}" inputmode="numeric" placeholder="Inconnu" value="${d.montant > 0 ? d.montant : ""}"></label></div></li>`;
 }
 
+function blocLmm(F, c) {
+  const r = repereLmm(F.ville, F.ch, c.total, c.minimum);
+  if (!r) return "";
+  const ch = r.ch === 3 ? "3 chambres" : `${r.ch} chambre${r.ch > 1 ? "s" : ""}`;
+  return `<p class="soft"><b>Repère, services compris :</b> <span class="num">${money(r.lmm)}</span> par mois pour ${ch} (${esc(r.region)}). ${esc(r.texte)}</p>
+<p class="law">${esc(r.source)}, ${esc(r.periode)}. ${esc(r.note)}${r.ch === 3 ? " Pour 4 chambres et plus, le repère est plus élevé." : ""}</p>`;
+}
+
 function contenuCout(F) {
   const dep = F.depenses || {};
   const c = calculerCout(F.prixN, dep);
   return `<h2>Coût mensuel réel</h2>
 <div class="verdict ${c.minimum ? "y" : "g"}"><strong>${c.minimum ? "Au moins " : ""}<span class="num">${money(c.total)}</span> par mois</strong><span>Loyer de ${money(F.prixN)}${c.total > F.prixN ? ` + ${money(c.total - F.prixN)} de dépenses connues` : ""}.${c.minimum ? ` Non précisé : ${esc(c.inconnues.join(", ").toLowerCase())}. Ces dépenses ne sont pas comptées : demande leur montant à la visite.` : ""}</span></div>
+${blocLmm(F, c)}
 <ul class="reasons depenses">${POSTES.map((p) => ligneDepense(p, dep[p.cle] || { statut: INCONNU })).join("")}</ul>
 <p class="hint">Lu automatiquement dans l'annonce : corrige si tu en sais plus, le total se met à jour. L'assurance habitation est toujours à ta charge, en plus.</p>`;
 }

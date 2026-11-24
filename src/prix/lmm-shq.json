@@ -1,0 +1,79 @@
+{
+  "source": "Société d'habitation du Québec, Loyers médians du marché (LMM) ajustés, avec services",
+  "periode": "2026",
+  "note": "Loyer médian ajusté par la SHQ pour 2026, services compris (chauffage, électricité, etc.). Barème des programmes d'aide au logement.",
+  "villes": {
+    "Montréal": {
+      "region": "RMR de Montréal",
+      "loyers": [
+        1190,
+        1420,
+        1725
+      ]
+    },
+    "Québec": {
+      "region": "RMR de Québec",
+      "loyers": [
+        1160,
+        1275,
+        1505
+      ]
+    },
+    "Gatineau": {
+      "region": "RMR de Gatineau",
+      "loyers": [
+        1355,
+        1515,
+        1755
+      ]
+    },
+    "Sherbrooke": {
+      "region": "RMR de Sherbrooke",
+      "loyers": [
+        1015,
+        1185,
+        1530
+      ]
+    },
+    "Trois-Rivières": {
+      "region": "RMR de Trois-Rivières",
+      "loyers": [
+        875,
+        1065,
+        1200
+      ]
+    },
+    "Saguenay": {
+      "region": "RMR de Saguenay",
+      "loyers": [
+        850,
+        1085,
+        1180
+      ]
+    },
+    "Drummondville": {
+      "region": "RMR de Drummondville",
+      "loyers": [
+        980,
+        1105,
+        1450
+      ]
+    },
+    "Rimouski": {
+      "region": "AR de Rimouski",
+      "loyers": [
+        860,
+        1115,
+        1270
+      ]
+    },
+    "Rivière-du-Loup": {
+      "region": "AR de Matane et de Rivière-du-Loup",
+      "loyers": [
+        820,
+        1065,
+        1200
+      ]
+    }
+  }
+}

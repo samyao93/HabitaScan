@@ -179,3 +179,15 @@ test("médiane SCHL saisie dans l'Espace admin : prioritaire sur celle du fichie
     etat.medianes = {};
   }
 });
+
+test("repère LMM 2026 (SHQ, avec services) : comparé au coût réel, jamais « sous » quand des dépenses manquent", () => {
+  const r = (...a) => plain(hs("repereLmm")(...a));
+  assert.equal(r("Montréal", "2", 1420, false).lmm, 1420);
+  assert.match(r("Montréal", "2", 1420, false).texte, /même niveau/);
+  assert.match(r("Montréal", "2", 1600, false).texte, /13 % au-dessus/);
+  assert.match(r("Montréal", "2", 1600, true).texte, /déjà au moins 13 %/);
+  assert.match(r("Montréal", "2", 1200, false).texte, /15 % sous/);
+  assert.match(r("Montréal", "2", 1200, true).texte, /pas encore connues/);
+  assert.equal(r("Rivière-du-Loup", "1", 900, false).region, "AR de Matane et de Rivière-du-Loup");
+  assert.equal(r("Autre", "1", 900, false), null);
+});
