@@ -123,6 +123,8 @@ const API={
  async rpc(n,a){if(DEMO)return DEMO_API.rpc(n,a);const {data,error}=await sb.rpc(n,a||{});if(error)throw error;return data},
  async table(t,cols,ordre){if(DEMO)return DEMO_API.table(t);let q=sb.from(t).select(cols);if(ordre)q=q.order(ordre[0],{ascending:ordre[1]!==false});const {data,error}=await q;if(error)throw error;return data||[]},
  async pieces(uid){if(DEMO)return [];const {data}=await sb.storage.from("pieces-identite").list(uid,{limit:20});const out=[];for(const f of data||[]){const {data:u}=await sb.storage.from("pieces-identite").createSignedUrl(`${uid}/${f.name}`,300);if(u)out.push({nom:f.name,url:u.signedUrl})}return out},
+ async majMediane(ville,chambres,mediane,periode){const {data,error}=await sb.from("loyers_reference").update({mediane,mediane_periode:periode}).eq("ville",ville).eq("chambres",chambres).select("ville");if(error)throw error;
+  if(!data||!data.length){const r=await sb.from("loyers_reference").insert({ville,chambres,mediane,mediane_periode:periode});if(r.error)throw r.error}},
  async supprimerCompte(uid){if(DEMO)return DEMO_API.supprimer(uid);const {data,error}=await sb.functions.invoke("admin-supprimer-compte",{body:{user_id:uid}});if(error)throw error;if(data&&data.error)throw new Error(data.error);return data}
 };
 
@@ -389,19 +391,35 @@ V.pages=async m=>{const P={confidentialite:"Politique de confidentialité",condi
  m.querySelectorAll("[data-pg]").forEach(b=>b.onclick=()=>{S.pg=b.dataset.pg;afficher()});
  m.querySelector("#pg-ok").onclick=async e=>{if(ta.value.trim().length<50)return toast("Le texte est trop court.",true);
   if(await agir(e.target,()=>API.rpc("admin_maj_page",{p_cle:S.pg,p_contenu:ta.value}),"Page publiée : elle est en ligne sur le site et dans l'app."))afficher()}};
-V.loyers=async m=>{const L=await API.table("loyers_reference","ville,chambres,loyer,periode,source",["ville"]);L.sort((a,b)=>a.ville.localeCompare(b.ville,"fr")||a.chambres-b.chambres);
+V.loyers=async m=>{let L,medOk=true;try{L=await API.table("loyers_reference","ville,chambres,loyer,periode,source,mediane,mediane_periode",["ville"])}catch(e){medOk=false;L=await API.table("loyers_reference","ville,chambres,loyer,periode,source",["ville"])}
+ L.sort((a,b)=>a.ville.localeCompare(b.ville,"fr")||a.chambres-b.chambres);
  const villes=[...new Set(L.map(r=>r.ville))],cell=(v,c)=>L.find(r=>r.ville===v&&r.chambres===c);
- m.innerHTML=tete("Loyers de référence","Loyers moyens utilisés pour repérer un prix anormalement bas. Mets-les à jour à chaque publication de la SCHL.")+
- `<div class="carte" style="padding:0"><div class="tab-wrap" style="border:0"><table><thead><tr><th>Ville</th><th class="r">1 ch.</th><th class="r">2 ch.</th><th class="r">3 ch. +</th><th>Période</th></tr></thead><tbody>
- ${villes.map(v=>`<tr><td><b>${esc(v)}</b></td>${[1,2,3].map(c=>{const r=cell(v,c);return `<td class="r"><input type="number" min="100" max="20000" data-v="${esc(v)}" data-c="${c}" value="${r?r.loyer:""}" aria-label="${esc(v)}, ${c} chambre(s)" style="width:90px;text-align:right;border:1px solid var(--line);border-radius:6px;padding:5px 7px;background:var(--card)"></td>`}).join("")}<td class="muted">${esc((cell(v,2)||cell(v,1)||{}).periode||"—")}</td></tr>`).join("")}
- <tr><td><input id="nv-ville" placeholder="Nouvelle ville" style="border:1px solid var(--line);border-radius:6px;padding:5px 7px;background:var(--card);width:150px"></td>${[1,2,3].map(c=>`<td class="r"><input type="number" id="nv-${c}" min="100" style="width:90px;text-align:right;border:1px solid var(--line);border-radius:6px;padding:5px 7px;background:var(--card)" aria-label="Nouvelle ville, ${c} chambre(s)"></td>`).join("")}<td></td></tr></tbody></table></div></div>
- <div class="carte"><div class="grille g2"><label>Période des données<br><input id="lper" value="${esc((L[0]||{}).periode||"")}" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--card)"></label><label>Source<br><input id="lsrc" value="${esc((L[0]||{}).source||"")}" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--card)"></label></div>
- <div class="actions" style="margin-top:12px"><button class="btn pri" id="lsave">Enregistrer les changements</button><a class="btn" href="https://www.cmhc-schl.gc.ca/professionnels/marche-du-logement-donnees-et-recherche/donnees-sur-le-logement/tableaux-de-donnees/donnees-sur-le-marche-locatif" target="_blank" rel="noopener">Données de la SCHL ↗</a></div></div>`;
+ const CH=[[0,"Studio"],[1,"1 ch."],[2,"2 ch."],[3,"3 ch. +"]],nomCh=c=>c===0?"studio":`${c} chambre(s)`;
+ const st="width:90px;text-align:right;border:1px solid var(--line);border-radius:6px;padding:5px 7px;background:var(--card)";
+ const champ=(attr,v,c,val)=>`<td class="r"><input type="number" min="100" max="20000" ${attr}="${esc(v)}" data-c="${c}" value="${val||""}" aria-label="${esc(v)}, ${nomCh(c)}" style="${st}"></td>`;
+ const perMed=(L.find(r=>r.mediane_periode)||{}).mediane_periode||"octobre 2025";
+ m.innerHTML=tete("Loyers de référence","Loyers moyens et médians de la SCHL, par ville et par nombre de chambres (studio compris). Mets-les à jour à chaque publication de la SCHL.")+
+ `<div class="carte"><h2>Loyers moyens SCHL</h2><p class="hint" style="margin-top:0">Servent à repérer un prix anormalement bas quand la médiane manque.</p></div>
+ <div class="carte" style="padding:0"><div class="tab-wrap" style="border:0"><table><thead><tr><th>Ville</th>${CH.map(([,t])=>`<th class="r">${t}</th>`).join("")}<th>Période</th></tr></thead><tbody>
+ ${villes.map(v=>`<tr><td><b>${esc(v)}</b></td>${CH.map(([c])=>champ("data-v",v,c,(cell(v,c)||{}).loyer)).join("")}<td class="muted">${esc((cell(v,2)||cell(v,1)||{}).periode||"—")}</td></tr>`).join("")}
+ <tr><td><input id="nv-ville" placeholder="Nouvelle ville" style="border:1px solid var(--line);border-radius:6px;padding:5px 7px;background:var(--card);width:150px"></td>${CH.map(([c])=>`<td class="r"><input type="number" id="nv-${c}" min="100" style="${st}" aria-label="Nouvelle ville, ${nomCh(c)}"></td>`).join("")}<td></td></tr></tbody></table></div></div>
+ <div class="carte"><div class="grille g2"><label>Période des données<br><input id="lper" value="${esc((L.find(r=>r.periode&&r.loyer)||L[0]||{}).periode||"")}" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--card)"></label><label>Source<br><input id="lsrc" value="${esc((L[0]||{}).source||"")}" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--card)"></label></div>
+ <div class="actions" style="margin-top:12px"><button class="btn pri" id="lsave">Enregistrer les loyers moyens</button><a class="btn" href="https://www.cmhc-schl.gc.ca/professionnels/marche-du-logement-donnees-et-recherche/donnees-sur-le-logement/tableaux-de-donnees/donnees-sur-le-marche-locatif" target="_blank" rel="noopener">Données de la SCHL ↗</a></div></div>
+ <div class="carte" id="medianes"><h2>Loyers médians SCHL</h2><p class="hint" style="margin-top:0">Utilisés pour le budget, le verdict et la comparaison du prix. Chaque décembre : Portail de l'information sur le marché de l'habitation, Québec, « Loyer médian ($) » selon le nombre de chambres. Case vide : l'app garde la médiane d'octobre 2025 intégrée.</p>${medOk?"":`<p class="hint">Colonnes des médianes absentes : applique la migration 20261124b.</p>`}</div>
+ ${medOk?`<div class="carte" style="padding:0"><div class="tab-wrap" style="border:0"><table><thead><tr><th>Ville</th>${CH.map(([,t])=>`<th class="r">${t}</th>`).join("")}</tr></thead><tbody>
+ ${villes.map(v=>`<tr><td><b>${esc(v)}</b></td>${CH.map(([c])=>champ("data-med",v,c,(cell(v,c)||{}).mediane)).join("")}</tr>`).join("")}</tbody></table></div></div>
+ <div class="carte"><label>Période des médianes<br><input id="mper" value="${esc(perMed)}" style="width:100%;max-width:320px;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--card)"></label>
+ <div class="actions" style="margin-top:12px"><button class="btn pri" id="msave">Enregistrer les médianes</button></div></div>`:""}`;
  $("#lsave").onclick=async e=>{const per=$("#lper").value.trim(),src=$("#lsrc").value.trim();const ch=[];
   m.querySelectorAll("input[data-v]").forEach(i=>{const r=cell(i.dataset.v,+i.dataset.c),v=parseInt(i.value,10);if(v&&(!r||r.loyer!==v||r.periode!==per||r.source!==src))ch.push([i.dataset.v,+i.dataset.c,v])});
-  const nv=$("#nv-ville").value.trim();if(nv)[1,2,3].forEach(c=>{const v=parseInt($("#nv-"+c).value,10);if(v)ch.push([nv,c,v])});
+  const nv=$("#nv-ville").value.trim();if(nv)CH.forEach(([c])=>{const v=parseInt($("#nv-"+c).value,10);if(v)ch.push([nv,c,v])});
   if(!ch.length)return toast("Aucun changement.");
-  if(await agir(e.target,async()=>{for(const [v,c,l] of ch)await API.rpc("admin_maj_loyer",{p_ville:v,p_chambres:c,p_loyer:l,p_periode:per,p_source:src})},`${ch.length} loyer${ch.length>1?"s":""} enregistré${ch.length>1?"s":""}.`))afficher()}};
+  if(await agir(e.target,async()=>{for(const [v,c,l] of ch)await API.rpc("admin_maj_loyer",{p_ville:v,p_chambres:c,p_loyer:l,p_periode:per,p_source:src})},`${ch.length} loyer${ch.length>1?"s":""} enregistré${ch.length>1?"s":""}.`))afficher()};
+ if(medOk)$("#msave").onclick=async e=>{const per=$("#mper").value.trim().slice(0,40)||"octobre 2025";const ch=[];let bad=false;
+  m.querySelectorAll("input[data-med]").forEach(i=>{const r=cell(i.dataset.med,+i.dataset.c),v=parseInt(i.value,10);if(!i.value)return;if(!(v>=100&&v<=20000)){bad=true;return}if(!r||r.mediane!==v||r.mediane_periode!==per)ch.push([i.dataset.med,+i.dataset.c,v])});
+  if(bad)return toast("Une médiane doit être entre 100 et 20 000 $.",true);
+  if(!ch.length)return toast("Aucun changement.");
+  if(await agir(e.target,async()=>{for(const [v,c,l] of ch)await API.majMediane(v,c,l,per)},`${ch.length} médiane${ch.length>1?"s":""} enregistrée${ch.length>1?"s":""}.`))afficher()}};
 
 V.admins=async m=>{const L=await API.rpc("admin_admins");
  m.innerHTML=tete("Administrateurs","Personnes qui ont accès à cette console.")+
