@@ -1,5 +1,5 @@
 // Service worker : met en cache uniquement les fichiers de l'app (jamais les données Supabase).
-const CACHE = "habitascan-v30";
+const CACHE = "habitascan-v31";
 const FILES = ["/app", "./langue.js", "./app.js", "./app-en.js", "./app.css", "./theme.js", "./md.js", "./manifest.webmanifest", "./icon.svg", "./icon-192.png", "./icon-512.png", "./icon-180.png"];
 self.addEventListener("install", e => e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES))));
 self.addEventListener("activate", e => e.waitUntil(
